@@ -2,7 +2,7 @@
 # app.py — Stock Flow Flask Application Factory
 # ═══════════════════════════════════════════════
 
-from flask import Flask, make_response, request
+from flask import Flask, make_response, request, send_from_directory
 from flask_login import LoginManager
 from config import Config
 from models import db, Admin, Company
@@ -19,6 +19,19 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     login_manager.login_view = 'login'
     login_manager.login_message = 'يرجى تسجيل الدخول أولاً'
+
+    @app.template_filter('cairo_time')
+    def cairo_time_filter(dt):
+        if not dt:
+            return '—'
+        try:
+            import pytz
+            cairo_tz = pytz.timezone('Africa/Cairo')
+            if dt.tzinfo is None:
+                dt = pytz.utc.localize(dt)
+            return dt.astimezone(cairo_tz).strftime('%Y-%m-%d %I:%M %p')
+        except Exception:
+            return str(dt)
 
     @app.before_request
     def redirect_legacy_htmx_boost_requests():
@@ -75,6 +88,10 @@ def create_app(config_class=Config):
 
     from product_reminder_routes import register_product_reminder_routes
     register_product_reminder_routes(app)
+
+    @app.route('/ad_images/<path:filename>')
+    def serve_ad_image(filename):
+        return send_from_directory(app.config['AD_IMAGES_FOLDER'], filename)
 
     return app
 
