@@ -62,7 +62,7 @@ class Config:
     # File upload settings
     MAX_CONTENT_LENGTH = 64 * 1024 * 1024  # 64MB max file size
     ALLOWED_LOGO_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg'}
-    ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'html', 'htm'}
+    ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
     # Third-party upload keys must stay in the environment, never in browser JavaScript.
     IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY')

@@ -2,7 +2,7 @@
 # app.py — Stock Flow Flask Application Factory
 # ═══════════════════════════════════════════════
 
-from flask import Flask, make_response, request, send_from_directory
+from flask import Flask, abort, make_response, request, send_from_directory
 from flask_login import LoginManager
 from config import Config
 from models import db, Admin, Company
@@ -91,6 +91,8 @@ def create_app(config_class=Config):
 
     @app.route('/ad_images/<path:filename>')
     def serve_ad_image(filename):
+        if str(filename or '').lower().endswith(('.html', '.htm')):
+            abort(404)
         return send_from_directory(app.config['AD_IMAGES_FOLDER'], filename)
 
     return app

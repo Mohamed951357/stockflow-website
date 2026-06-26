@@ -122,8 +122,8 @@
                     </div>
                     <div class="mb-3 border p-3 rounded bg-light">
                         <label for="ad_image_file" class="form-label"><i class="fas fa-image me-2"></i> اختر ملف الصورة التقليدية</label>
-                        <input class="form-control" type="file" id="ad_image_file" name="ad_image_file" accept=".png,.jpg,.jpeg,.gif,.html,.htm">
-                        <div class="form-text">صيغ الملفات المدعومة: PNG, JPG, JPEG, GIF, HTML</div>
+                        <input class="form-control" type="file" id="ad_image_file" name="ad_image_file" accept=".png,.jpg,.jpeg,.gif,.webp">
+                        <div class="form-text">صيغ الملفات المدعومة: PNG, JPG, JPEG, GIF, WEBP فقط</div>
                     </div>
                     <div class="mb-3">
                         <label for="description" class="form-label"><i class="fas fa-info-circle me-2"></i> وصف الصورة (اختياري)</label>
@@ -288,11 +288,12 @@
                     <div class="card ad-image-card {{ 'inactive' if not image.is_active }}">
                         <div class="card-body d-flex align-items-center">
                             {% set ext = (image.filename.rsplit('.', 1)[1].lower() if '.' in image.filename else '') %}
-                            {% if ext in ['html', 'htm'] %}
+                            {% set unsupported_html = ext in ['html', 'htm'] %}
+                            {% if unsupported_html %}
                             <div class="ad-image-thumbnail d-flex align-items-center justify-content-center bg-light" style="width:100px;height:100px;">
                                 <div class="text-center">
-                                    <i class="fas fa-code fa-2x text-primary"></i>
-                                    <div class="small text-muted mt-1">HTML</div>
+                                    <i class="fas fa-triangle-exclamation fa-2x text-warning"></i>
+                                    <div class="small text-muted mt-1">غير مدعوم</div>
                                 </div>
                             </div>
                             {% elif image.filename.startswith('http') %}
@@ -309,16 +310,21 @@
                                     • <i class="fas fa-clock me-1"></i> تم الرفع: {{ image.upload_date.strftime('%Y-%m-%d %H:%M') }}
                                 </small><br>
                                 <span class="badge bg-{{ 'success' if image.is_active else 'secondary' }}"><i class="fas fa-{{ 'check-circle' if image.is_active else 'times-circle' }} me-1"></i> {{ 'نشطة' if image.is_active else 'غير نشطة' }}</span>
+                                {% if unsupported_html %}
+                                <span class="badge bg-warning text-dark ms-2"><i class="fas fa-shield-halved me-1"></i> HTML قديم محجوب أمنياً</span>
+                                {% endif %}
                                 {% if image.active_story %}
                                 <span class="badge bg-primary story-badge ms-2"><i class="fas fa-circle-notch me-1"></i> منشورة كحالة {{ 'دائمة' if image.active_story.is_pinned else '24 ساعة' }}</span>
                                 {% endif %}
                             </div>
                             <div class="ms-auto">
-                                {% if image.active_story %}
+                                {% if image.active_story and not unsupported_html %}
                                 <button type="button" class="btn btn-sm btn-outline-primary js-story-viewers" data-story-id="{{ image.active_story.id }}" data-image-name="{{ image.original_filename|e }}"><i class="fas fa-eye"></i> من شاهد</button>
                                 <form method="POST" action="{{ url_for('unpublish_ad_story', story_id=image.active_story.id) }}" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-ban"></i> إلغاء الحالة</button>
                                 </form>
+                                {% elif unsupported_html %}
+                                <button type="button" class="btn btn-sm btn-secondary" disabled><i class="fas fa-ban"></i> غير قابل للنشر</button>
                                 {% else %}
                                 <button type="button" class="btn btn-sm btn-primary js-publish-story" data-image-id="{{ image.id }}" data-image-name="{{ image.original_filename|e }}"><i class="fas fa-circle-plus"></i> نشر كحالة</button>
                                 {% endif %}

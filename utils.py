@@ -593,9 +593,9 @@ def allowed_logo_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_LOGO_EXTENSIONS']
 
-# دالة مساعدة لتحديد امتدادات الصور الإعلانية المسموح بها
+# دالة مساعدة لتحديد امتدادات الصور المسموح بها، بدون HTML لتجنب stored XSS
 def allowed_image_file(filename):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'html', 'htm'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_IMAGE_EXTENSIONS']
 

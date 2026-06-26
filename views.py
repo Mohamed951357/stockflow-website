@@ -55,10 +55,10 @@ from utils import (
 # تعريف المنطقة الزمنية للقاهرة
 CAIRO_TIMEZONE = pytz.timezone('Africa/Cairo')
 
-# Private-message uploads are stricter than ad images; never allow HTML/SVG here.
-MESSAGE_IMAGE_UPLOAD_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MESSAGE_IMAGE_MIME_TYPES = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
-MESSAGE_IMAGE_MAGIC_HEADERS = {
+# Browser-rendered uploads must be real image bytes; never allow HTML/SVG here.
+SAFE_IMAGE_UPLOAD_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+SAFE_IMAGE_MIME_TYPES = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
+SAFE_IMAGE_MAGIC_HEADERS = {
     'png': (b'\x89PNG\r\n\x1a\n',),
     'jpg': (b'\xff\xd8\xff',),
     'jpeg': (b'\xff\xd8\xff',),
@@ -192,18 +192,19 @@ def _coerce_int_or_default(value, default):
         return default
 
 
-def _is_allowed_private_message_image(file_storage):
-    """Validate message images by extension and file signature before proxy upload."""
+def _is_allowed_safe_image_upload(file_storage, allowed_extensions=None):
+    """Validate browser-rendered images by extension, MIME type, and file signature."""
     filename = secure_filename(file_storage.filename or '')
     if '.' not in filename:
         return False
 
+    allowed_extensions = set(allowed_extensions or SAFE_IMAGE_UPLOAD_EXTENSIONS)
     extension = filename.rsplit('.', 1)[1].lower()
-    if extension not in MESSAGE_IMAGE_UPLOAD_EXTENSIONS:
+    if extension not in allowed_extensions:
         return False
 
     mimetype = (file_storage.mimetype or '').lower()
-    if mimetype and mimetype not in MESSAGE_IMAGE_MIME_TYPES:
+    if mimetype and mimetype not in SAFE_IMAGE_MIME_TYPES:
         return False
 
     stream = file_storage.stream
@@ -221,7 +222,21 @@ def _is_allowed_private_message_image(file_storage):
     if extension == 'webp':
         return header.startswith(b'RIFF') and header[8:12] == b'WEBP'
 
-    return any(header.startswith(signature) for signature in MESSAGE_IMAGE_MAGIC_HEADERS.get(extension, ()))
+    return any(header.startswith(signature) for signature in SAFE_IMAGE_MAGIC_HEADERS.get(extension, ()))
+
+
+def _is_html_ad_filename(filename):
+    """Identify legacy HTML ad uploads so they cannot be rendered as same-origin content."""
+    return str(filename or '').lower().endswith(('.html', '.htm'))
+
+
+def _filter_safe_ad_image_query(query):
+    """Exclude legacy HTML ads from user-facing ad queries."""
+    lowered_filename = func.lower(AdImage.filename)
+    return query.filter(
+        ~lowered_filename.like('%.html'),
+        ~lowered_filename.like('%.htm')
+    )
 
 
 VISITOR_COOKIE_NAME = 'stockflow_visitor_id'
@@ -1927,7 +1942,7 @@ def register_views(app):
                             if file.filename != '':
                                 allowed_extensions = {'.png', '.jpg', '.jpeg', '.gif'}
                                 ext = os.path.splitext(file.filename)[1].lower()
-                                if ext not in allowed_extensions:
+                                if ext not in allowed_extensions or not _is_allowed_safe_image_upload(file, {'png', 'jpg', 'jpeg', 'gif'}):
                                     flash('صيغة الملف غير مسموح بها. الصيغ المدعومة: PNG, JPG, JPEG, GIF.', 'error')
                                     return redirect(url_for('manage_ad_images'))
 
@@ -1996,7 +2011,15 @@ def register_views(app):
                     # Convert Google Drive links to direct image links
                     import re
                     from urllib.parse import urlparse, parse_qs
-                    if 'drive.google.com' in image_url:
+                    parsed_ad_url = urlparse(image_url)
+                    if parsed_ad_url.scheme not in {'http', 'https'} or not parsed_ad_url.netloc:
+                        flash('رابط الصورة يجب أن يبدأ بـ http أو https فقط.', 'error')
+                        return redirect(url_for('manage_ad_images'))
+                    if _is_html_ad_filename(parsed_ad_url.path):
+                        flash('روابط HTML غير مسموح بها كإعلانات. الرجاء استخدام رابط صورة مباشرة.', 'error')
+                        return redirect(url_for('manage_ad_images'))
+
+                    if 'drive.google.com' in parsed_ad_url.netloc.lower():
                         if '/folders/' in image_url:
                             flash('الرجاء وضع رابط مباشر للصورة (File) وليس رابط المجلد (Folder).', 'error')
                             return redirect(url_for('manage_ad_images'))
@@ -2006,8 +2029,7 @@ def register_views(app):
                             file_id = match.group(1)
                             image_url = f"https://drive.google.com/thumbnail?id={file_id}&sz=w1000"
                         else:
-                            parsed = urlparse(image_url)
-                            qs = parse_qs(parsed.query)
+                            qs = parse_qs(parsed_ad_url.query)
                             if 'id' in qs:
                                 file_id = qs['id'][0]
                                 image_url = f"https://drive.google.com/thumbnail?id={file_id}&sz=w1000"
@@ -2025,8 +2047,8 @@ def register_views(app):
                         flash('لم يتم اختيار ملف للرفع أو إدخال رابط.', 'error')
                         return redirect(url_for('manage_ad_images'))
 
-                    if not allowed_image_file(file.filename):
-                        flash('صيغة الملف غير مسموح بها. الصيغ المدعومة: PNG, JPG, JPEG, GIF.', 'error')
+                    if not allowed_image_file(file.filename) or not _is_allowed_safe_image_upload(file):
+                        flash('صيغة الملف غير مسموح بها. الصيغ المدعومة: PNG, JPG, JPEG, GIF, WEBP.', 'error')
                         return redirect(url_for('manage_ad_images'))
 
                     from werkzeug.utils import secure_filename
@@ -2079,6 +2101,11 @@ def register_views(app):
                 image.uploader = Admin.query.get(image.uploaded_by)
             else:
                 image.uploader = None
+
+            image.is_unsupported_html = _is_html_ad_filename(image.filename)
+            if image.is_unsupported_html:
+                image.active_story = None
+                continue
 
             try:
                 story = AdStory.query.filter_by(ad_image_id=image.id, is_active=True).order_by(AdStory.created_at.desc()).first()
@@ -2192,6 +2219,10 @@ def register_views(app):
     @check_permission('manage_ad_images')
     def publish_ad_story(image_id):
         ad_image = AdImage.query.get_or_404(image_id)
+        if _is_html_ad_filename(ad_image.filename):
+            flash('لا يمكن نشر ملفات HTML القديمة كحالة. الرجاء رفع صورة بصيغة PNG/JPG/GIF/WEBP.', 'error')
+            return redirect(url_for('manage_ad_images'))
+
         duration_mode = request.form.get('duration_mode', '24h')
 
         story = AdStory(
@@ -2282,14 +2313,19 @@ def register_views(app):
         allowed_types = ['premium', 'all'] if is_premium_company else ['free', 'all']
 
         try:
-            stories = db.session.query(AdStory).join(AdImage, AdImage.id == AdStory.ad_image_id).filter(
+            stories_query = db.session.query(AdStory).join(AdImage, AdImage.id == AdStory.ad_image_id).filter(
                 AdStory.is_active == True,
+                AdImage.is_active == True,
                 AdImage.image_type.in_(allowed_types),
                 or_(
                     AdStory.is_pinned == True,
                     and_(AdStory.start_at <= now_utc, AdStory.end_at != None, AdStory.end_at > now_utc)
                 )
-            ).order_by(AdStory.is_pinned.desc(), AdStory.start_at.desc()).all()
+            )
+            stories = _filter_safe_ad_image_query(stories_query).order_by(
+                AdStory.is_pinned.desc(),
+                AdStory.start_at.desc()
+            ).all()
         except OperationalError:
             return jsonify({'success': True, 'stories': []})
 
@@ -2315,8 +2351,6 @@ def register_views(app):
         payload = []
         for s in stories:
             image = s.ad_image
-            filename_lower = (image.filename or '').lower()
-            is_html = filename_lower.endswith('.html') or filename_lower.endswith('.htm')
             payload.append({
                 'id': s.id,
                 'company_name': 'STOCK FLOW',
@@ -2325,7 +2359,7 @@ def register_views(app):
                 'image_url': url_for('serve_ad_image', filename=image.filename),
                 'description': image.description or '',
                 'is_gif': bool(image.filename and image.filename.lower().endswith('.gif')),
-                'is_html': bool(is_html),
+                'is_html': False,
                 'is_pinned': bool(s.is_pinned),
                 'start_at': s.start_at.isoformat() if s.start_at else None,
                 'end_at': s.end_at.isoformat() if s.end_at else None,
@@ -2836,16 +2870,18 @@ def register_views(app):
 
         if is_premium_company:
             # العملاء المميزون يشاهدون الصور الموجهة للمميزين فقط أو للجميع
-            ad_images = AdImage.query.filter(
+            ad_images_query = AdImage.query.filter(
                 AdImage.is_active == True,
                 AdImage.image_type.in_(['premium', 'all'])
-            ).order_by(AdImage.upload_date.desc()).all()
+            )
         else:
             # العملاء المجانيون يشاهدون الصور المجانية أو الموجهة للجميع
-            ad_images = AdImage.query.filter(
+            ad_images_query = AdImage.query.filter(
                 AdImage.is_active == True,
                 AdImage.image_type.in_(['free', 'all'])
-            ).order_by(AdImage.upload_date.desc()).all()
+            )
+
+        ad_images = _filter_safe_ad_image_query(ad_images_query).order_by(AdImage.upload_date.desc()).all()
 
         for image in ad_images:
             if image.upload_date:
@@ -4473,7 +4509,7 @@ def register_views(app):
         if request.content_length and request.content_length > max_bytes:
             return jsonify({'success': False, 'message': 'حجم الصورة أكبر من المسموح'}), 413
 
-        if not _is_allowed_private_message_image(image_file):
+        if not _is_allowed_safe_image_upload(image_file):
             return jsonify({'success': False, 'message': 'نوع الصورة غير مسموح'}), 400
 
         safe_filename = secure_filename(image_file.filename)
@@ -4520,7 +4556,7 @@ def register_views(app):
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
 
-        if not allowed_image_file(file.filename):
+        if not allowed_image_file(file.filename) or not _is_allowed_safe_image_upload(file):
             return jsonify({'error': 'File type not allowed'}), 400
 
         try:
