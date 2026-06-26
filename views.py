@@ -76,16 +76,25 @@ def _sync_company_id_sequence():
     _sync_table_id_sequence('company')
 
 
+def _quote_sql_identifier(identifier):
+    """Quote trusted SQL identifiers after strict validation."""
+    identifier = str(identifier or '')
+    if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', identifier):
+        raise ValueError(f"Invalid SQL identifier: {identifier}")
+    return '"' + identifier.replace('"', '""') + '"'
+
+
 def _sync_table_id_sequence(table_name):
     """إعادة مزامنة sequence الخاص بجدول يملك عمود id تلقائي."""
     try:
+        quoted_table = _quote_sql_identifier(table_name)
         db.session.execute(text(f"""
             SELECT setval(
-                pg_get_serial_sequence('{table_name}', 'id'),
-                COALESCE((SELECT MAX(id) FROM {table_name}), 1),
+                pg_get_serial_sequence(:table_name, 'id'),
+                COALESCE((SELECT MAX(id) FROM {quoted_table}), 1),
                 true
             )
-        """))
+        """), {'table_name': table_name})
         db.session.flush()
     except Exception:
         db.session.rollback()

@@ -38,8 +38,13 @@ def _sanitize_identifier(name: str) -> str:
     return name
 
 
-def _sanitize_identifier_list(names):
-    return [_sanitize_identifier(n) for n in names]
+def _quote_identifier(name: str) -> str:
+    safe_name = _sanitize_identifier(name)
+    return '"' + safe_name.replace('"', '""') + '"'
+
+
+def _quote_identifier_list(names):
+    return [_quote_identifier(n) for n in names]
 
 def analyze_indexes(engine):
     """Analyze indexes to find redundant or low-cardinality ones."""
@@ -112,19 +117,19 @@ def analyze_indexes(engine):
             try:
                 try:
                     # Validate table and column identifiers before interpolating into SQL
-                    _sanitize_identifier(table)
-                    safe_cols = _sanitize_identifier_list(cols1)
+                    safe_table = _quote_identifier(table)
+                    safe_cols = _quote_identifier_list(cols1)
                 except Exception:
                     # Skip tables/indexes with unsafe names
                     continue
 
                 with engine.connect() as conn:
-                    total_rows = conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar()
+                    total_rows = conn.execute(text(f"SELECT COUNT(*) FROM {safe_table}")).scalar()
                     if total_rows and total_rows > 1000:
                         # Handle both single and multi-column indexes for cardinality
                         cols_str = ", ".join(safe_cols)
                         # Use subquery for distinct count on multiple columns which works in SQLite
-                        distinct_query = f"SELECT COUNT(*) FROM (SELECT DISTINCT {cols_str} FROM {table})"
+                        distinct_query = f"SELECT COUNT(*) FROM (SELECT DISTINCT {cols_str} FROM {safe_table})"
                         distinct_count = conn.execute(text(distinct_query)).scalar()
 
                         if distinct_count is not None and (distinct_count / total_rows) < 0.01:
@@ -188,23 +193,23 @@ def perform_repair_job(job_id, app, safe_mode, optimize_table, admin_username):
                 columns = idx_info['columns']
 
                 try:
-                    _sanitize_identifier(table)
-                    _sanitize_identifier(index)
-                    safe_columns = _sanitize_identifier_list(columns)
+                    safe_table = _quote_identifier(table)
+                    safe_index = _quote_identifier(index)
+                    safe_columns = _quote_identifier_list(columns)
                 except Exception as e:
                     with job_lock:
                         maintenance_jobs[job_id]['error'] = f"Skipping invalid identifiers: {e}"
                     continue
 
                 col_str = ", ".join(safe_columns)
-                recovery_sql = f"CREATE INDEX {index} ON {table} ({col_str});"
+                recovery_sql = f"CREATE INDEX {safe_index} ON {safe_table} ({col_str});"
                 recovery_script.append(recovery_sql)
 
                 try:
                     with job_lock:
                         maintenance_jobs[job_id]['message'] = f"Dropping index {index} on {table}..."
 
-                    drop_sql = f"DROP INDEX IF EXISTS {index}"
+                    drop_sql = f"DROP INDEX IF EXISTS {safe_index}"
                     with engine.connect() as conn:
                          conn.execute(text(drop_sql))
                          conn.commit()
