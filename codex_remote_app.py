@@ -56,14 +56,15 @@ try:
     from config import Config
 except ImportError:
     class Config:
-        SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
+        # Fallback config for environments where config.py isn't available.
+        SECRET_KEY = os.environ.get('SECRET_KEY') or os.environ.get('FLASK_SECRET') or 'dev-secret-key'
         SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
         SQLALCHEMY_TRACK_MODIFICATIONS = False
         UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', os.path.join(os.getcwd(), 'uploads'))
-        STATIC_FOLDER = os.path.join(os.getcwd(), 'static')
-        LOGO_FOLDER = os.path.join('static', 'logos')
-        AD_IMAGES_FOLDER = os.path.join('static', 'ad_images')
-        APK_FOLDER = os.path.join('static', 'apk')
+        STATIC_FOLDER = os.environ.get('STATIC_FOLDER', os.path.join(os.getcwd(), 'static'))
+        LOGO_FOLDER = os.environ.get('LOGO_FOLDER', os.path.join('static', 'logos'))
+        AD_IMAGES_FOLDER = os.environ.get('AD_IMAGES_FOLDER', os.path.join('static', 'ad_images'))
+        APK_FOLDER = os.environ.get('APK_FOLDER', os.path.join('static', 'apk'))
 
 # استيراد الدوال المساعدة
 from utils import update_database_schema, load_user, inject_global_data, ADMIN_ROLES, ALL_PERMISSIONS

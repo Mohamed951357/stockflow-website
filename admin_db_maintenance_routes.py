@@ -9,6 +9,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import text, inspect
 from models import db, DbMaintenanceLog, SearchLog
 from utils import check_permission
+import re
 
 admin_db_maintenance_bp = Blueprint('admin_db_maintenance', __name__)
 
@@ -24,6 +25,21 @@ def get_db_size():
         if os.path.exists(db_path):
             return os.path.getsize(db_path) / (1024 * 1024)
     return 0
+
+
+def _is_valid_identifier(name: str) -> bool:
+    """Return True if `name` is a safe SQL identifier (alphanumeric and underscore)."""
+    return bool(re.match(r'^[A-Za-z0-9_]+$', str(name)))
+
+
+def _sanitize_identifier(name: str) -> str:
+    if not _is_valid_identifier(name):
+        raise ValueError(f"Invalid SQL identifier: {name}")
+    return name
+
+
+def _sanitize_identifier_list(names):
+    return [_sanitize_identifier(n) for n in names]
 
 def analyze_indexes(engine):
     """Analyze indexes to find redundant or low-cardinality ones."""
@@ -94,15 +110,23 @@ def analyze_indexes(engine):
                 continue
 
             try:
+                try:
+                    # Validate table and column identifiers before interpolating into SQL
+                    _sanitize_identifier(table)
+                    safe_cols = _sanitize_identifier_list(cols1)
+                except Exception:
+                    # Skip tables/indexes with unsafe names
+                    continue
+
                 with engine.connect() as conn:
                     total_rows = conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar()
-                    if total_rows > 1000:
+                    if total_rows and total_rows > 1000:
                         # Handle both single and multi-column indexes for cardinality
-                        cols_str = ", ".join(cols1)
+                        cols_str = ", ".join(safe_cols)
                         # Use subquery for distinct count on multiple columns which works in SQLite
                         distinct_query = f"SELECT COUNT(*) FROM (SELECT DISTINCT {cols_str} FROM {table})"
                         distinct_count = conn.execute(text(distinct_query)).scalar()
-                        
+
                         if distinct_count is not None and (distinct_count / total_rows) < 0.01:
                             redundant_indexes.append({
                                 'table': table,
@@ -162,22 +186,31 @@ def perform_repair_job(job_id, app, safe_mode, optimize_table, admin_username):
                 table = idx_info['table']
                 index = idx_info['index']
                 columns = idx_info['columns']
-                
-                col_str = ", ".join(columns)
+
+                try:
+                    _sanitize_identifier(table)
+                    _sanitize_identifier(index)
+                    safe_columns = _sanitize_identifier_list(columns)
+                except Exception as e:
+                    with job_lock:
+                        maintenance_jobs[job_id]['error'] = f"Skipping invalid identifiers: {e}"
+                    continue
+
+                col_str = ", ".join(safe_columns)
                 recovery_sql = f"CREATE INDEX {index} ON {table} ({col_str});"
                 recovery_script.append(recovery_sql)
-                
+
                 try:
                     with job_lock:
                         maintenance_jobs[job_id]['message'] = f"Dropping index {index} on {table}..."
-                    
+
                     drop_sql = f"DROP INDEX IF EXISTS {index}"
                     with engine.connect() as conn:
                          conn.execute(text(drop_sql))
                          conn.commit()
-                    
+
                     deleted_indexes.append(idx_info)
-                    
+
                 except Exception as e:
                     with job_lock:
                         maintenance_jobs[job_id]['error'] = str(e)

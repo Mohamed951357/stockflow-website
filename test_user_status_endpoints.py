@@ -3,6 +3,7 @@ Test script for new user status and typing indicator endpoints
 """
 import requests
 import json
+import os
 from datetime import datetime, timedelta
 
 # Configuration
@@ -11,8 +12,8 @@ TEST_USER_ID = 1  # Replace with actual user ID for testing
 
 # Test data
 test_credentials = {
-    "username": "test_company",  # Replace with actual username
-    "password": "test_password"   # Replace with actual password
+    "username": os.environ.get('TEST_API_USERNAME', 'test_company'),
+    "password": os.environ.get('TEST_API_PASSWORD', '')  # Provide via environment for safety
 }
 
 def test_endpoints():

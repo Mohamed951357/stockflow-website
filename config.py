@@ -4,8 +4,9 @@ from pathlib import Path
 from datetime import timedelta
 
 class Config:
-    # Use a static SECRET_KEY to prevent session invalidation on app restarts
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'super-secret-stockflow-key-2026-production-fixed'
+    # Load SECRET_KEY from environment; do NOT hardcode production secrets in source.
+    # If not provided, generate a temporary key for development only.
+    SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
     _default_sqlite_path = str(Path(__file__).resolve().parent.joinpath('site.db')).replace('\\', '/')
     _pa_sqlite_path = '/home/Bonuspharma1/db.sqlite3'
     if os.environ.get('DATABASE_URL'):
