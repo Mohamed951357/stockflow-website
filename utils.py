@@ -618,6 +618,7 @@ def _drop_company_username_uniques(db, inspector):
     """يفك أي unique قديم على company.username حتى يسمح بتشابه أسماء المستخدمين."""
     dialect = db.engine.dialect.name
 
+    changed = False
     if dialect == 'postgresql':
         for constraint in inspector.get_unique_constraints('company'):
             if constraint.get('column_names') == ['username'] and constraint.get('name'):
@@ -628,7 +629,7 @@ def _drop_company_username_uniques(db, inspector):
                         f"ALTER TABLE {_quote_identifier('company')} "
                         f"DROP CONSTRAINT IF EXISTS {_quote_identifier(constraint_name)}"
                     ))
-                    db.session.commit()
+                    changed = True
                 except Exception as e:
                     db.session.rollback()
                     print(f"Could not drop username unique constraint '{constraint_name}': {e}")
@@ -640,10 +641,15 @@ def _drop_company_username_uniques(db, inspector):
                 try:
                     print(f"Dropping old unique index on company.username: {index_name}")
                     db.session.execute(text(f"DROP INDEX IF EXISTS {_quote_identifier(index_name)}"))
-                    db.session.commit()
+                    changed = True
                 except Exception as e:
                     db.session.rollback()
                     print(f"Could not drop username unique index '{index_name}': {e}")
+        if changed:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
         return
 
     if dialect == 'sqlite':
@@ -656,10 +662,15 @@ def _drop_company_username_uniques(db, inspector):
                 try:
                     print(f"Dropping old unique index on company.username: {index_name}")
                     db.session.execute(text(f"DROP INDEX IF EXISTS {_quote_identifier(index_name)}"))
-                    db.session.commit()
+                    changed = True
                 except Exception as e:
                     db.session.rollback()
                     print(f"Could not drop username unique index '{index_name}': {e}")
+        if changed:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
         return
 
     for index in inspector.get_indexes('company'):
@@ -668,10 +679,15 @@ def _drop_company_username_uniques(db, inspector):
             try:
                 print(f"Dropping old unique index on company.username: {index_name}")
                 db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} DROP INDEX {_quote_identifier(index_name)}"))
-                db.session.commit()
+                changed = True
             except Exception as e:
                 db.session.rollback()
                 print(f"Could not drop username unique index '{index_name}': {e}")
+    if changed:
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
 
 # دالة تحديث قاعدة البيانات
