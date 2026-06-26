@@ -9,6 +9,5 @@ User=root
 Group=root
 WorkingDirectory=/var/www/stock_flow
 EnvironmentFile=/var/www/stock_flow/.env
-Environment=TELEGRAM_BOT_TOKEN=8000825371:AAHpWNnggP_DrtM-zp21_O6Xt0g80wdWtwc
-Environment=TELEGRAM_STORAGE_CHAT_ID=-1003752537433
+# TELEGRAM_BOT_TOKEN and TELEGRAM_STORAGE_CHAT_ID must be provided by the env file.
 ExecStart=/var/www/stock_flow/venv/bin/python /var/www/stock_flow/stockflow_telegram_backup.py

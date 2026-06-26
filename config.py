@@ -63,3 +63,8 @@ class Config:
     MAX_CONTENT_LENGTH = 64 * 1024 * 1024  # 64MB max file size
     ALLOWED_LOGO_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg'}
     ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'html', 'htm'}
+
+    # Third-party upload keys must stay in the environment, never in browser JavaScript.
+    IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY')
+    MESSAGE_IMAGE_UPLOAD_MAX_BYTES = int(os.environ.get('MESSAGE_IMAGE_UPLOAD_MAX_BYTES') or (8 * 1024 * 1024))
+    IMGBB_IMAGE_EXPIRATION_SECONDS = int(os.environ.get('IMGBB_IMAGE_EXPIRATION_SECONDS') or (30 * 24 * 60 * 60))

@@ -38,6 +38,7 @@ build/
 # --- ملفات البيئة والإعدادات الحساسة ---
 .env
 .env.*
+!.env.example
 config_local.py
 secrets.py
 *.key

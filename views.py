@@ -20,6 +20,7 @@ from sqlalchemy import extract
 import random
 import threading
 import secrets
+import requests
 
 # استيراد db وجميع النماذج
 from models import (
@@ -53,6 +54,17 @@ from utils import (
 
 # تعريف المنطقة الزمنية للقاهرة
 CAIRO_TIMEZONE = pytz.timezone('Africa/Cairo')
+
+# Private-message uploads are stricter than ad images; never allow HTML/SVG here.
+MESSAGE_IMAGE_UPLOAD_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+MESSAGE_IMAGE_MIME_TYPES = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
+MESSAGE_IMAGE_MAGIC_HEADERS = {
+    'png': (b'\x89PNG\r\n\x1a\n',),
+    'jpg': (b'\xff\xd8\xff',),
+    'jpeg': (b'\xff\xd8\xff',),
+    'gif': (b'GIF87a', b'GIF89a'),
+    'webp': (b'RIFF',),
+}
 
 AUTO_STOCK_HISTORY_CLEANUP_LAST_RUN_KEY = 'auto_stock_history_cleanup_last_run'
 AUTO_STOCK_HISTORY_VACUUM_LAST_RUN_KEY = 'auto_stock_history_vacuum_last_run'
@@ -178,6 +190,38 @@ def _coerce_int_or_default(value, default):
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _is_allowed_private_message_image(file_storage):
+    """Validate message images by extension and file signature before proxy upload."""
+    filename = secure_filename(file_storage.filename or '')
+    if '.' not in filename:
+        return False
+
+    extension = filename.rsplit('.', 1)[1].lower()
+    if extension not in MESSAGE_IMAGE_UPLOAD_EXTENSIONS:
+        return False
+
+    mimetype = (file_storage.mimetype or '').lower()
+    if mimetype and mimetype not in MESSAGE_IMAGE_MIME_TYPES:
+        return False
+
+    stream = file_storage.stream
+    try:
+        current_position = stream.tell()
+    except Exception:
+        current_position = None
+
+    header = stream.read(32)
+    if current_position is not None:
+        stream.seek(current_position)
+    else:
+        stream.seek(0)
+
+    if extension == 'webp':
+        return header.startswith(b'RIFF') and header[8:12] == b'WEBP'
+
+    return any(header.startswith(signature) for signature in MESSAGE_IMAGE_MAGIC_HEADERS.get(extension, ()))
 
 
 VISITOR_COOKIE_NAME = 'stockflow_visitor_id'
@@ -4409,6 +4453,63 @@ def register_views(app):
             traceback.print_exc()
             return jsonify({'error': str(e)}), 500
 
+    @app.route('/api/messages/upload-image', methods=['POST'])
+    @login_required
+    def upload_private_message_image():
+        """Proxy private-message image uploads so third-party API keys never reach the browser."""
+        if session.get('user_type') not in {'admin', 'company'}:
+            return jsonify({'success': False, 'message': 'غير مصرح لك بالوصول'}), 403
+
+        api_key = (current_app.config.get('IMGBB_API_KEY') or '').strip()
+        if not api_key:
+            current_app.logger.error("IMGBB_API_KEY is not configured for private-message image uploads")
+            return jsonify({'success': False, 'message': 'خدمة رفع الصور غير مفعلة حالياً'}), 503
+
+        image_file = request.files.get('image') or request.files.get('file')
+        if not image_file or not image_file.filename:
+            return jsonify({'success': False, 'message': 'لم يتم اختيار صورة'}), 400
+
+        max_bytes = current_app.config.get('MESSAGE_IMAGE_UPLOAD_MAX_BYTES', 8 * 1024 * 1024)
+        if request.content_length and request.content_length > max_bytes:
+            return jsonify({'success': False, 'message': 'حجم الصورة أكبر من المسموح'}), 413
+
+        if not _is_allowed_private_message_image(image_file):
+            return jsonify({'success': False, 'message': 'نوع الصورة غير مسموح'}), 400
+
+        safe_filename = secure_filename(image_file.filename)
+        expiration_seconds = str(current_app.config.get('IMGBB_IMAGE_EXPIRATION_SECONDS', 30 * 24 * 60 * 60))
+
+        try:
+            response = requests.post(
+                'https://api.imgbb.com/1/upload',
+                data={
+                    'key': api_key,
+                    'expiration': expiration_seconds,
+                },
+                files={
+                    'image': (safe_filename, image_file.stream, image_file.mimetype or 'application/octet-stream'),
+                },
+                timeout=(5, 30),
+            )
+            payload = response.json()
+        except requests.RequestException:
+            current_app.logger.exception("ImgBB request failed during private-message image upload")
+            return jsonify({'success': False, 'message': 'فشل الاتصال بخدمة رفع الصور'}), 502
+        except ValueError:
+            current_app.logger.exception("ImgBB returned a non-JSON response during private-message image upload")
+            return jsonify({'success': False, 'message': 'تعذر قراءة رد خدمة رفع الصور'}), 502
+
+        image_url = (payload.get('data') or {}).get('url') or (payload.get('data') or {}).get('display_url')
+        if not response.ok or not payload.get('success') or not image_url:
+            current_app.logger.warning(
+                "ImgBB upload failed with status %s and response %s",
+                response.status_code,
+                {key: payload.get(key) for key in ('status_code', 'error', 'success')},
+            )
+            return jsonify({'success': False, 'message': 'فشل رفع الصورة'}), 502
+
+        return jsonify({'success': True, 'url': image_url})
+
     @app.route('/api/chat/upload', methods=['POST'])
     @login_required
     def upload_chat_attachment():
@@ -4627,7 +4728,7 @@ def register_views(app):
                     flash(f'تم إرسال الرسالة إلى {created_count} شركة بنجاح.', 'success')
                 except Exception as e:
                     db.session.rollback()
-                    logger.error(f'خطأ في إرسال رسالة من لوحة الإدارة: {e}', exc_info=True)
+                    current_app.logger.error(f'خطأ في إرسال رسالة من لوحة الإدارة: {e}', exc_info=True)
                     flash('حدث خطأ أثناء إرسال الرسائل.', 'error')
 
                 return redirect(url_for('admin_private_messages'))
@@ -4659,7 +4760,7 @@ def register_views(app):
                     flash(status_text, 'success')
                 except Exception as e:
                     db.session.rollback()
-                    logger.error(f'خطأ في تغيير حالة حظر المراسلات: {e}', exc_info=True)
+                    current_app.logger.error(f'خطأ في تغيير حالة حظر المراسلات: {e}', exc_info=True)
                     flash('حدث خطأ أثناء تحديث حالة حظر المراسلات.', 'error')
 
                 return redirect(url_for('admin_private_messages'))
@@ -8361,7 +8462,7 @@ def register_views(app):
             return jsonify({'success': True}), 200
         except Exception as e:
             db.session.rollback()
-            logger.error(f'خطأ في إرسال رسالة من تقرير طلبات المستخدمين: {e}', exc_info=True)
+            current_app.logger.error(f'خطأ في إرسال رسالة من تقرير طلبات المستخدمين: {e}', exc_info=True)
             return jsonify({'success': False, 'error': 'حدث خطأ أثناء إرسال الرسالة'}), 500
     
     @app.route('/add_blocked_product', methods=['POST'])
@@ -10004,7 +10105,7 @@ def register_views(app):
             return jsonify({'success': True}), 200
         except Exception as e:
             db.session.rollback()
-            logger.error(f'خطأ في إرسال رسالة من تقرير طلبات توبي: {e}', exc_info=True)
+            current_app.logger.error(f'خطأ في إرسال رسالة من تقرير طلبات توبي: {e}', exc_info=True)
             return jsonify({'success': False, 'error': 'حدث خطأ أثناء إرسال الرسالة'}), 500
 
     @app.route('/admin/companies_activity_report')
