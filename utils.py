@@ -783,7 +783,7 @@ def update_database_schema(app, db):
                         db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} ADD COLUMN IF NOT EXISTS {_quote_identifier(safe_col)} {col_type}"))
                     else:
                         db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
-                    db.session.commit()
+                    company_changed = True
                     print(f"{col_name} column added successfully!")
 
             if 'subscription_plan' not in columns:
@@ -819,15 +819,23 @@ def update_database_schema(app, db):
                         print(f"Skipping invalid trial column {col_name}: {e}")
                         continue
                     db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
-                    db.session.commit()
+                    company_changed = True
                     print(f"{col_name} column added successfully!")
+
+            # Commit once for company-related DDL changes
+            if company_changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
         if inspector.has_table('community_post'):
             cp_columns = [col['name'] for col in inspector.get_columns('community_post')]
+            community_post_changed = False
             if 'is_anonymous' not in cp_columns:
                 print("Adding is_anonymous column to community_post table...")
                 db.session.execute(text('ALTER TABLE "community_post" ADD COLUMN "is_anonymous" BOOLEAN DEFAULT 0'))
-                db.session.commit()
+                community_post_changed = True
                 print("is_anonymous column added successfully!")
             community_post_expected_cols = {
                 'audio_file_id': 'VARCHAR(255)',
@@ -842,12 +850,17 @@ def update_database_schema(app, db):
                         print(f"Skipping invalid community_post column {col_name}: {e}")
                         continue
                     db.session.execute(text(f"ALTER TABLE {_quote_identifier('community_post')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
-                    db.session.commit()
+                    community_post_changed = True
                     print(f"{col_name} column added successfully!")
+            if community_post_changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
         if inspector.has_table('community_message'):
             cm_columns = [col['name'] for col in inspector.get_columns('community_message')]
-            
+            cm_changed = False
             # قائمة بكافة الأعمدة المتوقع وجودها في جدول community_message
             cm_expected_cols = {
                 'company_id': 'INTEGER',
@@ -863,11 +876,16 @@ def update_database_schema(app, db):
                     try:
                         safe_col = _sanitize_identifier(col_name)
                         db.session.execute(text(f"ALTER TABLE {_quote_identifier('community_message')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
-                        db.session.commit()
+                        cm_changed = True
                         print(f"{col_name} column added successfully!")
                     except Exception as e:
                         print(f"Error adding {col_name}: {e}")
                         db.session.rollback()
+            if cm_changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
         if inspector.has_table('warehouse'):
             # إعادة قراءة أسماء الأعمدة قبل كل إضافة حتى لا نعتمد على قائمة قديمة
@@ -883,6 +901,7 @@ def update_database_schema(app, db):
                 ('last_process_filename', 'VARCHAR(255)'),
                 ('last_process_data_rows', 'INTEGER DEFAULT 0'),
             ]
+            warehouse_changed = False
             for col_name, col_type in warehouse_columns_to_ensure:
                 fresh_insp = inspect(db.engine)
                 existing = {c['name'] for c in fresh_insp.get_columns('warehouse')}
@@ -896,37 +915,54 @@ def update_database_schema(app, db):
                         print(f"Skipping invalid warehouse column {col_name}: {e}")
                         continue
                     db.session.execute(text(f"ALTER TABLE {_quote_identifier('warehouse')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
-                    db.session.commit()
+                    warehouse_changed = True
                     print(f"{col_name} column added successfully!")
                 except Exception as w_e:
                     print(f"Error adding warehouse column {col_name}: {w_e}")
                     db.session.rollback()
+            if warehouse_changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
         if inspector.has_table('product_item'):
             product_item_columns = {col['name'] for col in inspector.get_columns('product_item')}
+            product_item_changed = False
             for col_name, col_type in {'item_code': 'VARCHAR(100)', 'discount': 'VARCHAR(100)'}.items():
                 if col_name not in product_item_columns:
                     try:
                         print(f"Adding {col_name} column to product_item table...")
                         safe_col = _sanitize_identifier(col_name)
                         db.session.execute(text(f"ALTER TABLE {_quote_identifier('product_item')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
-                        db.session.commit()
+                        product_item_changed = True
                     except Exception as p_e:
                         print(f"Error adding product_item column {col_name}: {p_e}")
                         db.session.rollback()
+            if product_item_changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
         if inspector.has_table('product_stock_history'):
             product_stock_history_columns = {col['name'] for col in inspector.get_columns('product_stock_history')}
+            psh_changed = False
             for col_name, col_type in {'item_code': 'VARCHAR(100)', 'discount': 'VARCHAR(100)'}.items():
                 if col_name not in product_stock_history_columns:
                     try:
                         print(f"Adding {col_name} column to product_stock_history table...")
                         safe_col = _sanitize_identifier(col_name)
                         db.session.execute(text(f"ALTER TABLE {_quote_identifier('product_stock_history')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
-                        db.session.commit()
+                        psh_changed = True
                     except Exception as h_e:
                         print(f"Error adding product_stock_history column {col_name}: {h_e}")
                         db.session.rollback()
+            if psh_changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
         tables_to_check = ['admin', 'company', 'product_file', 'appointment', 'notification', 
                            'search_log', 'favorite_product', 'system_setting', 'product_item', 
