@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include '_pwa_meta.html' %}
+    <title>تثبيت StockFlow على iPhone</title>
+    <script>
+        !function(){
+            const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+            if (isStandalone) {
+                window.location.replace("{{ url_for('login') }}");
+            }
+        }();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue: #1243C4;
+            --blue-dark: #0A2DA0;
+            --ink: #111827;
+            --muted: #5F6B7A;
+            --line: rgba(17, 24, 39, .09);
+            --soft: #F5F7FB;
+            --green: #12A66A;
+            --red: #EF3F32;
+            --shadow: 0 22px 60px rgba(12, 27, 94, .18);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            overflow-x: hidden;
+            background: #EEF3FF;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: 'Cairo', sans-serif;
+            color: var(--ink);
+            direction: rtl;
+        }
+
+        .page {
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: max(22px, env(safe-area-inset-top)) 16px max(22px, env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background:
+                radial-gradient(circle at top right, rgba(18, 67, 196, .16), transparent 34%),
+                linear-gradient(180deg, #F9FBFF 0%, #EAF0FF 100%);
+        }
+
+        .shell {
+            width: min(100%, 880px);
+            display: grid;
+            grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+            gap: 22px;
+            align-items: stretch;
+        }
+
+        .intro,
+        .steps-panel {
+            background: rgba(255, 255, 255, .94);
+            border: 1px solid rgba(255, 255, 255, .75);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .intro {
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: var(--blue);
+            display: grid;
+            place-items: center;
+            box-shadow: 0 14px 28px rgba(18, 67, 196, .28);
+            overflow: hidden;
+        }
+
+        .brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .brand-copy strong {
+            display: block;
+            color: var(--blue);
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1.15;
+        }
+
+        .brand-copy span {
+            color: var(--muted);
+            font-size: .82rem;
+            font-weight: 700;
+        }
+
+        h1 {
+            margin-top: 10px;
+            color: var(--ink);
+            font-size: clamp(1.85rem, 4vw, 3.05rem);
+            line-height: 1.18;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        .subtitle {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.9;
+            font-weight: 700;
+        }
+
+        .safari-note {
+            display: none;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(239, 63, 50, .08);
+            color: #A83227;
+            border: 1px solid rgba(239, 63, 50, .16);
+            font-size: .9rem;
+            line-height: 1.8;
+            font-weight: 800;
+        }
+
+        .safari-note.on {
+            display: block;
+        }
+
+        .actions {
+            display: grid;
+            gap: 10px;
+        }
+
+        .main-action,
+        .ghost-action {
+            min-height: 48px;
+            border: 0;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            text-decoration: none;
+            font-family: inherit;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        .main-action {
+            color: #fff;
+            background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+            box-shadow: 0 14px 28px rgba(18, 67, 196, .24);
+        }
+
+        .ghost-action {
+            color: var(--blue);
+            background: rgba(18, 67, 196, .08);
+        }
+
+        .main-action:active,
+        .ghost-action:active {
+            transform: scale(.98);
+        }
+
+        .steps-panel {
+            padding: 18px;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            gap: 14px;
+            padding: 18px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .step:last-child {
+            border-bottom: 0;
+        }
+
+        .step-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            background: var(--blue);
+            box-shadow: 0 12px 24px rgba(18, 67, 196, .18);
+            font-size: 1.18rem;
+        }
+
+        .step:nth-child(2) .step-icon {
+            background: var(--green);
+        }
+
+        .step:nth-child(3) .step-icon {
+            background: #1F2937;
+        }
+
+        .step:nth-child(4) .step-icon {
+            background: var(--red);
+        }
+
+        .step h2 {
+            font-size: 1.02rem;
+            line-height: 1.45;
+            font-weight: 900;
+            color: var(--ink);
+            letter-spacing: 0;
+        }
+
+        .step p {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: .9rem;
+            line-height: 1.65;
+            font-weight: 700;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .english {
+            display: block;
+            margin-top: 3px;
+            color: #374151;
+            direction: ltr;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-size: .86rem;
+            line-height: 1.55;
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                align-items: flex-start;
+            }
+
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .intro,
+            .steps-panel,
+            .intro {
+                padding: 22px;
+            }
+
+            .step {
+                grid-template-columns: 48px minmax(0, 1fr);
+                gap: 12px;
+                padding: 16px 6px;
+            }
+
+            .step-icon {
+                width: 46px;
+                height: 46px;
+                border-radius: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <section class="shell" id="guideShell" aria-label="iPhone install guide">
+            <div class="intro">
+                <div>
+                    <div class="brand">
+                        <div class="brand-icon">
+                            <img src="{{ url_for('static', filename='icons/apple-touch-icon-safe.png') }}" alt="StockFlow">
+                        </div>
+                        <div class="brand-copy">
+                            <strong>StockFlow</strong>
+                            <span>iPhone Home Screen</span>
+                        </div>
+                    </div>
+                    <h1>ثبّت StockFlow على شاشة الآيفون</h1>
+                    <p class="subtitle">
+                        على iPhone التثبيت بيتم من Safari. اتبع الخطوات دي مرة واحدة، وبعدها افتح النظام من الأيقونة مباشرة.
+                        ده حل مؤقت لتسهيل الاستخدام لحد ما نرفعه قريباً على App Store.
+                    </p>
+                </div>
+
+                <div class="safari-note" id="safariNote">
+                    لو فاتح الرابط من WhatsApp أو Facebook أو Chrome، افتحه في Safari الأول.
+                    <span class="english">If this page is open inside WhatsApp, Facebook, or Chrome, open it in Safari first.</span>
+                </div>
+
+                <div class="actions">
+                    <a class="main-action" href="{{ url_for('login') }}">
+                        <i class="fas fa-arrow-right"></i>
+                        رجوع لتسجيل الدخول
+                    </a>
+                    <button class="ghost-action" type="button" id="copyLinkBtn">
+                        <i class="fas fa-link"></i>
+                        نسخ رابط الموقع
+                    </button>
+                </div>
+            </div>
+
+            <div class="steps-panel">
+                <article class="step">
+                    <div class="step-icon"><i class="fab fa-safari"></i></div>
+                    <div>
+                        <h2>١. افتح الصفحة من Safari</h2>
+                        <p>لو أنت داخل من متصفح تاني، انسخ الرابط وافتحه في Safari.</p>
+                        <span class="english">1. Open this page in Safari. If you are using another browser, copy the link and open it in Safari.</span>
+                    </div>
+                </article>
+
+                <article class="step">
+                    <div class="step-icon"><i class="fas fa-arrow-up-from-bracket"></i></div>
+                    <div>
+                        <h2>٢. افتح قائمة المتصفح من الثلاث نقط</h2>
+                        <p>هتلاقي ٣ نقط في شريط المتصفح تحت أو فوق حسب إصدار الآيفون. اضغط عليهم وافتح قائمة المشاركة.</p>
+                        <span class="english">2. Tap the three dots in the browser bar, then open the share menu.</span>
+                    </div>
+                </article>
+
+                <article class="step">
+                    <div class="step-icon"><i class="fas fa-square-plus"></i></div>
+                    <div>
+                        <h2>٣. اختار إضافة إلى الشاشة الرئيسية (Add to Home Screen)</h2>
+                        <p>لو مش ظاهرة فورًا، اسحب قائمة المشاركة لتحت لحد ما تظهر.</p>
+                        <span class="english">3. Choose Add to Home Screen. If you do not see it, scroll down inside the share menu.</span>
+                    </div>
+                </article>
+
+                <article class="step">
+                    <div class="step-icon"><i class="fas fa-check"></i></div>
+                    <div>
+                        <h2>٤. اضغط Add / إضافة</h2>
+                        <p>هتلاقي أيقونة StockFlow على الشاشة الرئيسية وتفتح منها بعد كده.</p>
+                        <span class="english">4. Tap Add. The StockFlow icon will appear on your Home Screen.</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        !function(){
+            const ua = window.navigator.userAgent || '';
+            const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isSafari = /^((?!chrome|android|crios|fxios|edgios|fbav|instagram|whatsapp).)*safari/i.test(ua);
+            const note = document.getElementById('safariNote');
+            if (note && isIOS && !isSafari) note.classList.add('on');
+        }();
+
+        document.getElementById('copyLinkBtn').addEventListener('click', async function(){
+            const btn = this;
+            const original = btn.innerHTML;
+            const link = window.location.origin + "{{ url_for('login') }}";
+            try {
+                await navigator.clipboard.writeText(link);
+                btn.innerHTML = '<i class="fas fa-check"></i> تم نسخ الرابط';
+                setTimeout(function(){ btn.innerHTML = original; }, 1600);
+            } catch (err) {
+                window.prompt('انسخ الرابط وافتحه في Safari', link);
+            }
+        });
+    </script>
+</body>
+</html>

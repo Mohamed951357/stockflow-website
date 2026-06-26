@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الاشتراكات - لوحة الإدارة</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #f4f6fb; font-family: 'Cairo', sans-serif; }
+        .navbar { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+        .navbar-brand, .nav-link { color: #333 !important; font-weight: 700; }
+        .page-header {
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+            color: #333; border-radius: 16px; padding: 2rem 2.5rem;
+            margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(247,151,30,.25);
+        }
+        .stat-card {
+            background: white; border-radius: 14px; padding: 1.4rem;
+            box-shadow: 0 3px 12px rgba(0,0,0,.07); text-align: center;
+            transition: transform .2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-icon {
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin: 0 auto 0.75rem;
+        }
+        .section-title {
+            font-size: 1.1rem; font-weight: 700; padding: 0.5rem 1rem;
+            border-radius: 8px; margin-bottom: 1rem; display: inline-flex;
+            align-items: center; gap: 0.5rem;
+        }
+        .sub-card {
+            background: white; border-radius: 12px; padding: 1.1rem 1.4rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 0.75rem;
+            border-right: 5px solid #28a745; display: flex;
+            justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+        }
+        .sub-card.max { border-right-color: #7c3aed; background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%); }
+        .sub-card.expired { border-right-color: #dc3545; opacity: .85; }
+        .sub-card.warning { border-right-color: #ffc107; }
+        .company-name { font-weight: 700; font-size: 1rem; }
+        .badge-days {
+            font-size: .78rem; padding: .35em .7em;
+            border-radius: 20px; font-weight: 600;
+        }
+        .badge-days.ok { background: #d4edda; color: #155724; }
+        .badge-days.warn { background: #fff3cd; color: #856404; }
+        .badge-days.exp { background: #f8d7da; color: #721c24; }
+        .plan-pill {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: .25rem .65rem; border-radius: 999px;
+            font-size: .75rem; font-weight: 700;
+            background: #ede9fe; color: #5b21b6;
+        }
+        .meta { font-size: .82rem; color: #666; }
+        .empty-state { text-align: center; padding: 3rem; color: #aaa; }
+    </style>
+    <link href="{{ url_for('static', filename='css/admin_identity.css') }}" rel="stylesheet">
+</head>
+<body>
+{% include '_admin_navbar.html' %}
+
+<div class="container mt-4">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h3 class="mb-1"><i class="fas fa-crown me-2"></i>إدارة الاشتراكات المميزة</h3>
+                <p class="mb-0 opacity-75">عرض جميع الشركات المشتركة وتتبع حالة اشتراكاتها</p>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge bg-dark fs-6">{{ active_subs|length }} مشترك نشط</span>
+                <span class="badge bg-light text-dark fs-6">{{ max_subs|length }} ماكس</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        {% set active_count = active_subs|length %}
+        {% set max_count = max_subs|length %}
+        {% set expiring_soon = active_subs|selectattr('_days_left', 'defined')|selectattr('_days_left', 'lt', 15)|list|length %}
+        {% set expired_count = expired_subs|length %}
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#d4edda; color:#28a745;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h4 class="text-success mb-0">{{ active_count }}</h4>
+                <small class="text-muted">اشتراك نشط</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#ede9fe; color:#7c3aed;">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <h4 class="mb-0" style="color:#7c3aed;">{{ max_count }}</h4>
+                <small class="text-muted">اشتراك ماكس</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fff3cd; color:#856404;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h4 class="text-warning mb-0">{{ expiring_soon }}</h4>
+                <small class="text-muted">تنتهي خلال 15 يوم</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#f8d7da; color:#dc3545;">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <h4 class="text-danger mb-0">{{ expired_count }}</h4>
+                <small class="text-muted">اشتراك منتهٍ (آخر 50)</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Max Subscriptions -->
+    <div class="mb-4">
+        <div class="section-title text-white" style="background:#7c3aed;">
+            <i class="fas fa-gem"></i> اشتراكات الماكس ({{ max_subs|length }})
+        </div>
+        {% if max_subs %}
+            {% for c in max_subs %}
+            <div class="sub-card max">
+                <div>
+                    <div class="company-name">
+                        <i class="fas fa-building me-1 text-muted"></i>{{ c.company_name }}
+                        <span class="plan-pill ms-2"><i class="fas fa-gem"></i> MAX</span>
+                    </div>
+                    <div class="meta mt-1">
+                        <i class="fas fa-user me-1"></i> {{ c.username }}
+                        {% if c.phone %}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-phone me-1"></i> {{ c.phone }}
+                        {% endif %}
+                        {% if c.email %}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-envelope me-1"></i> {{ c.email }}
+                        {% endif %}
+                    </div>
+                    <div class="meta mt-1">
+                        <i class="fas fa-calendar-plus me-1"></i> بداية: {{ c._activation_fmt }}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-calendar-times me-1"></i> نهاية: {{ c._end_fmt }}
+                        {% if c._duration_days is not none %}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-hourglass-half me-1"></i> مدة الاشتراك: {{ c._duration_days }} يوم
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    {% if c._days_left is not none %}
+                        {% if c._is_expired %}
+                        <span class="badge-days exp"><i class="fas fa-times-circle me-1"></i>منتهي</span>
+                        {% elif c._days_left < 15 %}
+                        <span class="badge-days warn"><i class="fas fa-clock me-1"></i>{{ c._days_left }} يوم متبقي</span>
+                        {% else %}
+                        <span class="badge-days ok"><i class="fas fa-check me-1"></i>{{ c._days_left }} يوم متبقي</span>
+                        {% endif %}
+                    {% endif %}
+                    {% if c._subscription_plan != 'max' %}
+                    <span class="badge bg-secondary">محسوب من مدة 6 شهور</span>
+                    {% endif %}
+                    <a href="{{ url_for('manage_users') }}?search={{ c.company_name }}" class="btn btn-sm btn-outline-secondary" title="عرض في إدارة المستخدمين">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('toggle_premium', user_id=c.id) }}" class="d-inline"
+                          onsubmit="return confirm('هل تريد إلغاء اشتراك ماكس لـ {{ c.company_name }}؟')">
+                        <button class="btn btn-sm btn-danger" title="إلغاء الاشتراك">
+                            <i class="fas fa-ban me-1"></i>إلغاء
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="empty-state bg-white rounded shadow-sm">
+            <i class="fas fa-gem fa-3x mb-3"></i>
+            <p>لا توجد اشتراكات ماكس نشطة حالياً</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Active Subscriptions -->
+    <div class="mb-4">
+        <div class="section-title bg-success text-white">
+            <i class="fas fa-check-circle"></i> الاشتراكات النشطة ({{ active_subs|length }})
+        </div>
+        {% if active_subs %}
+            {% for c in active_subs %}
+            {% if c._days_left is not none and c._days_left < 15 %}
+            {% set card_class = 'warning' %}
+            {% elif c._is_expired %}
+            {% set card_class = 'expired' %}
+            {% else %}
+            {% set card_class = '' %}
+            {% endif %}
+            <div class="sub-card {{ card_class }}">
+                <div>
+                    <div class="company-name">
+                        <i class="fas fa-building me-1 text-muted"></i>{{ c.company_name }}
+                        {% if c._is_max_subscription %}
+                        <span class="plan-pill ms-2"><i class="fas fa-gem"></i> MAX</span>
+                        {% endif %}
+                    </div>
+                    <div class="meta mt-1">
+                        <i class="fas fa-calendar-plus me-1"></i> بداية: {{ c._activation_fmt }}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-calendar-times me-1"></i> نهاية: {{ c._end_fmt }}
+                        {% if c.invite_code_used %}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-ticket-alt me-1"></i> كود: <code>{{ c.invite_code_used }}</code>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    {% if c._days_left is not none %}
+                        {% if c._is_expired %}
+                        <span class="badge-days exp"><i class="fas fa-times-circle me-1"></i>منتهي</span>
+                        {% elif c._days_left < 15 %}
+                        <span class="badge-days warn"><i class="fas fa-clock me-1"></i>{{ c._days_left }} يوم متبقي</span>
+                        {% else %}
+                        <span class="badge-days ok"><i class="fas fa-check me-1"></i>{{ c._days_left }} يوم متبقي</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge-days ok"><i class="fas fa-infinity me-1"></i>دائم</span>
+                    {% endif %}
+                    <a href="{{ url_for('manage_users') }}?search={{ c.company_name }}" class="btn btn-sm btn-outline-secondary" title="عرض في إدارة المستخدمين">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('toggle_premium', user_id=c.id) }}" class="d-inline"
+                          onsubmit="return confirm('هل تريد إلغاء اشتراك {{ c.company_name }}؟')">
+                        <button class="btn btn-sm btn-danger" title="إلغاء الاشتراك">
+                            <i class="fas fa-ban me-1"></i>إلغاء
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-crown fa-3x mb-3"></i>
+            <p>لا توجد اشتراكات نشطة حالياً</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Expired Subscriptions -->
+    {% if expired_subs %}
+    <div class="mb-4">
+        <div class="section-title bg-danger text-white">
+            <i class="fas fa-times-circle"></i> الاشتراكات المنتهية (آخر {{ expired_subs|length }})
+        </div>
+        {% for c in expired_subs %}
+        <div class="sub-card expired">
+            <div>
+                <div class="company-name text-muted">
+                    <i class="fas fa-building me-1"></i>{{ c.company_name }}
+                </div>
+                <div class="meta mt-1">
+                    <i class="fas fa-calendar-plus me-1"></i> بداية: {{ c._activation_fmt }}
+                    &nbsp;|&nbsp;
+                    <i class="fas fa-calendar-times me-1"></i> انتهت: {{ c._end_fmt }}
+                    {% if c.invite_code_used %}
+                    &nbsp;|&nbsp;
+                    <i class="fas fa-ticket-alt me-1"></i> كود: <code>{{ c.invite_code_used }}</code>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge-days exp"><i class="fas fa-times-circle me-1"></i>منتهي</span>
+                <a href="{{ url_for('manage_users') }}?search={{ c.company_name }}" class="btn btn-sm btn-outline-secondary" title="إعادة تفعيل من إدارة المستخدمين">
+                    <i class="fas fa-redo me-1"></i>تفعيل
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

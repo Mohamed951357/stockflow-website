@@ -1,0 +1,4 @@
+{% set _admin_logo_src = current_logo_path or url_for('static', filename='images/default_logo.png') %}
+<img src="{{ _admin_logo_src }}" alt="Logo" class="navbar-logo admin-navbar-logo"
+     style="height:36px;width:auto;max-width:96px;object-fit:contain;margin-left:.55rem;background:transparent;padding:0;border-radius:0;vertical-align:middle;"
+     onerror="this.style.display='none';">

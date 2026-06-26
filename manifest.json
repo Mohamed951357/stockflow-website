@@ -1,0 +1,28 @@
+{
+  "background_color": "#1243C4",
+  "description": "تسجيل الدخول إلى نظام StockFlow - إدارة مواعيدك وأرصدة الأصناف بسهولة.",
+  "dir": "rtl",
+  "display": "standalone",
+  "name": "StockFlow",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "StockFlow",
+  "start_url": "/",
+  "theme_color": "#1243C4",
+  "icons": [
+    {
+      "src": "/static/icons/pwa-192-safe.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/pwa-512-safe.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/",
+  "lang": "ar"
+}

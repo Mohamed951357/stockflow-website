@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Stock Flow Telegram backup daily at 06:00 Cairo time
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+Persistent=true
+Unit=stockflow-telegram-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بونص فارما - إدارة الصور الإعلانية - نظام حجز المواعيد</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Cairo', sans-serif; }
+        .navbar { background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .ad-image-card { border-left: 4px solid #007bff; margin-bottom: 1rem; transition: all 0.3s ease; }
+        .ad-image-card.inactive { border-left-color: #6c757d; background-color: #f0f2f5; }
+        .ad-image-thumbnail { max-width: 100px; max-height: 100px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; margin-left: 15px; }
+        .story-badge { font-size: 0.75rem; }
+    
+        /* --- Mobile Responsiveness Bounds Fix --- */
+        html, body {
+            overflow-x: hidden !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-x: none !important;
+        }
+
+    </style>
+    <link href="{{ url_for('static', filename='css/admin_identity.css') }}" rel="stylesheet">
+</head>
+<body>
+    {% include '_admin_navbar.html' %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-image me-2 text-primary"></i> إدارة الصور الإعلانية</h2>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-right me-2"></i> العودة للوحة الإدارة</a>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Ramadan Settings Card -->
+        <div class="card mb-4 border-warning">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-moon me-2"></i> إعدادات رمضان</h5>
+                <i class="fas fa-star text-white"></i>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('manage_ad_images') }}" class="d-flex align-items-center flex-wrap gap-4">
+                    <input type="hidden" name="toggle_ramadan" value="1">
+                    
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input" type="checkbox" id="ramadanStatus" name="ramadan_status" value="on" {% if ramadan_countdown_enabled %}checked{% endif %} onchange="this.form.submit()">
+                        <label class="form-check-label ms-2 fw-bold" for="ramadanStatus">
+                            تفعيل عداد رمضان
+                        </label>
+                    </div>
+
+                    <div class="form-check form-switch fs-5 ms-3">
+                        <input class="form-check-input" type="checkbox" id="glitterStatus" name="glitter_status" value="on" {% if ramadan_glitter_enabled %}checked{% endif %} onchange="this.form.submit()">
+                        <label class="form-check-label ms-2 fw-bold" for="glitterStatus">
+                            تفعيل الجليتر المتساقط
+                        </label>
+                    </div>
+
+                    <div class="w-100 mt-2 text-muted">
+                        <small><i class="fas fa-info-circle me-1"></i> يمكنك تفعيل العداد والجليتر بشكل منفصل.</small>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Launch Settings Card -->
+        <div class="card mb-4 border-info">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-rocket me-2"></i> إعدادات إطلاق المنصة</h5>
+                <i class="fab fa-google-play text-white"></i>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('manage_ad_images') }}" class="d-flex align-items-center flex-wrap gap-4">
+                    <input type="hidden" name="toggle_ramadan" value="1">
+                    
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input" type="checkbox" id="launchStatus" name="launch_status" value="on" {% if launch_countdown_enabled %}checked{% endif %}>
+                        <label class="form-check-label ms-2 fw-bold" for="launchStatus">
+                            تفعيل عداد وحالة إطلاق التطبيق (StockFlow Launch)
+                        </label>
+                    </div>
+
+                    <div class="mt-3 w-100 d-flex align-items-center">
+                        <label for="launchDate" class="fw-bold me-2" style="font-size:1.1rem;">أدخل تاريخ الإطلاق المستهدف:</label>
+                        <input type="datetime-local" class="form-control" name="launch_target_date" id="launchDate" value="{{ launch_target_date }}" style="max-width: 250px;">
+                        <button type="submit" class="btn btn-primary ms-3"><i class="fas fa-save me-2"></i>حفظ التعديلات</button>
+                    </div>
+
+                    <div class="w-100 mt-2 text-muted">
+                        <small><i class="fas fa-info-circle me-1"></i> عند التفعيل وحفظ التاريخ، يظهر عداد يحسب الأيام المتبقية تلقائياً للشركات.</small>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white"><h5 class="mb-0"><i class="fas fa-upload me-2"></i> رفع صورة إعلانية جديدة</h5></div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('manage_ad_images') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="ad_image_url" class="form-label"><i class="fas fa-link me-2"></i> رابط صورة خارجية (يفضل رابط Google Drive)</label>
+                        <input type="url" class="form-control" id="ad_image_url" name="ad_image_url" placeholder="انسخ رابط جوجل درايف هنا..." dir="ltr">
+                        <div class="form-text text-success"><i class="fas fa-check-circle me-1"></i> الأسهل: قم بوضع الرابط من جوجل درايف لتوفير المساحة بالكامل (صلاحية: Anyone with the link)</div>
+                    </div>
+                    <div class="mb-3 text-center text-muted">
+                        <span class="bg-white px-2">----- أو للرفع التقليدي -----</span>
+                    </div>
+                    <div class="mb-3 border p-3 rounded bg-light">
+                        <label for="ad_image_file" class="form-label"><i class="fas fa-image me-2"></i> اختر ملف الصورة التقليدية</label>
+                        <input class="form-control" type="file" id="ad_image_file" name="ad_image_file" accept=".png,.jpg,.jpeg,.gif,.html,.htm">
+                        <div class="form-text">صيغ الملفات المدعومة: PNG, JPG, JPEG, GIF, HTML</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label"><i class="fas fa-info-circle me-2"></i> وصف الصورة (اختياري)</label>
+                        <input type="text" class="form-control" id="description" name="description" placeholder="وصف موجز يظهر مع الصورة">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-users me-2"></i> نوع الصورة - من سيشاهدها؟</label>
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>ملحوظة:</strong> اختر من سيتمكن من مشاهدة هذه الصورة الإعلانية في لوحة التحكم الخاصة بهم
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="image_type" id="image_type_free" value="free" checked>
+                            <label class="form-check-label" for="image_type_free">
+                                <i class="fas fa-users text-info me-1"></i> <strong>للعملاء المجانيين</strong>
+                                <small class="d-block text-muted ms-4">تظهر فقط للعملاء الذين لم يشتركوا في الباقة المميزة</small>
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="image_type" id="image_type_premium" value="premium">
+                            <label class="form-check-label" for="image_type_premium">
+                                <i class="fas fa-crown text-warning me-1"></i> <strong>للعملاء المميزين فقط</strong>
+                                <small class="d-block text-muted ms-4">تظهر فقط للمشتركين في STOCKFLOW PLUS</small>
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="image_type" id="image_type_all" value="all">
+                            <label class="form-check-label" for="image_type_all">
+                                <i class="fas fa-globe text-success me-1"></i> <strong>لجميع العملاء</strong>
+                                <small class="d-block text-muted ms-4">تظهر للجميع بغض النظر عن نوع الاشتراك</small>
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-cloud-upload-alt me-2"></i> رفع الصورة</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Promo Image Card -->
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-film me-2"></i> صورة/GIF البرومو (قبل تسجيل الدخول)</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('manage_ad_images') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="upload_promo_image">
+                    <div class="mb-3">
+                        <label for="promo_image_file" class="form-label">
+                            <i class="fas fa-upload me-2"></i>
+                            رفع صورة/GIF ترويجي جديد
+                        </label>
+                        <input class="form-control" type="file" id="promo_image_file" name="promo_image_file"
+                            accept=".png,.jpg,.jpeg,.gif">
+                        <div class="form-text">تظهر هذه الصورة أو الـ GIF للشركات قبل شاشة تسجيل الدخول. الصيغ المدعومة: PNG, JPG, JPEG, GIF.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="promo_duration" class="form-label">
+                            <i class="fas fa-clock me-2"></i>
+                            مدة عرض البرومو (بالثواني)
+                        </label>
+                        <input type="number" class="form-control" id="promo_duration" name="promo_duration"
+                            value="{{ promo_image_duration or 7 }}" min="1" max="30">
+                        <div class="form-text">المدة بالثواني (من 1 إلى 30 ثانية)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="promo_validity" class="form-label">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            صلاحية البرومو
+                        </label>
+                        <select class="form-select" id="promo_validity" name="promo_validity">
+                            <option value="always" {% if promo_image_validity=='always' or not promo_image_validity %}selected{% endif %}>دائماً</option>
+                            <option value="24hours" {% if promo_image_validity=='24hours' %}selected{% endif %}>24 ساعة فقط</option>
+                            <option value="7days" {% if promo_image_validity=='7days' %}selected{% endif %}>7 أيام</option>
+                            <option value="30days" {% if promo_image_validity=='30days' %}selected{% endif %}>30 يوم (شهر)</option>
+                        </select>
+                        <div class="form-text">
+                            {% if promo_image_upload_date %}
+                            تم الرفع: {{ promo_image_upload_date }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <p class="mb-1">البرومو الحالي:</p>
+                        {% if promo_image_filename %}
+                        <img src="{{ url_for('static', filename='promo_gifs/' + promo_image_filename) }}"
+                            alt="Current Promo" class="img-fluid" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd; padding: 5px; border-radius: 8px;">
+                        <small class="text-muted d-block mt-1">اسم الملف: {{ promo_image_filename }}</small>
+                        {% else %}
+                        <div class="text-center p-3 bg-light border rounded">
+                            <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">لا يوجد برومو</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-save me-2"></i>
+                        حفظ إعدادات البرومو
+                    </button>
+                </form>
+
+                {% if promo_image_filename %}
+                <form method="POST" action="{{ url_for('manage_ad_images') }}" class="mt-2" onsubmit="return confirm('هل أنت متأكد من حذف البرومو؟');">
+                    <input type="hidden" name="action" value="delete_promo_image">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-trash-alt me-2"></i>
+                        حذف البرومو
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white"><h5 class="mb-0"><i class="fas fa-comment-dots me-2"></i> حالات الشركات (نص)</h5></div>
+            <div class="card-body">
+                {% if company_status_rows %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>الشركة</th>
+                                <th>الحالة</th>
+                                <th>وقت النشر</th>
+                                <th>مشاهدات</th>
+                                <th>ريأكت</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in company_status_rows %}
+                            <tr>
+                                <td>{{ row.company_name }}</td>
+                                <td style="max-width: 520px; white-space: pre-wrap; word-break: break-word;">{{ row.text }}</td>
+                                <td class="text-muted">{{ row.created_at }}</td>
+                                <td><span class="badge bg-secondary">{{ row.views }}</span></td>
+                                <td><span class="badge bg-primary">{{ row.reactions }}</span></td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger js-delete-company-status" data-status-id="{{ row.id }}" data-company-name="{{ row.company_name|e }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                        حذف
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-muted">لا توجد حالات شركات حالياً.</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header bg-info text-white"><h5 class="mb-0"><i class="fas fa-list me-2"></i> الصور الإعلانية الحالية ({{ ad_images|length }} صورة)</h5></div>
+            <div class="card-body">
+                {% if ad_images %}
+                    {% for image in ad_images %}
+                    <div class="card ad-image-card {{ 'inactive' if not image.is_active }}">
+                        <div class="card-body d-flex align-items-center">
+                            {% set ext = (image.filename.rsplit('.', 1)[1].lower() if '.' in image.filename else '') %}
+                            {% if ext in ['html', 'htm'] %}
+                            <div class="ad-image-thumbnail d-flex align-items-center justify-content-center bg-light" style="width:100px;height:100px;">
+                                <div class="text-center">
+                                    <i class="fas fa-code fa-2x text-primary"></i>
+                                    <div class="small text-muted mt-1">HTML</div>
+                                </div>
+                            </div>
+                            {% elif image.filename.startswith('http') %}
+                            <img src="{{ image.filename }}" alt="صورة إعلانية خارجية" class="ad-image-thumbnail" style="object-fit: cover;">
+                            {% else %}
+                            <img src="{{ url_for('serve_ad_image', filename=image.filename) }}" alt="صورة إعلانية" class="ad-image-thumbnail">
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ image.original_filename }}</h6>
+                                <p class="mb-1 text-muted">{{ image.description or 'لا يوجد وصف' }}</p>
+                                <small class="text-muted">
+                                    <i class="fas {{ 'fa-crown text-warning' if image.image_type == 'premium' else 'fa-globe text-success' if image.image_type == 'all' else 'fa-users text-info' }} me-1"></i> 
+                                    {{ 'للعُملاء المميزين' if image.image_type == 'premium' else 'لجميع العملاء' if image.image_type == 'all' else 'للعملاء المجانيين' }} 
+                                    • <i class="fas fa-clock me-1"></i> تم الرفع: {{ image.upload_date.strftime('%Y-%m-%d %H:%M') }}
+                                </small><br>
+                                <span class="badge bg-{{ 'success' if image.is_active else 'secondary' }}"><i class="fas fa-{{ 'check-circle' if image.is_active else 'times-circle' }} me-1"></i> {{ 'نشطة' if image.is_active else 'غير نشطة' }}</span>
+                                {% if image.active_story %}
+                                <span class="badge bg-primary story-badge ms-2"><i class="fas fa-circle-notch me-1"></i> منشورة كحالة {{ 'دائمة' if image.active_story.is_pinned else '24 ساعة' }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="ms-auto">
+                                {% if image.active_story %}
+                                <button type="button" class="btn btn-sm btn-outline-primary js-story-viewers" data-story-id="{{ image.active_story.id }}" data-image-name="{{ image.original_filename|e }}"><i class="fas fa-eye"></i> من شاهد</button>
+                                <form method="POST" action="{{ url_for('unpublish_ad_story', story_id=image.active_story.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-ban"></i> إلغاء الحالة</button>
+                                </form>
+                                {% else %}
+                                <button type="button" class="btn btn-sm btn-primary js-publish-story" data-image-id="{{ image.id }}" data-image-name="{{ image.original_filename|e }}"><i class="fas fa-circle-plus"></i> نشر كحالة</button>
+                                {% endif %}
+                                <button type="button" class="btn btn-sm btn-info js-edit-image-type" data-image-id="{{ image.id }}" data-image-name="{{ image.original_filename|e }}" data-image-type="{{ image.image_type|e }}"><i class="fas fa-edit"></i> تعديل الجمهور</button>
+                                <a href="{{ url_for('toggle_ad_image', image_id=image.id) }}" class="btn btn-sm btn-{{ 'warning' if image.is_active else 'success' }}"><i class="fas fa-{{ 'pause' if image.is_active else 'play' }}"></i> {{ 'تعطيل' if image.is_active else 'تفعيل' }}</a>
+                                <form method="POST" action="{{ url_for('toggle_ad_image_adonly', image_id=image.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-warning"><i class="fas fa-eye-slash"></i> تعطيل كإعلان فقط</button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-danger js-delete-ad-image" data-image-id="{{ image.id }}" data-image-name="{{ image.original_filename|e }}"><i class="fas fa-trash-alt"></i> حذف</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5"><i class="fas fa-image fa-4x text-muted mb-3"></i><h5 class="text-muted">لا توجد صور إعلانية مرفوعة بعد.</h5><p class="text-muted">ابدأ برفع صور إعلانية جديدة لتظهر في لوحة تحكم الشركات.</p></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- Modal تعديل نوع الصورة -->
+    <div class="modal fade" id="editImageTypeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fas fa-users me-2"></i> تعديل الجمهور المستهدف</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editImageTypeForm" method="POST">
+                    <div class="modal-body">
+                        <p>تعديل الجمهور المستهدف للصورة: <strong id="imageNameEditModal"></strong></p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            اختر من سيتمكن من مشاهدة هذه الصورة
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="new_image_type" id="edit_type_free" value="free">
+                            <label class="form-check-label" for="edit_type_free">
+                                <i class="fas fa-users text-info me-1"></i> <strong>للعملاء المجانيين</strong>
+                                <small class="d-block text-muted ms-4">تظهر فقط للعملاء الذين لم يشتركوا في الباقة المميزة</small>
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="new_image_type" id="edit_type_premium" value="premium">
+                            <label class="form-check-label" for="edit_type_premium">
+                                <i class="fas fa-crown text-warning me-1"></i> <strong>للعملاء المميزين فقط</strong>
+                                <small class="d-block text-muted ms-4">تظهر فقط للمشتركين في STOCKFLOW PLUS</small>
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="new_image_type" id="edit_type_all" value="all">
+                            <label class="form-check-label" for="edit_type_all">
+                                <i class="fas fa-globe text-success me-1"></i> <strong>لجميع العملاء</strong>
+                                <small class="d-block text-muted ms-4">تظهر للجميع بغض النظر عن نوع الاشتراك</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i> إلغاء</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i> حفظ التعديل</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal حذف الصورة -->
+    <div class="modal fade" id="deleteAdImageConfirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> تأكيد حذف الصورة الإعلانية</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p>هل أنت متأكد أنك تريد حذف الصورة الإعلانية <strong id="adImageNameDeleteModal"></strong>؟</p>
+                    <p class="text-danger">**تحذير**: هذا الإجراء لا يمكن التراجع عنه وسيحذف الصورة من الخادم ومن قاعدة البيانات.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>إلغاء</button>
+                    <form id="deleteAdImageForm" method="POST"><button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt me-2"></i>تأكيد الحذف</button></form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function openEditImageTypeModal(imageId, imageName, currentType) {
+            // Set form action
+            document.getElementById('editImageTypeForm').action = '{{ url_for("update_image_type", image_id=0) }}'.replace('0', imageId);
+            
+            // Set image name
+            document.getElementById('imageNameEditModal').textContent = imageName;
+            
+            // Check the current type radio button
+            document.getElementById('edit_type_free').checked = (currentType === 'free');
+            document.getElementById('edit_type_premium').checked = (currentType === 'premium');
+            document.getElementById('edit_type_all').checked = (currentType === 'all');
+            
+            // Show modal
+            var editModal = new bootstrap.Modal(document.getElementById('editImageTypeModal'));
+            editModal.show();
+        }
+        
+        function confirmDeleteAdImage(imageId, imageName) {
+            document.getElementById('deleteAdImageForm').action = '{{ url_for("delete_ad_image", image_id=0) }}'.replace('0', imageId);
+            document.getElementById('adImageNameDeleteModal').textContent = imageName;
+            var deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteAdImageConfirmModal'));
+            deleteConfirmModal.show();
+        }
+
+        function openPublishStoryModal(imageId, imageName) {
+            document.getElementById('publishStoryForm').action = '{{ url_for("publish_ad_story", image_id=0) }}'.replace('0', imageId);
+            document.getElementById('publishStoryImageName').textContent = imageName;
+            var publishModal = new bootstrap.Modal(document.getElementById('publishStoryModal'));
+            publishModal.show();
+        }
+
+        function reactionLabel(type) {
+            if (type === 'like') return 'أعجبني';
+            if (type === 'love') return 'لاف';
+            if (type === 'angry') return 'أغضبني';
+            return type || '-';
+        }
+
+        function openStoryViewersModal(storyId, imageName) {
+            document.getElementById('storyViewersTitle').textContent = imageName;
+            document.getElementById('storyViewersBody').innerHTML = '<tr><td colspan="2" class="text-muted">جاري التحميل...</td></tr>';
+            document.getElementById('storyReactionsBody').innerHTML = '<tr><td colspan="3" class="text-muted">جاري التحميل...</td></tr>';
+
+            var modal = new bootstrap.Modal(document.getElementById('storyViewersModal'));
+            modal.show();
+
+            fetch('{{ url_for("ad_story_viewers", story_id=0) }}'.replace('0', storyId))
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || !data.viewers) {
+                        document.getElementById('storyViewersBody').innerHTML = '<tr><td colspan="2" class="text-danger">فشل تحميل البيانات</td></tr>';
+                        document.getElementById('storyReactionsBody').innerHTML = '<tr><td colspan="3" class="text-danger">فشل تحميل البيانات</td></tr>';
+                        return;
+                    }
+
+                    if (data.viewers.length === 0) {
+                        document.getElementById('storyViewersBody').innerHTML = '<tr><td colspan="2" class="text-muted">لا توجد مشاهدات بعد</td></tr>';
+                    } else {
+                        document.getElementById('storyViewersBody').innerHTML = data.viewers.map(v => (
+                            `<tr><td>${v.company_name || v.username || ('ID: ' + v.company_id)}</td><td>${v.viewed_at || '-'}</td></tr>`
+                        )).join('');
+                    }
+
+                    if (!data.reactions || data.reactions.length === 0) {
+                        document.getElementById('storyReactionsBody').innerHTML = '<tr><td colspan="3" class="text-muted">لا توجد ريأكتات بعد</td></tr>';
+                    } else {
+                        document.getElementById('storyReactionsBody').innerHTML = data.reactions.map(x => (
+                            `<tr><td>${x.company_name || x.username || ('ID: ' + x.company_id)}</td><td>${reactionLabel(x.reaction_type)}</td><td>${x.created_at || '-'}</td></tr>`
+                        )).join('');
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('storyViewersBody').innerHTML = '<tr><td colspan="2" class="text-danger">حدث خطأ أثناء التحميل</td></tr>';
+                    document.getElementById('storyReactionsBody').innerHTML = '<tr><td colspan="3" class="text-danger">حدث خطأ أثناء التحميل</td></tr>';
+                });
+        }
+
+        function deleteCompanyStatusAdmin(statusId, companyName) {
+            if (!confirm(`هل أنت متأكد من حذف حالة الشركة: ${companyName} ؟`)) return;
+            fetch(`/admin/company_statuses/${statusId}/delete`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || !data.success) {
+                        alert((data && data.error) ? data.error : 'تعذر حذف الحالة');
+                        return;
+                    }
+                    window.location.reload();
+                })
+                .catch(() => {
+                    alert('حدث خطأ أثناء الحذف');
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.js-publish-story').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    openPublishStoryModal(this.dataset.imageId, this.dataset.imageName);
+                });
+            });
+
+            document.querySelectorAll('.js-story-viewers').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    openStoryViewersModal(this.dataset.storyId, this.dataset.imageName);
+                });
+            });
+
+            document.querySelectorAll('.js-edit-image-type').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    openEditImageTypeModal(this.dataset.imageId, this.dataset.imageName, this.dataset.imageType);
+                });
+            });
+
+            document.querySelectorAll('.js-delete-ad-image').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    confirmDeleteAdImage(this.dataset.imageId, this.dataset.imageName);
+                });
+            });
+
+            document.querySelectorAll('.js-delete-company-status').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    deleteCompanyStatusAdmin(this.dataset.statusId, this.dataset.companyName);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

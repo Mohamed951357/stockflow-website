@@ -1,0 +1,33 @@
+{% extends "admin_base.html" %}
+
+{% block title %}تعديل مخزن{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>تعديل مخزن</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">اسم المخزن</label>
+                        <input type="text" class="form-control" id="name" name="name" required value="{{ warehouse.name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">الوصف</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{{ warehouse.description or '' }}</textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-2"></i>حفظ التعديلات
+                        </button>
+                        <a href="{{ url_for('manage_warehouses') }}" class="btn btn-secondary">رجوع</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "admin_base.html" %}
+
+{% block title %}إدارة المخازن{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="fas fa-warehouse text-primary me-2"></i>إدارة المخازن</h2>
+        <p class="text-muted mb-0">إضافة المخازن والتحكم فيما يظهر لأدمن كل مخزن.</p>
+    </div>
+    <a href="{{ url_for('add_warehouse') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>إضافة مخزن
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>المخزن</th>
+                    <th>الوصف</th>
+                    <th>الحالة</th>
+                    <th>آخر معالجة</th>
+                    <th>إحصائيات آخر رفع</th>
+                    <th class="text-center">التحكم</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for warehouse in warehouses %}
+                <tr>
+                    <td>
+                        <strong>{{ warehouse.name }}</strong>
+                        <div class="small text-muted">رقم {{ warehouse.id }}</div>
+                    </td>
+                    <td>{{ warehouse.description or 'بدون وصف' }}</td>
+                    <td>
+                        {% if warehouse.is_active %}
+                        <span class="badge bg-success">مفعل</span>
+                        {% else %}
+                        <span class="badge bg-secondary">معطل</span>
+                        {% endif %}
+                        {% if warehouse.is_processing %}
+                        <span class="badge bg-warning text-dark">قيد المعالجة</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if warehouse.last_process_time %}
+                        {{ warehouse.last_process_time.strftime('%Y-%m-%d %H:%M') }}
+                        <div class="small text-muted">{{ warehouse.last_process_status or '' }}</div>
+                        {% else %}
+                        <span class="text-muted">لا يوجد</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-success">إضافة {{ warehouse.last_process_added or 0 }}</span>
+                        <span class="badge bg-info text-dark">تحديث {{ warehouse.last_process_updated or 0 }}</span>
+                        <span class="badge bg-secondary">تصفير {{ warehouse.last_process_reset or 0 }}</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('edit_warehouse', warehouse_id=warehouse.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('manage_warehouse_permissions', warehouse_id=warehouse.id) }}" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-sliders-h"></i>
+                            </a>
+                            <form method="post" action="{{ url_for('toggle_warehouse', warehouse_id=warehouse.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-warning">
+                                    {% if warehouse.is_active %}
+                                    <i class="fas fa-pause"></i>
+                                    {% else %}
+                                    <i class="fas fa-play"></i>
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-5">لا توجد مخازن بعد.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

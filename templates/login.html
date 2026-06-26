@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include '_pwa_meta.html' %}
+    <title>STOCK FLOW — تسجيل الدخول</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+    :root {
+        --blue:       #1243C4;
+        --blue-dark:  #0A2DA0;
+        --white:      #FFFFFF;
+        --off:        #F0F3FA;
+        --text:       #111827;
+        --muted:      #6B7280;
+        --light:      #9CA3AF;
+        --wa:         #25D366;
+        --r-card:     24px;
+        --r-field:    14px;
+        --r-pill:     50px;
+        --spring:     cubic-bezier(0.34,1.56,0.64,1);
+        --ease:       cubic-bezier(0.4,0,0.2,1);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    html, body {
+        height:100%;
+        width:100%;
+        max-width:100%;
+        overflow-x:hidden;
+        overscroll-behavior-x:none;
+        background:var(--blue);
+    }
+
+    body {
+        font-family:'Cairo',sans-serif;
+        min-height:100vh;
+        min-height:100dvh;
+        background: var(--blue);
+        display:flex; flex-direction:column;
+        align-items:center; justify-content:flex-start;
+        /* safe area for notched phones */
+        padding: max(40px, env(safe-area-inset-top))
+                 16px
+                 max(40px, env(safe-area-inset-bottom))
+                 16px;
+        position:relative; overflow-x:clip; overflow-y:auto; direction:rtl;
+        width:100%;
+        max-width:100vw;
+    }
+
+    /* ── AMBIENT MESH ── */
+    body::before {
+        content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+        background:
+            radial-gradient(ellipse 65% 55% at 12% 18%, rgba(255,255,255,.08) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 45% at 88% 82%, rgba(10,45,160,.55) 0%, transparent 60%),
+            radial-gradient(ellipse 35% 35% at 50% 50%, rgba(18,67,196,.28) 0%, transparent 70%);
+        animation: meshDrift 22s ease-in-out infinite;
+    }
+    @keyframes meshDrift {
+        0%,100% { transform:scale(1) rotate(0deg); opacity:1; }
+        50%      { transform:scale(1.06) rotate(.8deg); opacity:.88; }
+    }
+
+    /* ── PARTICLES ── */
+    #pts { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+    .pt  { position:absolute; border-radius:50%; background:rgba(255,255,255,.18); animation:ptUp linear infinite; }
+    @keyframes ptUp { 0%{transform:translateY(0) scale(1);opacity:.16} 100%{transform:translateY(-110vh) scale(.3);opacity:0} }
+
+    /* ── ABOUT BTN ── */
+    .about-btn {
+        position:fixed; top:max(20px, env(safe-area-inset-top)); left:20px; z-index:1000;
+        display:flex; align-items:center; justify-content:flex-start;
+        width:38px; height:38px; overflow:hidden; white-space:nowrap;
+        background:rgba(255,255,255,.15); backdrop-filter:blur(10px);
+        border:1px solid rgba(255,255,255,.22); border-radius:var(--r-pill);
+        color:white; text-decoration:none; padding:0;
+        transition:all .5s var(--ease);
+    }
+    .about-btn.open { width:112px; padding-right:15px; }
+    .about-btn i { font-size:.88rem; min-width:38px; display:flex; align-items:center; justify-content:center; }
+    .about-btn span { font-size:.82rem; font-weight:700; opacity:0; transition:opacity .3s; margin-right:4px; }
+    .about-btn.open span { opacity:1; }
+    .about-btn:hover { background:white; color:var(--blue); box-shadow:0 6px 20px rgba(0,0,0,.18); }
+
+    /* ════════════════════════════════
+       PAGE WRAP
+    ════════════════════════════════ */
+    .wrap {
+        position:relative; z-index:1;
+        width:min(100%, 460px); max-width:min(100%, 460px);
+        display:flex; flex-direction:column; align-items:center;
+        margin-top:auto; margin-bottom:auto;
+    }
+
+    /* ── LOGO ── */
+    .logo-zone {
+        text-align:center;
+        margin-bottom:18px;
+        animation:upIn .75s var(--spring) .05s both;
+        width:100%;
+        flex-shrink:0;
+        min-height:100px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+    @keyframes upIn {
+        from { opacity:0; transform:translateY(-20px) scale(.9); }
+        to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+    .logo-zone img {
+        height:120px;
+        width:auto;
+        max-width:300px;
+        object-fit:contain;
+        display:block;
+        cursor:pointer;
+        user-select:none;
+        filter: drop-shadow(0 4px 18px rgba(0,0,0,.3));
+        transition:transform .35s ease, filter .35s ease;
+    }
+    .logo-zone img:hover {
+        transform:scale(1.08);
+        filter: drop-shadow(0 8px 28px rgba(0,0,0,.4));
+    }
+    .logo-zone img:active { transform:scale(.94); }
+
+    /* ── LOGO FALLBACK ── */
+    .logo-fallback {
+        display:flex; flex-direction:column; align-items:center; gap:8px;
+        cursor:pointer; user-select:none;
+    }
+    .logo-bars {
+        display:flex; gap:6px; align-items:flex-end; height:60px;
+    }
+    .logo-bars .bar {
+        display:block; border-radius:4px; background:rgba(255,255,255,.9);
+    }
+    .logo-bars .b1 { width:16px; height:40px; opacity:.85; }
+    .logo-bars .b2 { width:16px; height:55px; }
+    .logo-bars .b3 { width:16px; height:32px; opacity:.7; position:relative; }
+    .logo-bars .b3::after {
+        content:''; position:absolute; bottom:0; right:0;
+        border-style:solid; border-width:0 0 18px 16px;
+        border-color:transparent transparent #E53E3E transparent;
+        opacity:.9;
+    }
+    .logo-text {
+        display:flex; gap:10px; align-items:baseline;
+    }
+    .lt-stock {
+        font-family:'Cairo',sans-serif; font-weight:900; font-size:2.2rem;
+        color:#fff; letter-spacing:3px;
+        text-shadow:0 2px 12px rgba(0,0,0,.25);
+    }
+    .lt-flow {
+        font-family:'Cairo',sans-serif; font-weight:300; font-size:2.2rem;
+        color:rgba(255,255,255,.7); letter-spacing:5px;
+        text-shadow:0 2px 12px rgba(0,0,0,.15);
+    }
+
+    /* ── ADMIN MODAL ── */
+    .adm-overlay {
+        display:none; position:fixed; inset:0; z-index:99998;
+        background:rgba(4,12,40,.72); backdrop-filter:blur(14px);
+        align-items:center; justify-content:center;
+        animation:fadeIn .3s ease;
+    }
+    .adm-overlay.on { display:flex; }
+    .adm-box {
+        background:#fff; border-radius:24px; padding:2rem 1.8rem;
+        width:min(92vw,400px); position:relative;
+        box-shadow:0 32px 80px rgba(4,12,40,.5), 0 8px 28px rgba(4,12,40,.25);
+        animation:upIn .55s var(--spring);
+    }
+    .adm-close {
+        position:absolute; top:14px; left:14px;
+        width:32px; height:32px; border-radius:50%; border:none;
+        background:rgba(18,67,196,.07); color:var(--blue);
+        font-size:.9rem; cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        transition:background .2s;
+    }
+    .adm-close:hover { background:rgba(18,67,196,.14); }
+    .adm-badge {
+        display:flex; align-items:center; justify-content:center;
+        gap:8px; margin-bottom:1.2rem;
+    }
+    .adm-badge i { color:var(--blue); font-size:1.3rem; }
+    .adm-badge span { font-weight:900; font-size:1.15rem; color:var(--text); letter-spacing:-.4px; }
+    .adm-title {
+        text-align:center; font-size:1.3rem; font-weight:900;
+        color:var(--text); margin-bottom:1.4rem;
+    }
+
+    /* ════════════════════════════════
+       CARD
+    ════════════════════════════════ */
+    .card {
+        width:100%; background:var(--white);
+        max-width:100%;
+        border-radius:var(--r-card);
+        padding:2.5rem 2rem 2rem;
+        box-shadow:0 28px 72px rgba(4,12,40,.38), 0 8px 28px rgba(4,12,40,.2);
+        animation:upIn .75s var(--spring) .12s both;
+        position:relative; overflow:hidden;
+    }
+    .card-title {
+        font-size:1.65rem; font-weight:900; color:var(--text);
+        text-align:center; margin-bottom:1.8rem; letter-spacing:-.5px;
+    }
+
+    /* ── FIELD ── */
+    .fgroup { margin-bottom:1.05rem; }
+    .flabel {
+        display:block; font-size:.86rem; font-weight:700; color:var(--muted);
+        margin-bottom:.42rem; transition:color .2s ease;
+        text-align:right;
+    }
+    .fgroup:focus-within .flabel { color:var(--blue); }
+    .fbox {
+        display:flex; align-items:center;
+        background:var(--off); border:1.5px solid transparent;
+        border-radius:var(--r-field); overflow:hidden;
+        transition:all .3s var(--ease);
+    }
+    .fbox:focus-within { background:white; border-color:var(--blue); box-shadow:0 0 0 4px rgba(18,67,196,.09); }
+    .fbox:hover:not(:focus-within) { border-color:rgba(18,67,196,.18); }
+    .ficon { width:46px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--blue); font-size:.88rem; opacity:.55; transition:opacity .2s; }
+    .fbox:focus-within .ficon { opacity:1; }
+    .finput {
+        flex:1; border:none; outline:none; background:transparent;
+        min-width:0;
+        padding:13px 10px 13px 0;
+        font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:500;
+        color:var(--text); text-align:right; direction:rtl;
+    }
+    .finput::placeholder { color:var(--light); font-weight:400; }
+    .pwtoggle {
+        width:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+        cursor:pointer; color:var(--light); font-size:.9rem; transition:color .2s;
+    }
+    .pwtoggle:hover { color:var(--blue); }
+
+    /* ── REMEMBER ── */
+    .rem-row { display:flex; align-items:center; gap:8px; margin-bottom:1.4rem; justify-content:flex-end; }
+    .rem-chk { width:18px; height:18px; accent-color:var(--blue); cursor:pointer; border-radius:4px; flex-shrink:0; }
+    .rem-lbl { font-size:.87rem; font-weight:600; color:var(--muted); cursor:pointer; user-select:none; }
+
+    /* ── UNIFIED BUTTON BASE ── */
+    /* All action buttons share exact same height and radius */
+    .ubtn {
+        width:100%; height:46px;
+        display:flex; align-items:center; justify-content:center; gap:9px;
+        border-radius:var(--r-pill); border:none;
+        font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700;
+        cursor:pointer; position:relative; overflow:hidden;
+        transition:all .32s var(--ease);
+        text-decoration:none; letter-spacing:.2px;
+    }
+    .ubtn::after {
+        content:''; position:absolute; top:0; left:-110%; width:100%; height:100%;
+        background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);
+        transition:left .5s ease;
+    }
+    .ubtn:hover::after { left:110%; }
+    .ubtn:hover { transform:translateY(-2px); }
+    .ubtn:active { transform:translateY(0) scale(.99); }
+
+    /* LOGIN — filled blue */
+    .ubtn-login {
+        background:var(--blue); color:white;
+        box-shadow:0 6px 26px rgba(18,67,196,.42), inset 0 1px 0 rgba(255,255,255,.14);
+        font-size:1.08rem; font-weight:800;
+        animation:pulse 3.5s ease-in-out 2s infinite;
+    }
+    .ubtn-login:hover { background:var(--blue-dark); box-shadow:0 12px 36px rgba(18,67,196,.52); animation:none; }
+    @keyframes pulse {
+        0%,100%{box-shadow:0 6px 26px rgba(18,67,196,.42),inset 0 1px 0 rgba(255,255,255,.14)}
+        50%{box-shadow:0 6px 26px rgba(18,67,196,.42),inset 0 1px 0 rgba(255,255,255,.14),0 0 0 8px rgba(18,67,196,.07)}
+    }
+
+    /* GOOGLE — outlined, white bg */
+    .ubtn-google {
+        background:white; color:#3c4043;
+        border:1.5px solid #dadce0;
+        box-shadow:0 1px 6px rgba(0,0,0,.08);
+        font-size:.95rem; font-weight:700;
+    }
+    .ubtn-google:hover { background:#f5f7ff; border-color:rgba(18,67,196,.3); box-shadow:0 4px 18px rgba(0,0,0,.1); }
+    .ubtn-google .g-logo { width:20px; height:20px; flex-shrink:0; }
+
+    /* WHATSAPP — outlined green */
+    .ubtn-wa {
+        background:rgba(37,211,102,.04); color:#16a34a;
+        border:1.5px solid var(--wa);
+        font-size:.92rem;
+    }
+    .ubtn-wa:hover { background:var(--wa); color:white; box-shadow:0 8px 24px rgba(37,211,102,.3); }
+
+    /* MAINTENANCE disabled */
+    .ubtn-login.maint {
+        background:linear-gradient(to bottom,#4a5568,#2d3748) !important;
+        color:#a0aec0 !important; cursor:not-allowed !important;
+        box-shadow:inset 0 3px 8px rgba(0,0,0,.45) !important;
+        transform:translateY(2px) !important; animation:none !important;
+    }
+
+    /* ── FORGOT ── */
+    .forgot {
+        display:block; text-align:center; margin:10px 0 4px;
+        font-size:.87rem; font-weight:600; color:var(--muted);
+        text-decoration:none; cursor:pointer; transition:color .2s;
+    }
+    .forgot:hover { color:var(--blue); }
+
+    /* ── OR DIVIDER ── */
+    .orline {
+        display:flex; align-items:center; gap:10px;
+        margin:14px 0; color:var(--light); font-size:.79rem; font-weight:600;
+    }
+    .orline::before, .orline::after { content:''; flex:1; height:1px; background:rgba(18,67,196,.1); }
+
+    /* ── SIGN UP ── */
+    .signup { text-align:center; font-size:.86rem; font-weight:600; color:var(--muted); margin-top:10px; }
+    .signup a { color:var(--blue); font-weight:800; text-decoration:none; }
+    .signup a:hover { text-decoration:underline; }
+
+    /* ── GAP BETWEEN BUTTONS ── */
+    .btn-gap { display:flex; flex-direction:column; gap:10px; }
+
+    /* ── DOWNLOAD ── */
+    .dl-section {
+        margin-top:1.5rem; padding-top:1.3rem;
+        border-top:1px solid rgba(18,67,196,.07);
+        text-align:center; position:relative;
+    }
+    .dl-section::before {
+        content:''; position:absolute; top:-1px; left:50%; transform:translateX(-50%);
+        width:48px; height:2px; background:linear-gradient(90deg,var(--blue),#5b9fff); border-radius:2px;
+    }
+    .dl-label { font-size:.84rem; font-weight:600; color:var(--muted); margin-bottom:.85rem; }
+    .dl-btns { display:flex; justify-content:center; gap:10px; }
+    .dl-btn {
+        display:inline-flex; align-items:center; gap:7px;
+        padding:11px 22px; border-radius:var(--r-field);
+        font-family:'Cairo',sans-serif; font-size:.87rem; font-weight:700;
+        border:none; cursor:pointer; position:relative; overflow:hidden;
+        transition:all .32s var(--ease);
+    }
+    .dl-btn::after { content:''; position:absolute; top:0; left:-110%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent); transition:left .5s; }
+    .dl-btn:hover::after { left:110%; }
+    .dl-btn:hover { transform:translateY(-3px); }
+    .dl-play { background:linear-gradient(135deg,#10b981,#059669); color:white; box-shadow:0 6px 18px rgba(16,185,129,.3); }
+    .dl-ios  { background:linear-gradient(135deg,var(--blue),var(--blue-dark)); color:white; box-shadow:0 6px 18px rgba(18,67,196,.3); }
+
+    /* ── VERSION FOOTER ── */
+    .ver {
+        margin-top:18px; text-align:center;
+        color:rgba(255,255,255,.35);
+        font-size:.73rem; font-weight:600; letter-spacing:.8px; line-height:1.75;
+        animation:upIn .75s var(--spring) .4s both;
+        /* breathe room above system bar */
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+    }
+
+    /* ── WA FLOAT ── */
+    .wa-float {
+        position:fixed; z-index:10000;
+        bottom: max(26px, calc(env(safe-area-inset-bottom) + 14px));
+        right:26px;
+    }
+    .wa-ball {
+        width:60px; height:60px; background:var(--wa); border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 10px 28px rgba(37,211,102,.42); text-decoration:none;
+        transition:all .35s cubic-bezier(.175,.885,.32,1.275);
+    }
+    .wa-ball i { color:white; font-size:30px; }
+    .wa-ball:hover { transform:scale(1.13) rotate(9deg); box-shadow:0 16px 36px rgba(37,211,102,.55); }
+
+    /* ── iPHONE INSTALL TIP ── */
+    .ios-tip {
+        position:fixed;
+        left:50%;
+        bottom:max(16px, calc(env(safe-area-inset-bottom) + 14px));
+        z-index:10050;
+        width:min(calc(100vw - 24px), 430px);
+        transform:translate(-50%, 22px);
+        opacity:0;
+        pointer-events:none;
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:12px;
+        border-radius:18px;
+        background:rgba(255,255,255,.96);
+        border:1px solid rgba(255,255,255,.78);
+        box-shadow:0 18px 42px rgba(4,12,40,.28);
+        backdrop-filter:blur(14px);
+        transition:opacity .25s ease, transform .25s ease;
+    }
+    .ios-tip.show {
+        opacity:1;
+        transform:translate(-50%, 0);
+        pointer-events:auto;
+    }
+    .ios-tip-icon {
+        width:42px;
+        height:42px;
+        flex:0 0 42px;
+        border-radius:13px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:white;
+        background:linear-gradient(135deg,var(--blue),var(--blue-dark));
+        box-shadow:0 10px 22px rgba(18,67,196,.26);
+        font-size:1.05rem;
+    }
+    .ios-tip-copy {
+        min-width:0;
+        flex:1;
+    }
+    .ios-tip-copy strong {
+        display:block;
+        color:var(--text);
+        font-size:.9rem;
+        font-weight:900;
+        line-height:1.35;
+    }
+    .ios-tip-copy span {
+        display:block;
+        color:var(--muted);
+        font-size:.76rem;
+        font-weight:700;
+        line-height:1.55;
+        margin-top:1px;
+    }
+    .ios-tip-action {
+        min-height:36px;
+        flex:0 0 auto;
+        border:0;
+        border-radius:12px;
+        padding:0 12px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        color:white;
+        background:var(--blue);
+        text-decoration:none;
+        font-family:'Cairo',sans-serif;
+        font-size:.78rem;
+        font-weight:900;
+        white-space:nowrap;
+    }
+    .ios-tip-close {
+        width:30px;
+        height:30px;
+        flex:0 0 30px;
+        border:0;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:var(--muted);
+        background:rgba(17,24,39,.06);
+        cursor:pointer;
+    }
+
+    /* ── ALERTS ── */
+    .alert {
+        border-radius:12px; border:none; padding:11px 14px;
+        font-size:.87rem; font-weight:600; margin-bottom:1rem;
+        display:flex; align-items:center; gap:9px;
+        animation:alertIn .4s ease;
+    }
+    @keyframes alertIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .alert-danger  { background:rgba(239,68,68,.07);  color:#b91c1c; border-right:3px solid #ef4444; }
+    .alert-success { background:rgba(16,185,129,.07); color:#065f46; border-right:3px solid #10b981; }
+    .alert-info    { background:rgba(18,67,196,.07);  color:#1e40af; border-right:3px solid var(--blue); }
+    .alert-warning { background:rgba(245,158,11,.07); color:#92400e; border-right:3px solid #f59e0b; }
+
+    /* ── SPINNER ── */
+    .spinner-overlay {
+        display:none; position:fixed; inset:0;
+        background:rgba(12,27,94,.72); backdrop-filter:blur(14px);
+        z-index:99999; justify-content:center; align-items:center;
+    }
+    .spinner-overlay.on { display:flex; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .spin { position:relative; width:58px; height:58px; }
+    .sp { position:absolute; border-radius:50%; border:2.5px solid transparent; }
+    .sp1 { width:58px; height:58px; border-top-color:white; border-right-color:rgba(255,255,255,.35); animation:cw 1s linear infinite; top:0; left:0; }
+    .sp2 { width:36px; height:36px; border-bottom-color:white; border-left-color:rgba(255,255,255,.35); animation:ccw 1s linear infinite; top:11px; left:11px; }
+    @keyframes cw  { to{transform:rotate(360deg)} }
+    @keyframes ccw { to{transform:rotate(-360deg)} }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:520px){
+        body { padding-left:12px; padding-right:12px; }
+        .wrap { width:100%; max-width:100%; }
+        .about-btn {
+            left:12px;
+            display:flex !important;
+            width:38px;
+            padding-right:0;
+            background:rgba(255,255,255,.2);
+        }
+        .about-btn.open {
+            width:116px;
+            padding-right:14px;
+        }
+        .about-btn span { opacity:0; }
+        .about-btn.open span { opacity:1; }
+        .wa-float { right:12px; }
+        .finput,
+        .rem-lbl,
+        .forgot,
+        .ubtn,
+        input,
+        select,
+        textarea {
+            font-size:16px !important;
+        }
+        .wa-float {
+            display:none !important;
+        }
+    }
+    @media(max-width:420px){
+        .card { padding:2rem 1.35rem 1.8rem; border-radius:20px; }
+        .card-title { font-size:1.4rem; }
+        .dl-btns { flex-direction:column; align-items:center; }
+        .dl-btn { width:100%; justify-content:center; }
+        .wa-float { right:16px; }
+        .about-btn { left:14px; }
+        .ios-tip {
+            align-items:flex-start;
+            gap:10px;
+            padding:11px;
+        }
+        .ios-tip-action {
+            padding:0 10px;
+        }
+    }
+    @media(min-width:768px){
+        body { padding-top:32px; padding-bottom:32px; }
+        .wrap { max-width:480px; }
+        .card { padding:2.8rem 2.5rem 2.4rem; }
+    }
+    
+        /* --- Mobile Responsiveness Bounds Fix --- */
+        html, body {
+            overflow-x: hidden !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-x: none !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- SPINNER -->
+    <div class="spinner-overlay" id="sp">
+        <div class="spin"><div class="sp sp1"></div><div class="sp sp2"></div></div>
+    </div>
+
+    <!-- PARTICLES -->
+    <div id="pts"></div>
+
+    <!-- ABOUT BTN -->
+    <a href="{{ url_for('about_portfolio') }}" class="about-btn" id="aBtn">
+        <i class="fas fa-info"></i><span>من نحن</span>
+    </a>
+
+    <!-- ═══════════════════════════ CONTENT ═══════════════════════════ -->
+    <div class="wrap">
+
+        <!-- LOGO (من لوحة الإعدادات) -->
+        <div class="logo-zone" id="logoZone">
+            <img id="logoImg"
+                 src="{{ current_logo_path }}"
+                 alt="STOCK FLOW"
+                 onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex';">
+            <div class="logo-fallback" id="logoFallback" style="display:none">
+                <div class="logo-bars">
+                    <span class="bar b1"></span>
+                    <span class="bar b2"></span>
+                    <span class="bar b3"></span>
+                </div>
+                <div class="logo-text">
+                    <span class="lt-stock">STOCK</span>
+                    <span class="lt-flow">FLOW</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ WHITE CARD ═══════ -->
+        <div class="card" id="loginCard">
+
+            <h1 class="card-title">تسجيل الدخول</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="mb-3">
+                {% for category, message in messages %}
+                <div class="alert {% if category == 'error' %}alert-danger{% elif category == 'success' %}alert-success{% elif category == 'warning' %}alert-warning{% else %}alert-info{% endif %}">
+                    <i class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- USERNAME -->
+            <div class="fgroup">
+                <label class="flabel" for="usr">اسم المستخدم</label>
+                <div class="fbox">
+                    <div class="ficon"><i class="fas fa-user"></i></div>
+                    <input class="finput" id="usr" type="text" placeholder="أدخل اسم المستخدم" autocomplete="username">
+                </div>
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="fgroup">
+                <label class="flabel" for="pwd">كلمة المرور</label>
+                <div class="fbox">
+                    <div class="ficon"><i class="fas fa-lock"></i></div>
+                    <input class="finput" id="pwd" type="password" placeholder="........" autocomplete="current-password">
+                    <span class="pwtoggle" onclick="togglePw()"><i class="fas fa-eye" id="pwIco"></i></span>
+                </div>
+            </div>
+
+            <!-- REMEMBER -->
+            <div class="rem-row">
+                <label class="rem-lbl" for="rem">تذكرني</label>
+                <input class="rem-chk" id="rem" type="checkbox" checked>
+            </div>
+
+            <!-- ══ BUTTONS — all same height via .ubtn ══ -->
+            <div class="btn-gap">
+
+                <!-- 1. LOGIN -->
+                <button class="ubtn ubtn-login" id="loginBtn">
+                    تسجيل الدخول
+                </button>
+
+                <!-- forgot link (between login and others) -->
+                <a href="https://wa.me/201554077727?text=نسيت اسم المستخدم أو كلمة السر" target="_blank" class="forgot" id="forgotLink">هل نسيت كلمة المرور؟</a>
+
+                <div class="orline">أو المتابعة باستخدام</div>
+
+                <!-- 2. GOOGLE — GSI Official Button (Dynamic Width) -->
+                <div class="google-login-wrapper w-100 mb-2" id="googleButtonContainer">
+                </div>
+
+                <style>
+                    /* تحسين شكل زر جوجل ليتناسق مع الأزرار الأخرى */
+                    .google-login-wrapper {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        width: 100%;
+                        margin-top: 5px;
+                        margin-bottom: 12px !important;
+                        direction: ltr; /* لحل مشكلة محاذاة الـ iframe الخاصة بجوجل في الصفحات العربية */
+                        min-height: 48px;
+                    }
+                </style>
+
+                <script>
+                function handleCredentialResponse(response) {
+                    const btn = document.getElementById('loginBtn');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الدخول...';
+                    document.getElementById('sp').classList.add('on');
+
+                    fetch("{{ url_for('auth_web_google_signin') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ credential: response.credential })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = data.redirect_url || '/company_dashboard';
+                        } else {
+                            document.getElementById('sp').classList.remove('on');
+                            btn.disabled = false;
+                            btn.innerHTML = 'تسجيل الدخول';
+                            alert(data.message || 'فشل تسجيل الدخول بجوجل');
+                        }
+                    })
+                    .catch(err => {
+                        document.getElementById('sp').classList.remove('on');
+                        btn.disabled = false;
+                        btn.innerHTML = 'تسجيل الدخول';
+                        alert('تعذر الاتصال بالخادم: ' + err.message);
+                    });
+                }
+
+                function renderGoogleButton() {
+                    const container = document.getElementById('googleButtonContainer');
+                    if (window.google && container) {
+                        container.innerHTML = ''; // تفريغ الحاوية بدلاً من فحص ChildNodes
+                        
+                        google.accounts.id.initialize({
+                            client_id: "{{ config.GOOGLE_CLIENT_ID if config.GOOGLE_CLIENT_ID else '873268136156-i4oug6tmlp0mo0r8v7omn25e1f7431m2.apps.googleusercontent.com' }}",
+                            callback: handleCredentialResponse
+                        });
+                        
+                        let exactWidth = container.offsetWidth;
+                        if (!exactWidth || exactWidth < 100) exactWidth = 350; // حماية إضافية
+                        
+                        google.accounts.id.renderButton(
+                            container,
+                            { 
+                                theme: "outline", 
+                                size: "large", 
+                                shape: "pill", 
+                                type: "standard", 
+                                text: "continue_with",
+                                logo_alignment: "left",
+                                width: exactWidth 
+                            }
+                        );
+                    }
+                }
+                
+                let isGoogleRendered = false;
+                const checkGoogleInterval = setInterval(function() {
+                    if (window.google && document.getElementById('googleButtonContainer')) {
+                        if (!isGoogleRendered && (document.readyState === 'complete' || document.readyState === 'interactive')) {
+                            renderGoogleButton();
+                            isGoogleRendered = true;
+                            clearInterval(checkGoogleInterval);
+                        }
+                    }
+                }, 100);
+
+                // في حالة إعادة تحجيم الشاشة (فقط إذا تغير العرض لتجنب الرعشة في الموبايل)
+                let lastWidth = window.innerWidth;
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth !== lastWidth) {
+                        lastWidth = window.innerWidth;
+                        const container = document.getElementById('googleButtonContainer');
+                        if(container && window.google) {
+                            container.innerHTML = ''; 
+                            renderGoogleButton();
+                        }
+                    }
+                });
+                </script>
+
+                <!-- 3. WHATSAPP — same height, same radius -->
+                <a href="https://wa.me/201554077727" class="ubtn ubtn-wa" target="_blank">
+                    <i class="fab fa-whatsapp" style="font-size:1.15rem"></i>
+                    نسيت اسم المستخدم أو كلمة السر؟
+                </a>
+
+            </div>
+
+            <!-- SIGN UP -->
+            <div class="signup" style="margin-top:14px">
+                <a href="/signup_company">تسجيل شركة جديدة</a>
+            </div>
+
+            <!-- DOWNLOAD -->
+            <div class="dl-section">
+                <p class="dl-label">حمّل التطبيق الآن</p>
+                <div class="dl-btns">
+                    <a class="dl-btn dl-play" href="https://play.google.com/store/apps/details?id=com.mnagy.stockflowapp&pcampaignid=web_share" target="_blank" rel="noopener" style="text-decoration:none;">
+                        <i class="fab fa-google-play"></i> Google Play
+                    </a>
+                    <a class="dl-btn dl-ios" id="iosInstallBtn" href="{{ url_for('ios_install_guide') }}" style="text-decoration:none;">
+                        <i class="fab fa-apple"></i> App Store
+                    </a>
+                </div>
+            </div>
+
+        </div><!-- /card -->
+
+        <!-- VERSION -->
+        <div class="ver">
+            <div>STOCK FLOW v1.4.8</div>
+            <div>© DATA-DRIVEN INTELLIGENCE 2026</div>
+            <a href="/privacy-policy" target="_blank" style="color:rgba(255,255,255,.45);font-size:.7rem;text-decoration:none;transition:color .2s;" onmouseover="this.style.color='rgba(255,255,255,.75)'" onmouseout="this.style.color='rgba(255,255,255,.45)'">سياسة الخصوصية</a>
+        </div>
+
+    </div>
+
+    <!-- ADMIN SECRET MODAL -->
+    <div class="adm-overlay" id="admOverlay">
+        <div class="adm-box">
+            <button class="adm-close" id="admClose"><i class="fas fa-times"></i></button>
+            <div class="adm-badge">
+                <i class="fas fa-user-shield"></i>
+                <span>وضع الإدارة</span>
+            </div>
+            <h2 class="adm-title">تسجيل دخول المدير</h2>
+
+            <div class="fgroup">
+                <label class="flabel" for="adm_usr">اسم المستخدم</label>
+                <div class="fbox">
+                    <div class="ficon"><i class="fas fa-user-tie"></i></div>
+                    <input class="finput" id="adm_usr" type="text" placeholder="أدخل اسم مستخدم المدير" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="fgroup">
+                <label class="flabel" for="adm_pwd">كلمة المرور</label>
+                <div class="fbox">
+                    <div class="ficon"><i class="fas fa-lock"></i></div>
+                    <input class="finput" id="adm_pwd" type="password" placeholder="........" autocomplete="current-password">
+                    <span class="pwtoggle" onclick="toggleAdmPw()"><i class="fas fa-eye" id="admPwIco"></i></span>
+                </div>
+            </div>
+
+            <div style="margin-top:1rem">
+                <button class="ubtn ubtn-login" id="admLoginBtn" onclick="doAdminLogin()">دخول الإدارة</button>
+            </div>
+            <div id="admError" style="margin-top:.75rem"></div>
+        </div>
+    </div>
+
+    <!-- WA FLOAT -->
+    <div class="wa-float">
+        <a href="https://wa.me/201554077727" target="_blank" class="wa-ball">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+    </div>
+
+    <!-- iPHONE INSTALL FLOATING TIP -->
+    <div class="ios-tip" id="iosInstallTip" aria-live="polite">
+        <div class="ios-tip-icon"><i class="fab fa-apple"></i></div>
+        <div class="ios-tip-copy">
+            <strong>ضيف StockFlow كاختصار على شاشة الآيفون</strong>
+            <span>افتحه بسرعة من غير ما تدور على الرابط كل مرة.</span>
+        </div>
+        <a class="ios-tip-action" href="{{ url_for('ios_install_guide') }}">الشرح</a>
+        <button class="ios-tip-close" type="button" id="iosInstallTipClose" aria-label="إغلاق">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    /* PARTICLES */
+    !function(){
+        const c=document.getElementById('pts');
+        const s=document.createElement('style');
+        s.textContent='@keyframes ptUp{0%{transform:translateY(0) scale(1);opacity:.16}100%{transform:translateY(-110vh) scale(.3);opacity:0}}';
+        document.head.appendChild(s);
+        for(let i=0;i<32;i++){
+            const d=document.createElement('div'); d.className='pt';
+            const sz=Math.random()*4+1.5;
+            d.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}vw;bottom:-${sz}px;opacity:${Math.random()*.13+.04};animation:ptUp ${Math.random()*18+14}s ${Math.random()*14}s linear infinite;`;
+            c.appendChild(d);
+        }
+    }();
+
+    /* ABOUT BTN expand */
+    !function(){
+        const b=document.getElementById('aBtn');
+        const isMobile=window.innerWidth<=520;
+        const delay=isMobile?550:900;
+        const hold=isMobile?3600:5200;
+        setTimeout(()=>{b.classList.add('open');setTimeout(()=>b.classList.remove('open'),hold);},delay);
+    }();
+
+    /* PW TOGGLE */
+    function togglePw(){
+        const i=document.getElementById('pwd'), ic=document.getElementById('pwIco');
+        i.type=i.type==='password'?'text':'password';
+        ic.className=i.type==='password'?'fas fa-eye':'fas fa-eye-slash';
+    }
+
+    /* 3D CARD TILT */
+    !function(){
+        const card=document.getElementById('loginCard');
+        document.body.addEventListener('mousemove',e=>{
+            if(window.innerWidth<768)return;
+            const r=card.getBoundingClientRect();
+            const rx=(e.clientY-r.top-r.height/2)/r.height*4.5;
+            const ry=(e.clientX-r.left-r.width/2)/r.width*-4.5;
+            card.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.008)`;
+            card.style.boxShadow=`${ry/2}px ${-rx/2}px 50px rgba(4,12,40,.4),0 8px 28px rgba(4,12,40,.2)`;
+        });
+        document.body.addEventListener('mouseleave',()=>{
+            card.style.transform='perspective(900px) rotateX(0) rotateY(0) scale(1)';
+            card.style.boxShadow='';
+        });
+    }();
+
+    /* ═══ LOGIN BUTTON HANDLER ═══ */
+    document.getElementById('loginBtn').addEventListener('click', function(){
+        const usr=document.getElementById('usr').value.trim();
+        const pwd=document.getElementById('pwd').value.trim();
+        const rem=document.getElementById('rem').checked;
+        const btn=this;
+        if(!usr||!pwd){
+            alert('يرجى إدخال اسم المستخدم وكلمة المرور');
+            return;
+        }
+        btn.disabled=true;
+        btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ الدخول...';
+        document.getElementById('sp').classList.add('on');
+
+        const fd=new FormData();
+        fd.append('username',usr);
+        fd.append('password',pwd);
+        fd.append('login_type','company');
+        if(rem) fd.append('remember_me','on');
+
+        fetch('/login',{
+            method:'POST',
+            headers:{'X-Requested-With':'XMLHttpRequest'},
+            body:fd
+        }).then(r=>r.json()).then(data=>{
+            if(data.success){
+                window.location.href=data.redirect_url||'/company_dashboard';
+            } else {
+                document.getElementById('sp').classList.remove('on');
+                btn.disabled=false;
+                btn.innerHTML='تسجيل الدخول';
+                alert(data.message);
+            }
+        }).catch(()=>{
+            document.getElementById('sp').classList.remove('on');
+            btn.disabled=false;
+            btn.innerHTML='تسجيل الدخول';
+            alert('تعذر الاتصال بالخادم');
+        });
+    });
+
+    /* Enter on password field triggers login */
+    document.getElementById('pwd').addEventListener('keydown',e=>{
+        if(e.key==='Enter') document.getElementById('loginBtn').click();
+    });
+    document.getElementById('usr').addEventListener('keydown',e=>{
+        if(e.key==='Enter') document.getElementById('pwd').focus();
+    });
+
+    /* Hide iPhone install hint when already running from Home Screen */
+    !function(){
+        const installBtn=document.getElementById('iosInstallBtn');
+        const tip=document.getElementById('iosInstallTip');
+        const close=document.getElementById('iosInstallTipClose');
+        const ua=window.navigator.userAgent||'';
+        const isIPhone=/iPhone|iPod/.test(ua);
+        const isStandalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+        if(installBtn&&isStandalone){
+            installBtn.style.display='none';
+        }
+        if(tip&&isIPhone&&!isStandalone){
+            window.setTimeout(()=>tip.classList.add('show'),650);
+        }
+        if(close&&tip){
+            close.addEventListener('click',()=>tip.classList.remove('show'));
+        }
+    }();
+
+    /* ═══ TRIPLE CLICK LOGO → admin modal ═══ */
+    !function(){
+        const zone=document.getElementById('logoZone');
+        const overlay=document.getElementById('admOverlay');
+        const closeBtn=document.getElementById('admClose');
+        let n=0,t=0;
+
+        zone.addEventListener('click',()=>{
+            const now=Date.now();
+            n=now-t<900?n+1:1; t=now;
+            if(n>=3){
+                n=0;
+                overlay.classList.add('on');
+                setTimeout(()=>document.getElementById('adm_usr').focus(),200);
+            }
+        });
+
+        closeBtn.addEventListener('click',()=>{
+            overlay.classList.remove('on');
+            document.getElementById('adm_usr').value='';
+            document.getElementById('adm_pwd').value='';
+            document.getElementById('admError').innerHTML='';
+        });
+
+        overlay.addEventListener('click',(e)=>{
+            if(e.target===overlay){
+                overlay.classList.remove('on');
+                document.getElementById('admError').innerHTML='';
+            }
+        });
+    }();
+
+    function toggleAdmPw(){
+        const i=document.getElementById('adm_pwd'), ic=document.getElementById('admPwIco');
+        i.type=i.type==='password'?'text':'password';
+        ic.className=i.type==='password'?'fas fa-eye':'fas fa-eye-slash';
+    }
+
+    function doAdminLogin(){
+        const usr=document.getElementById('adm_usr').value.trim();
+        const pwd=document.getElementById('adm_pwd').value.trim();
+        const errDiv=document.getElementById('admError');
+        const btn=document.getElementById('admLoginBtn');
+        if(!usr||!pwd){
+            errDiv.innerHTML='<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> يرجى إدخال اسم المستخدم وكلمة المرور</div>';
+            return;
+        }
+        btn.disabled=true;
+        btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ الدخول...';
+        errDiv.innerHTML='';
+
+        const fd=new FormData();
+        fd.append('username',usr);
+        fd.append('password',pwd);
+        fd.append('login_type','admin');
+        fd.append('remember_me','on');
+
+        fetch('/login',{
+            method:'POST',
+            headers:{'X-Requested-With':'XMLHttpRequest'},
+            body:fd
+        }).then(r=>r.json()).then(data=>{
+            if(data.success){
+                document.getElementById('sp').classList.add('on');
+                window.location.href=data.redirect_url||'/admin_dashboard';
+            } else {
+                errDiv.innerHTML='<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> '+data.message+'</div>';
+                btn.disabled=false;
+                btn.innerHTML='دخول الإدارة';
+            }
+        }).catch(()=>{
+            errDiv.innerHTML='<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> تعذر الاتصال بالخادم</div>';
+            btn.disabled=false;
+            btn.innerHTML='دخول الإدارة';
+        });
+    }
+
+    /* Enter key support in admin modal */
+    document.getElementById('adm_pwd').addEventListener('keydown',e=>{
+        if(e.key==='Enter') doAdminLogin();
+    });
+    document.getElementById('adm_usr').addEventListener('keydown',e=>{
+        if(e.key==='Enter') document.getElementById('adm_pwd').focus();
+    });
+    </script>
+</body>
+</html>

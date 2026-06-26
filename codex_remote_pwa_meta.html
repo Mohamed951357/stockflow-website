@@ -1,0 +1,43 @@
+<meta name="theme-color" content="#1243C4">
+<meta name="application-name" content="StockFlow">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="StockFlow">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon-safe.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/pwa-192-safe.png') }}">
+<link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='icons/pwa-512-safe.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pwa_install.css') }}?v=20260609">
+<script src="{{ url_for('static', filename='js/pwa_install.js') }}?v=20260609" defer></script>
+{% if current_user.is_authenticated and session.get('user_type') == 'company' %}
+<script>
+    (function () {
+        function reportClientContext() {
+            var standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+            var displayMode = standalone ? 'standalone' : 'browser';
+            try {
+                fetch('/client-context', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    keepalive: true,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        is_standalone: standalone,
+                        display_mode: displayMode,
+                        user_agent: window.navigator.userAgent || '',
+                        platform: window.navigator.platform || '',
+                        path: window.location.pathname || ''
+                    })
+                }).catch(function () {});
+            } catch (err) {}
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', reportClientContext, { once: true });
+        } else {
+            reportClientContext();
+        }
+    })();
+</script>
+{% endif %}

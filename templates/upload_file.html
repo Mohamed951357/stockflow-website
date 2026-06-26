@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رفع ملف - نظام حجز المواعيد</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #e9ecef;
+            border-radius: 10px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #dc3545;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #dc3545;
+            margin-bottom: 1rem;
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .tips-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .tip-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tip-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .status-card {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .status-card-header {
+            background: linear-gradient(135deg, #0d6efd 0%, #20c997 100%);
+            color: #fff;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .status-pill {
+            border-radius: 999px;
+            padding: 0.45rem 0.9rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .mini-stat {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1rem;
+            height: 100%;
+        }
+
+        .mini-stat .label {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .mini-stat .value {
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .token-box {
+            font-family: Consolas, monospace;
+            direction: ltr;
+            text-align: left;
+        }
+
+        /* ── Throttle Card (فلتر الفترة الزمنية) ── */
+        .throttle-card {
+            background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%);
+            border: 1.5px solid #ffc107;
+            border-radius: 14px;
+            padding: 1.4rem 1.6rem;
+            margin-top: 1.5rem;
+        }
+        .throttle-card .tc-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #856404;
+            margin-bottom: 0.3rem;
+        }
+        .throttle-card .tc-subtitle {
+            font-size: 0.82rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .throttle-status {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.85rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            margin-top: 0.75rem;
+            display: none;
+        }
+        .throttle-status.show {
+            display: block;
+        }
+        #saveIntervalBtn {
+            background: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            padding: 0.45rem 1.2rem;
+            transition: opacity 0.2s;
+        }
+        #saveIntervalBtn:hover { opacity: 0.88; }
+        #saveIntervalBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* ── Stale Timeout Card (مهلة المعالجة) ── */
+        .stale-card {
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+            border: 1.5px solid #66bb6a;
+            border-radius: 14px;
+            padding: 1.4rem 1.6rem;
+            margin-top: 1rem;
+        }
+        .stale-card .sc-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #2e7d32;
+            margin-bottom: 0.3rem;
+        }
+        .stale-card .sc-subtitle {
+            font-size: 0.82rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .stale-status {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.85rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            margin-top: 0.75rem;
+            display: none;
+        }
+        .stale-status.show { display: block; }
+        .last-process-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+        .last-process-badge.success { background: #d1fae5; color: #065f46; }
+        .last-process-badge.killed  { background: #fee2e2; color: #991b1b; }
+        .last-process-badge.unknown { background: #f3f4f6; color: #4b5563; }
+        #saveStaleBtn {
+            background: linear-gradient(135deg, #43a047 0%, #1b5e20 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            padding: 0.45rem 1.2rem;
+            transition: opacity 0.2s;
+        }
+        #saveStaleBtn:hover { opacity: 0.88; }
+        #saveStaleBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+    
+        /* --- Mobile Responsiveness Bounds Fix --- */
+        html, body {
+            overflow-x: hidden !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-x: none !important;
+        }
+
+    </style>
+    <link href="{{ url_for('static', filename='css/admin_identity.css') }}" rel="stylesheet">
+</head>
+<body>
+    {% include '_admin_navbar.html' %}
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-upload me-2"></i>
+                    رفع ملف أصناف جديد
+                </h2>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            {% if message != 'مرحباً بك Default Admin' %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {# رسالة التنبيه عند وجود معالجة جارية #}
+                {% set processing_warehouse = target_warehouse %}
+
+                {% if processing_warehouse and processing_warehouse.is_processing %}
+                <div id="processingBanner" class="alert alert-warning border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm text-warning me-3" role="status"></div>
+                            <div id="processingBannerText">
+                            <strong>تنبيه:</strong> هناك ملف قيد المعالجة حالياً لمخزنك ({{ processing_warehouse.name }}).
+                            <p class="mb-0 small text-muted">يمكنك الاستمرار في استخدام الموقع، سيتم تحديث الأرصدة تلقائياً فور الانتهاء.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form method="POST" action="{{ url_for('force_stop_upload') }}" onsubmit="return confirm('هل تريد إيقاف عملية الرفع الحالية إجبارياً؟');">
+                                <input type="hidden" name="warehouse_id" value="{{ processing_warehouse.id }}">
+                                <button id="forceStopUploadButton" type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-ban me-1"></i>
+                                    إيقاف الرفع إجبارياً
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('reset_processing_flag') }}" onsubmit="return confirm('هل تريد إعادة ضبط حالة المعالجة العالقة؟');">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-rotate-left me-1"></i>
+                                    إعادة ضبط الحالة
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="upload-container">
+                            <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data"> 
+                                {% if current_user.role != 'warehouse_admin' %}
+                                    {% if warehouses|length > 1 %}
+                                    <div class="mb-4">
+                                        <label for="warehouse_id" class="form-label">
+                                            <i class="fas fa-warehouse me-2"></i>
+                                            اختر المخزن المستهدف (اختياري)
+                                        </label>
+                                        <select class="form-select form-select-lg" id="warehouse_id" name="warehouse_id">
+                                            <option value="">-- المخزن الافتراضي --</option>
+                                            {% for warehouse in warehouses %}
+                                                <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="form-text text-primary">سيتم الرفع للمخزن الافتراضي (بونص فارما) إذا لم يتم الاختيار.</div>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                <div class="alert alert-info mb-4">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    سيتم رفع الأصناف إلى مخزنك: <strong>{{ current_user.warehouse.name }}</strong>
+                                </div>
+                                {% endif %}
+
+                                <div class="upload-area" onclick="document.getElementById('file').click()">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-file-excel"></i>
+                                    </div>
+                                    <h4>اختر ملف Excel للرفع</h4>
+                                    <p class="text-muted">اضغط هنا أو اسحب الملف إلى هذه المنطقة</p>
+                                    <input type="file" id="file" name="file" accept=".xlsx,.xls" style="display: none;" required>
+                                </div>
+
+                                <div class="mt-3 text-center">
+                                    <button type="submit" class="btn btn-primary btn-upload" {% if processing_warehouse and processing_warehouse.is_processing %}disabled{% endif %}>
+                                        <i class="fas fa-upload me-2"></i>
+                                        رفع الملف
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+
+
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="tips-container">
+                            <h5>
+                                <i class="fas fa-lightbulb me-2 text-warning"></i>
+                                نصائح مهمة
+                            </h5>
+
+                            <div class="tip-item">
+                                <strong>أنواع الملفات المدعومة:</strong>
+                                <p class="text-muted mb-0">Excel (.xlsx, .xls)</p>
+                            </div>
+
+                            <div class="tip-item">
+                                <strong>حجم الملف:</strong>
+                                <p class="text-muted mb-0">الحد الأقصى 16 ميجابايت</p>
+                            </div>
+
+                            <div class="tip-item">
+                                <strong>تنسيق البيانات:</strong>
+                                <p class="text-muted mb-0">تأكد من أن البيانات في الصف الأول هي عناوين الأعمدة</p>
+                            </div>
+
+                            <div class="tip-item">
+                                <strong>الأمان:</strong>
+                                <p class="text-muted mb-0">سيتم فحص الملف قبل الحفظ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-card mt-4">
+                    <div class="status-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h4 class="mb-1">
+                                <i class="fas fa-link me-2"></i>
+                                حالة ربط الإكسل والـ API
+                            </h4>
+                            <div class="small opacity-75">آخر تحديث، التوكن، وحالة الاتصال في مكان واحد</div>
+                        </div>
+                        <span class="badge bg-{{ bridge_status.connection_class }} status-pill">{{ bridge_status.connection_label }}</span>
+                    </div>
+
+                    <div class="bg-white p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <div class="mini-stat">
+                                    <div class="label">آخر أبديت</div>
+                                    <div class="value">{{ bridge_status.last_update_time or 'لا يوجد تحديث بعد' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mini-stat">
+                                    <div class="label">المخزن</div>
+                                    <div class="value">{{ bridge_status.warehouse_name or 'غير محدد' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mini-stat">
+                                    <div class="label">آخر حالة</div>
+                                    <div class="value">
+                                        {% if bridge_status.last_status == 'success' %}
+                                            ناجح
+                                        {% elif bridge_status.last_status in ['waiting', 'skipped'] %}
+                                            مفتوح وينتظر الرفع القادم
+                                        {% elif bridge_status.last_status == 'starting' %}
+                                            بدأ التشغيل
+                                        {% elif bridge_status.last_status == 'processing' %}
+                                            جارٍ التنفيذ
+                                        {% elif bridge_status.last_status == 'stopped' %}
+                                            متوقف
+                                        {% elif bridge_status.last_status == 'error' %}
+                                            فشل
+                                        {% else %}
+                                            لا توجد بيانات
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mini-stat">
+                                    <div class="label">عدد الصفوف</div>
+                                    <div class="value">{{ bridge_status.rows_count or 0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <div class="mini-stat border border-success-subtle">
+                                    <div class="label">تمت إضافته</div>
+                                    <div class="value text-success">{{ bridge_status.added }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mini-stat border border-info-subtle">
+                                    <div class="label">تم تحديثه</div>
+                                    <div class="value text-info">{{ bridge_status.updated }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mini-stat border border-warning-subtle">
+                                    <div class="label">تم تصفيره</div>
+                                    <div class="value text-warning">{{ bridge_status.reset }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mini-stat border border-secondary-subtle">
+                                    <div class="label">بدون تغيير</div>
+                                    <div class="value text-secondary">{{ bridge_status.skipped }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">التوكن الحالي</label>
+                            <div class="input-group">
+                                <input type="text" id="bridgeTokenField" class="form-control token-box" value="{{ bridge_status.token or 'غير مضبوط حتى الآن' }}" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyBridgeToken()">
+                                    <i class="fas fa-copy me-1"></i>
+                                    نسخ
+                                </button>
+                            </div>
+                            <div class="form-text">مصدر التوكن: {{ bridge_status.token_source }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">رابط الاستقبال</label>
+                            <input type="text" class="form-control token-box" value="{{ bridge_status.endpoint_url }}" readonly>
+                        </div>
+
+                        <div class="alert alert-light border mb-3">
+                            <i class="fas fa-heart-pulse me-2 text-success"></i>
+                            {% if bridge_status.heartbeat_time %}
+                                آخر إشارة من البرنامج: <strong>{{ bridge_status.heartbeat_time }}</strong>
+                            {% else %}
+                                لم تصل نبضة مباشرة من برنامج الربط بعد. افتح البرنامج المحدث ليظهر هنا هل هو مفتوح الآن أم لا.
+                            {% endif %}
+                            {% if bridge_status.machine_name %}
+                                <span class="ms-2">الجهاز: <strong>{{ bridge_status.machine_name }}</strong></span>
+                            {% endif %}
+                            {% if bridge_status.next_run_time %}
+                                <div class="small text-muted mt-1">المحاولة القادمة المتوقعة: {{ bridge_status.next_run_time }}</div>
+                            {% else %}
+                                <div class="small text-muted mt-1">موعد المحاولة القادمة سيظهر هنا تلقائيًا بمجرد وصول أول نبضة من برنامج الربط.</div>
+                            {% endif %}
+                        </div>
+
+                        {% if bridge_warehouses_status %}
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>المخزن</th>
+                                        <th>الاتصال</th>
+                                        <th>آخر تحديث</th>
+                                        <th>النبضة</th>
+                                        <th>الصفوف</th>
+                                        <th>الجهاز</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for wh_status in bridge_warehouses_status %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ wh_status.name }}</strong>
+                                            <div class="small text-muted">رقم {{ wh_status.id }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ wh_status.connection_class }}">{{ wh_status.connection_label }}</span>
+                                            {% if wh_status.error %}
+                                            <div class="small text-danger mt-1">{{ wh_status.error }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ wh_status.last_update_time or 'لا يوجد' }}</td>
+                                        <td>
+                                            {{ wh_status.heartbeat_time or 'لم تصل' }}
+                                            {% if wh_status.next_run_time %}
+                                            <div class="small text-muted">القادمة: {{ wh_status.next_run_time }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="text-success">{{ wh_status.added }}</span>
+                                            /
+                                            <span class="text-info">{{ wh_status.updated }}</span>
+                                            /
+                                            <span class="text-warning">{{ wh_status.reset }}</span>
+                                            <div class="small text-muted">إجمالي {{ wh_status.rows_count }}</div>
+                                        </td>
+                                        <td>{{ wh_status.machine_name or '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+
+                        {% if bridge_status.sync_source == 'api' %}
+                        <div class="alert alert-light border mb-0">
+                            <i class="fas fa-server me-2 text-success"></i>
+                            آخر تحديث وصل من السيرفر مباشرة عبر برنامج الربط، وليس من رفع ملف يدوي.
+                        </div>
+                        {% elif bridge_status.last_file_name %}
+                        <div class="alert alert-light border mb-0">
+                            <i class="fas fa-file-lines me-2 text-primary"></i>
+                            آخر ملف معروف: <strong>{{ bridge_status.last_file_name }}</strong>
+                        </div>
+                        {% elif bridge_status.connection_state == 'connected' %}
+                        <div class="alert alert-light border mb-0">
+                            <i class="fas fa-plug me-2 text-success"></i>
+                            آخر تحديث وصل من الربط المباشر API وليس من رفع ملف يدوي.
+                        </div>
+                        {% endif %}
+
+                        {% if bridge_status.error %}
+                        <div class="alert alert-danger mt-3 mb-0">
+                            <i class="fas fa-triangle-exclamation me-2"></i>
+                            آخر خطأ: {{ bridge_status.error }}
+                        </div>
+                        {% endif %}
+
+                        <!-- ─── بطاقة الحد الأدنى بين التحديثات ─── -->
+                        <div class="throttle-card">
+                            <div class="tc-title">
+                                <i class="fas fa-clock me-2"></i>
+                                الحد الأدنى بين التحديثات المقبولة
+                            </div>
+                            <div class="tc-subtitle">
+                                برنامج الربط يستمر في الإرسال بشكل طبيعي — الموقع فقط يتجاهل التحديثات التي تصل قبل انقضاء الوقت المحدد.
+                            </div>
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <select id="intervalSelect" class="form-select form-select-sm" style="max-width: 220px;">
+                                    <option value="0">⛔ مطفي (اقبل كل تحديث)</option>
+                                    <option value="5">5 دقائق</option>
+                                    <option value="10">10 دقائق</option>
+                                    <option value="15">15 دقائق</option>
+                                    <option value="30">30 دقيقة</option>
+                                    <option value="45">45 دقيقة</option>
+                                    <option value="60">60 دقيقة (1 ساعة)</option>
+                                    <option value="90">90 دقيقة (1.5 ساعة)</option>
+                                    <option value="120">120 دقيقة (2 ساعة)</option>
+                                </select>
+                                <button id="saveIntervalBtn" onclick="saveThrottleInterval()">
+                                    <i class="fas fa-floppy-disk me-1"></i> حفظ
+                                </button>
+                            </div>
+                            <div id="throttleStatus" class="throttle-status"></div>
+                        </div>
+                        <!-- ─────────────────────────────────────── -->
+
+                        <!-- ─── بطاقة مهلة المعالجة + حالة آخر معالجة ─── -->
+                        <div class="stale-card">
+                            <div class="sc-title">
+                                <i class="fas fa-hourglass-half me-2"></i>
+                                مهلة المعالجة قبل الإلغاء التلقائي
+                            </div>
+                            <div class="sc-subtitle">
+                                إذا لم تنتهِ المعالجة خلال هذا الوقت، يتم فك حالتها تلقائياً حتى تتمكن من رفع ملف جديد.
+                            </div>
+
+                            <!-- آخر حالة معالجة -->
+                            <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+                                <span class="text-muted small">آخر معالجة:</span>
+                                {% if processing_warehouse and processing_warehouse.last_process_time %}
+                                    {% if processing_warehouse.last_process_status == 'success' and not processing_warehouse.last_process_error %}
+                                        <span class="last-process-badge success">
+                                            <i class="fas fa-circle-check"></i> نجحت بالكامل ✅
+                                        </span>
+                                    {% elif processing_warehouse.last_process_status in ['error', 'cancelled'] or processing_warehouse.last_process_error %}
+                                        <span class="last-process-badge killed" title="{{ processing_warehouse.last_process_error or '' }}">
+                                            <i class="fas fa-skull-crossbones"></i>
+                                            {% if 'stale' in (processing_warehouse.last_process_error or '') or 'فك حالة' in (processing_warehouse.last_process_error or '') or 'عالقة' in (processing_warehouse.last_process_error or '') %}
+                                                تم إلغاؤها تلقائياً (stale timeout)
+                                            {% elif 'نبض' in (processing_warehouse.last_process_error or '') %}
+                                                أُلغيت بسبب نبضة برنامج الربط
+                                            {% elif 'cancel' in (processing_warehouse.last_process_error or '').lower() %}
+                                                تم إيقافها يدوياً
+                                            {% else %}
+                                                فشلت — {{ (processing_warehouse.last_process_error or '')[:50] }}
+                                            {% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="last-process-badge unknown"><i class="fas fa-circle-question"></i> غير محدد</span>
+                                    {% endif %}
+                                    <span class="text-muted small">({{ processing_warehouse.last_process_time | cairo_time }})</span>
+                                {% else %}
+                                    <span class="last-process-badge unknown"><i class="fas fa-minus"></i> لا توجد بيانات بعد</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <select id="staleSelect" class="form-select form-select-sm" style="max-width: 240px;">
+                                    <option value="3">3 دقائق</option>
+                                    <option value="5">5 دقائق</option>
+                                    <option value="10">10 دقائق</option>
+                                    <option value="20">20 دقيقة</option>
+                                    <option value="30">30 دقيقة</option>
+                                    <option value="45">45 دقيقة</option>
+                                    <option value="60">60 دقيقة (1 ساعة) — افتراضي</option>
+                                    <option value="90">90 دقيقة (1.5 ساعة)</option>
+                                    <option value="120">120 دقيقة (2 ساعة)</option>
+                                    <option value="180">180 دقيقة (3 ساعات)</option>
+                                    <option value="360">360 دقيقة (6 ساعات)</option>
+                                </select>
+                                <button id="saveStaleBtn" onclick="saveStaleTimeout()">
+                                    <i class="fas fa-floppy-disk me-1"></i> حفظ
+                                </button>
+                            </div>
+                            <div id="staleStatus" class="stale-status"></div>
+                        </div>
+                        <!-- ─────────────────────────────────────────── -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // عرض اسم الملف المختار
+        document.getElementById('file').addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : '';
+            if (fileName) {
+                document.querySelector('.upload-area h4').textContent = fileName;
+                document.querySelector('.upload-area p').textContent = 'ملف جاهز للرفع';
+            }
+        });
+
+        function copyBridgeToken() {
+            const field = document.getElementById('bridgeTokenField');
+            if (!field || !field.value || field.value === 'غير مضبوط حتى الآن') {
+                return;
+            }
+
+            field.select();
+            field.setSelectionRange(0, 99999);
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(field.value);
+            } else {
+                document.execCommand('copy');
+            }
+        }
+
+        const uploadStatusUrl = "{{ url_for('upload_file_status') }}";
+        const processingActive = {{ 'true' if processing_warehouse and processing_warehouse.is_processing else 'false' }};
+
+        if (processingActive) {
+            let pageReloadedAfterFinish = false;
+
+            window.setInterval(async function() {
+                try {
+                    const response = await fetch(uploadStatusUrl, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        cache: 'no-store'
+                    });
+
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (!data.success || !data.has_report) {
+                        return;
+                    }
+
+                    if (data.status === 'cancelling') {
+                        const stopButton = document.getElementById('forceStopUploadButton');
+                        if (stopButton) {
+                            stopButton.disabled = true;
+                            stopButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الإيقاف...';
+                        }
+                    }
+
+                    if (!data.is_processing && !pageReloadedAfterFinish) {
+                        pageReloadedAfterFinish = true;
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Upload status polling failed:', error);
+                }
+            }, 5000);
+        }
+    </script>
+
+    <script>
+        /* ══════════════════════════════════════════════════════════════
+           Throttle Interval — عرض إعداد الفلتر الزمني مع إحصائيات
+           آخر تحديث مقبول + كام صنف تحدث + موعد التحديث القادم
+        ══════════════════════════════════════════════════════════════ */
+        const _intervalUrl = "{{ url_for('erp_bridge_interval') }}";
+        let _throttleRefreshTimer = null;
+
+        function _buildThrottleStatusHtml(data) {
+            const mins   = data.interval_minutes || 0;
+            const stats  = data.last_stats || {};
+            const lastFmt = data.last_accepted_fmt;
+            const nextFmt = data.next_accepted_fmt;
+            const waitLeft = data.wait_left_minutes || 0;
+
+            if (mins <= 0) {
+                return `<i class="fas fa-circle-info text-primary me-1"></i>الفلتر <strong>مطفي</strong> — الموقع يقبل كل تحديث.`;
+            }
+
+            let html = `<i class="fas fa-circle-check text-success me-1"></i>`;
+            html += `الفلتر مفعّل — تحديث مقبول كل <strong>${mins} دقيقة</strong>.<br>`;
+
+            // آخر تحديث مقبول + الإحصائيات
+            if (lastFmt) {
+                const added   = stats.added   || 0;
+                const updated = stats.updated || 0;
+                const reset   = stats.reset   || 0;
+                html += `<span class="text-muted">آخر تحديث مقبول: <strong>${lastFmt}</strong>`;
+                if (added + updated + reset > 0) {
+                    html += ` &nbsp;|&nbsp; `;
+                    if (added > 0)   html += `<span class="text-success">+${added} جديد</span> `;
+                    if (updated > 0) html += `<span class="text-info">↻${updated} محدَّث</span> `;
+                    if (reset > 0)   html += `<span class="text-warning">⊘${reset} صُفِّر</span>`;
+                }
+                html += `</span><br>`;
+            } else {
+                html += `<span class="text-muted">لم يُقبَل أي تحديث بعد منذ تفعيل الفلتر.</span><br>`;
+            }
+
+            // موعد التحديث القادم
+            if (nextFmt) {
+                const waitStr = waitLeft > 0
+                    ? ` (<span class="text-warning fw-bold">بعد ${waitLeft.toFixed(0)} دقيقة</span>)`
+                    : ` (<span class="text-success fw-bold">جاهز الآن</span>)`;
+                html += `<span class="text-muted">التحديث القادم سيُقبَل: <strong>${nextFmt}</strong>${waitStr}</span>`;
+            }
+
+            html += `&nbsp;&nbsp;<span class="text-success small">✅ برنامج الربط لا يتأثر نهائياً</span>`;
+            return html;
+        }
+
+        async function loadCurrentThrottleInterval() {
+            try {
+                const res = await fetch(_intervalUrl, { cache: 'no-store' });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data.success) return;
+
+                // ضبط الـ select
+                const select = document.getElementById('intervalSelect');
+                if (select) {
+                    const val = String(data.interval_minutes || 0);
+                    const found = Array.from(select.options).some(o => {
+                        if (o.value === val) { o.selected = true; return true; }
+                        return false;
+                    });
+                    if (!found) select.value = '0';
+                }
+
+                // عرض الحالة
+                const statusEl = document.getElementById('throttleStatus');
+                if (statusEl) {
+                    const mins = data.interval_minutes || 0;
+                    statusEl.innerHTML = _buildThrottleStatusHtml(data);
+                    statusEl.classList.add('show');
+                    statusEl.style.borderColor = mins > 0 ? '#198754' : '#0d6efd';
+                }
+
+                // إعادة التحديث التلقائي كل 60 ثانية (عشان الوقت المتبقي يتحدث)
+                if (_throttleRefreshTimer) clearTimeout(_throttleRefreshTimer);
+                if ((data.interval_minutes || 0) > 0) {
+                    _throttleRefreshTimer = setTimeout(loadCurrentThrottleInterval, 60000);
+                }
+            } catch(e) {
+                console.warn('loadCurrentThrottleInterval failed:', e);
+            }
+        }
+
+        async function saveThrottleInterval() {
+            const select   = document.getElementById('intervalSelect');
+            const btn      = document.getElementById('saveIntervalBtn');
+            const statusEl = document.getElementById('throttleStatus');
+            if (!select || !btn) return;
+
+            const interval = parseInt(select.value, 10);
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الحفظ...';
+            statusEl.classList.remove('show');
+
+            try {
+                const res = await fetch(_intervalUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ interval_minutes: interval })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    // أعد تحميل البيانات الكاملة بعد الحفظ
+                    await loadCurrentThrottleInterval();
+                } else {
+                    statusEl.innerHTML =
+                        `<i class="fas fa-triangle-exclamation text-danger me-1"></i>${data.message || 'حدث خطأ.'}`;
+                    statusEl.style.borderColor = '#dc3545';
+                    statusEl.classList.add('show');
+                }
+            } catch(e) {
+                statusEl.innerHTML =
+                    `<i class="fas fa-triangle-exclamation text-danger me-1"></i>فشل الاتصال بالسيرفر.`;
+                statusEl.style.borderColor = '#dc3545';
+                statusEl.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-floppy-disk me-1"></i> حفظ';
+            }
+        }
+
+        // تحميل عند فتح الصفحة
+        loadCurrentThrottleInterval();
+    </script>
+
+    <script>
+        /* ══════════════════════════════════════════════════════════════
+           Stale Timeout — مهلة المعالجة قبل الإلغاء التلقائي
+        ══════════════════════════════════════════════════════════════ */
+        const _staleUrl = "{{ url_for('erp_bridge_stale_timeout') }}";
+
+        async function loadCurrentStaleTimeout() {
+            try {
+                const res = await fetch(_staleUrl, { cache: 'no-store' });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data.success) return;
+
+                const select = document.getElementById('staleSelect');
+                if (select) {
+                    const val = String(data.stale_minutes || 60);
+                    const found = Array.from(select.options).some(o => {
+                        if (o.value === val) { o.selected = true; return true; }
+                        return false;
+                    });
+                    if (!found) {
+                        // اختر أقرب خيار أعلى من القيمة
+                        select.value = '60';
+                    }
+                }
+
+                const statusEl = document.getElementById('staleStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = `<i class="fas fa-circle-info text-success me-1"></i>مهلة المعالجة الحالية: <strong>${data.stale_minutes} دقيقة</strong>`;
+                    statusEl.style.borderColor = '#198754';
+                    statusEl.classList.add('show');
+                }
+            } catch(e) {
+                console.warn('loadCurrentStaleTimeout failed:', e);
+            }
+        }
+
+        async function saveStaleTimeout() {
+            const select   = document.getElementById('staleSelect');
+            const btn      = document.getElementById('saveStaleBtn');
+            const statusEl = document.getElementById('staleStatus');
+            if (!select || !btn) return;
+
+            const minutes = parseInt(select.value, 10);
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الحفظ...';
+            statusEl.classList.remove('show');
+
+            try {
+                const res = await fetch(_staleUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stale_minutes: minutes })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    statusEl.innerHTML = `<i class="fas fa-circle-check text-success me-1"></i>تم الحفظ — مهلة المعالجة الآن: <strong>${data.stale_minutes} دقيقة</strong>`;
+                    statusEl.style.borderColor = '#198754';
+                } else {
+                    statusEl.innerHTML = `<i class="fas fa-triangle-exclamation text-danger me-1"></i>${data.message || 'حدث خطأ.'}`;
+                    statusEl.style.borderColor = '#dc3545';
+                }
+                statusEl.classList.add('show');
+            } catch(e) {
+                statusEl.innerHTML = `<i class="fas fa-triangle-exclamation text-danger me-1"></i>فشل الاتصال بالسيرفر.`;
+                statusEl.style.borderColor = '#dc3545';
+                statusEl.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-floppy-disk me-1"></i> حفظ';
+            }
+        }
+
+        // تحميل عند فتح الصفحة
+        loadCurrentStaleTimeout();
+    </script>
+</body>
+</html>
+

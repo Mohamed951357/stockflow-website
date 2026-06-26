@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include '_pwa_meta.html' %}
+    <title>STOCK FLOW — تسجيل شركة جديدة</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+    :root {
+        --blue: #1243C4;
+        --blue-dark: #0A2DA0;
+        --white: #FFFFFF;
+        --off: #F0F3FA;
+        --text: #111827;
+        --muted: #6B7280;
+        --light: #9CA3AF;
+        --wa: #25D366;
+        --r-card: 24px;
+        --r-field: 14px;
+        --r-pill: 50px;
+        --spring: cubic-bezier(0.34,1.56,0.64,1);
+        --ease: cubic-bezier(0.4,0,0.2,1);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body {
+        height:100%;
+        width:100%;
+        max-width:100%;
+        overflow-x:hidden;
+        overscroll-behavior-x:none;
+        background:var(--blue);
+    }
+
+    body {
+        font-family:'Cairo',sans-serif;
+        min-height:100vh;
+        min-height:100dvh;
+        background: var(--blue);
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:flex-start;
+        padding:max(40px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom)) 16px;
+        position:relative;
+        overflow-x:clip;
+        overflow-y:auto;
+        direction:rtl;
+        width:100%;
+        max-width:100vw;
+    }
+
+    body::before {
+        content:'';
+        position:fixed;
+        inset:0;
+        pointer-events:none;
+        z-index:0;
+        background:
+            radial-gradient(ellipse 65% 55% at 12% 18%, rgba(255,255,255,.08) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 45% at 88% 82%, rgba(10,45,160,.55) 0%, transparent 60%),
+            radial-gradient(ellipse 35% 35% at 50% 50%, rgba(18,67,196,.28) 0%, transparent 70%);
+        animation: meshDrift 22s ease-in-out infinite;
+    }
+    @keyframes meshDrift {
+        0%,100% { transform:scale(1) rotate(0deg); opacity:1; }
+        50% { transform:scale(1.06) rotate(.8deg); opacity:.88; }
+    }
+
+    #pts { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+    .pt { position:absolute; border-radius:50%; background:rgba(255,255,255,.18); animation:ptUp linear infinite; }
+    @keyframes ptUp {
+        0% { transform:translateY(0) scale(1); opacity:.16; }
+        100% { transform:translateY(-110vh) scale(.3); opacity:0; }
+    }
+
+    .about-btn {
+        position:fixed;
+        top:max(20px, env(safe-area-inset-top));
+        left:20px;
+        z-index:1000;
+        display:flex;
+        align-items:center;
+        justify-content:flex-start;
+        width:38px;
+        height:38px;
+        overflow:hidden;
+        white-space:nowrap;
+        background:rgba(255,255,255,.15);
+        backdrop-filter:blur(10px);
+        border:1px solid rgba(255,255,255,.22);
+        border-radius:var(--r-pill);
+        color:white;
+        text-decoration:none;
+        padding:0;
+        transition:all .5s var(--ease);
+    }
+    .about-btn.open { width:132px; padding-right:15px; }
+    .about-btn i {
+        font-size:.88rem;
+        min-width:38px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+    .about-btn span {
+        font-size:.82rem;
+        font-weight:700;
+        opacity:0;
+        transition:opacity .3s;
+        margin-right:4px;
+    }
+    .about-btn.open span { opacity:1; }
+    .about-btn:hover {
+        background:white;
+        color:var(--blue);
+        box-shadow:0 6px 20px rgba(0,0,0,.18);
+    }
+
+    .wrap {
+        position:relative;
+        z-index:1;
+        width:min(100%, 460px);
+        max-width:min(100%, 460px);
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        margin-top:auto;
+        margin-bottom:auto;
+    }
+
+    .logo-zone {
+        text-align:center;
+        margin-bottom:18px;
+        animation:upIn .75s var(--spring) .05s both;
+        width:100%;
+        flex-shrink:0;
+        min-height:100px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+    @keyframes upIn {
+        from { opacity:0; transform:translateY(-20px) scale(.9); }
+        to { opacity:1; transform:translateY(0) scale(1); }
+    }
+    .logo-zone img {
+        height:120px;
+        width:auto;
+        max-width:300px;
+        object-fit:contain;
+        display:block;
+        filter:drop-shadow(0 4px 18px rgba(0,0,0,.3));
+        transition:transform .35s ease, filter .35s ease;
+    }
+    .logo-zone img:hover {
+        transform:scale(1.08);
+        filter:drop-shadow(0 8px 28px rgba(0,0,0,.4));
+    }
+
+    .logo-fallback {
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:8px;
+        user-select:none;
+    }
+    .logo-bars {
+        display:flex;
+        gap:6px;
+        align-items:flex-end;
+        height:60px;
+    }
+    .logo-bars .bar {
+        display:block;
+        border-radius:4px;
+        background:rgba(255,255,255,.9);
+    }
+    .logo-bars .b1 { width:16px; height:40px; opacity:.85; }
+    .logo-bars .b2 { width:16px; height:55px; }
+    .logo-bars .b3 { width:16px; height:32px; opacity:.7; position:relative; }
+    .logo-bars .b3::after {
+        content:'';
+        position:absolute;
+        bottom:0;
+        right:0;
+        border-style:solid;
+        border-width:0 0 18px 16px;
+        border-color:transparent transparent #E53E3E transparent;
+        opacity:.9;
+    }
+    .logo-text { display:flex; gap:10px; align-items:baseline; }
+    .lt-stock {
+        font-weight:900;
+        font-size:2.2rem;
+        color:#fff;
+        letter-spacing:3px;
+        text-shadow:0 2px 12px rgba(0,0,0,.25);
+    }
+    .lt-flow {
+        font-weight:300;
+        font-size:2.2rem;
+        color:rgba(255,255,255,.7);
+        letter-spacing:5px;
+        text-shadow:0 2px 12px rgba(0,0,0,.15);
+    }
+
+    .card {
+        width:100%;
+        max-width:100%;
+        background:var(--white);
+        border-radius:var(--r-card);
+        padding:2.5rem 2rem 2rem;
+        box-shadow:0 28px 72px rgba(4,12,40,.38), 0 8px 28px rgba(4,12,40,.2);
+        animation:upIn .75s var(--spring) .12s both;
+        position:relative;
+        overflow:hidden;
+    }
+    .card-title {
+        font-size:1.65rem;
+        font-weight:900;
+        color:var(--text);
+        text-align:center;
+        margin-bottom:.55rem;
+        letter-spacing:-.5px;
+    }
+    .card-subtitle {
+        text-align:center;
+        color:var(--muted);
+        font-size:.9rem;
+        font-weight:600;
+        margin-bottom:1.6rem;
+    }
+
+    .fgroup { margin-bottom:1.05rem; }
+    .flabel {
+        display:block;
+        font-size:.86rem;
+        font-weight:700;
+        color:var(--muted);
+        margin-bottom:.42rem;
+        transition:color .2s ease;
+        text-align:right;
+    }
+    .fgroup:focus-within .flabel { color:var(--blue); }
+    .fbox {
+        display:flex;
+        align-items:center;
+        background:var(--off);
+        border:1.5px solid transparent;
+        border-radius:var(--r-field);
+        overflow:hidden;
+        transition:all .3s var(--ease);
+    }
+    .fbox:focus-within {
+        background:white;
+        border-color:var(--blue);
+        box-shadow:0 0 0 4px rgba(18,67,196,.09);
+    }
+    .fbox:hover:not(:focus-within) { border-color:rgba(18,67,196,.18); }
+    .ficon {
+        width:46px;
+        flex-shrink:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:var(--blue);
+        font-size:.88rem;
+        opacity:.55;
+        transition:opacity .2s;
+    }
+    .fbox:focus-within .ficon { opacity:1; }
+    .finput {
+        flex:1;
+        min-width:0;
+        border:none;
+        outline:none;
+        background:transparent;
+        padding:13px 10px 13px 0;
+        font-family:'Cairo',sans-serif;
+        font-size:.95rem;
+        font-weight:500;
+        color:var(--text);
+        text-align:right;
+        direction:rtl;
+    }
+    .finput::placeholder { color:var(--light); font-weight:400; }
+    .pwtoggle {
+        width:44px;
+        flex-shrink:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        color:var(--light);
+        font-size:.9rem;
+        transition:color .2s;
+    }
+    .pwtoggle:hover { color:var(--blue); }
+    .help-text {
+        margin-top:.4rem;
+        color:var(--light);
+        font-size:.78rem;
+        font-weight:600;
+        text-align:right;
+        padding-right:4px;
+    }
+    .help-text.warn { color:#b45309; }
+
+    .alert {
+        border-radius:12px;
+        border:none;
+        padding:11px 14px;
+        font-size:.87rem;
+        font-weight:600;
+        margin-bottom:1rem;
+        display:flex;
+        align-items:center;
+        gap:9px;
+        animation:alertIn .4s ease;
+    }
+    @keyframes alertIn {
+        from { opacity:0; transform:translateY(-8px); }
+        to { opacity:1; transform:translateY(0); }
+    }
+    .alert-danger  { background:rgba(239,68,68,.07); color:#b91c1c; border-right:3px solid #ef4444; }
+    .alert-success { background:rgba(16,185,129,.07); color:#065f46; border-right:3px solid #10b981; }
+    .alert-info    { background:rgba(18,67,196,.07); color:#1e40af; border-right:3px solid var(--blue); }
+    .alert-warning { background:rgba(245,158,11,.07); color:#92400e; border-right:3px solid #f59e0b; }
+
+    .btn-gap { display:flex; flex-direction:column; gap:10px; }
+    .ubtn {
+        width:100%;
+        height:46px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:9px;
+        border-radius:var(--r-pill);
+        border:none;
+        font-family:'Cairo',sans-serif;
+        font-size:.95rem;
+        font-weight:700;
+        cursor:pointer;
+        position:relative;
+        overflow:hidden;
+        transition:all .32s var(--ease);
+        text-decoration:none;
+        letter-spacing:.2px;
+    }
+    .ubtn::after {
+        content:'';
+        position:absolute;
+        top:0;
+        left:-110%;
+        width:100%;
+        height:100%;
+        background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);
+        transition:left .5s ease;
+    }
+    .ubtn:hover::after { left:110%; }
+    .ubtn:hover { transform:translateY(-2px); }
+    .ubtn:active { transform:translateY(0) scale(.99); }
+    .ubtn-login {
+        background:var(--blue);
+        color:white;
+        box-shadow:0 6px 26px rgba(18,67,196,.42), inset 0 1px 0 rgba(255,255,255,.14);
+        font-size:1.02rem;
+        font-weight:800;
+    }
+    .ubtn-login:hover {
+        background:var(--blue-dark);
+        box-shadow:0 12px 36px rgba(18,67,196,.52);
+    }
+    .ubtn-secondary {
+        background:rgba(18,67,196,.05);
+        color:var(--blue);
+        border:1.5px solid rgba(18,67,196,.16);
+    }
+    .ubtn-secondary:hover {
+        background:rgba(18,67,196,.1);
+        border-color:rgba(18,67,196,.3);
+    }
+
+    .orline {
+        display:flex;
+        align-items:center;
+        gap:10px;
+        margin:12px 0 8px;
+        color:var(--light);
+        font-size:.79rem;
+        font-weight:600;
+    }
+    .orline::before, .orline::after {
+        content:'';
+        flex:1;
+        height:1px;
+        background:rgba(18,67,196,.1);
+    }
+
+    .signup {
+        text-align:center;
+        font-size:.86rem;
+        font-weight:600;
+        color:var(--muted);
+        margin-top:10px;
+    }
+    .signup a {
+        color:var(--blue);
+        font-weight:800;
+        text-decoration:none;
+    }
+    .signup a:hover { text-decoration:underline; }
+
+    .ver {
+        margin-top:18px;
+        text-align:center;
+        color:rgba(255,255,255,.35);
+        font-size:.73rem;
+        font-weight:600;
+        letter-spacing:.8px;
+        line-height:1.75;
+        animation:upIn .75s var(--spring) .4s both;
+        padding-bottom:max(0px, env(safe-area-inset-bottom));
+    }
+
+    .wa-float {
+        position:fixed;
+        z-index:10000;
+        bottom:max(26px, calc(env(safe-area-inset-bottom) + 14px));
+        right:26px;
+    }
+    .wa-ball {
+        width:60px;
+        height:60px;
+        background:var(--wa);
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 10px 28px rgba(37,211,102,.42);
+        text-decoration:none;
+        transition:all .35s cubic-bezier(.175,.885,.32,1.275);
+    }
+    .wa-ball i { color:white; font-size:30px; }
+    .wa-ball:hover {
+        transform:scale(1.13) rotate(9deg);
+        box-shadow:0 16px 36px rgba(37,211,102,.55);
+    }
+
+    @media(max-width:520px){
+        body { padding-left:12px; padding-right:12px; }
+        .wrap { width:100%; max-width:100%; }
+        .about-btn.open { width:38px; padding-right:0; }
+        .about-btn.open span { opacity:0; }
+        .about-btn { left:12px; }
+        .wa-float { right:12px; }
+        .finput,
+        .help-text,
+        .ubtn,
+        input,
+        select,
+        textarea {
+            font-size:16px !important;
+        }
+        .about-btn,
+        .wa-float {
+            display:none !important;
+        }
+    }
+    @media(max-width:420px){
+        .card { padding:2rem 1.35rem 1.8rem; border-radius:20px; }
+        .card-title { font-size:1.4rem; }
+        .wa-float { right:16px; }
+        .about-btn { left:14px; }
+    }
+    @media(min-width:768px){
+        body { padding-top:32px; padding-bottom:32px; }
+        .wrap { max-width:480px; }
+        .card { padding:2.8rem 2.5rem 2.4rem; }
+    }
+    
+        /* --- Mobile Responsiveness Bounds Fix --- */
+        html, body {
+            overflow-x: hidden !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-x: none !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="pts"></div>
+
+    <a href="{{ url_for('login') }}" class="about-btn" id="aBtn">
+        <i class="fas fa-arrow-right"></i><span>العودة للدخول</span>
+    </a>
+
+    <div class="wrap">
+        <div class="logo-zone">
+            <img
+                src="{{ current_logo_path }}"
+                alt="STOCK FLOW"
+                onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex';"
+            >
+            <div class="logo-fallback" id="logoFallback" style="display:none">
+                <div class="logo-bars">
+                    <span class="bar b1"></span>
+                    <span class="bar b2"></span>
+                    <span class="bar b3"></span>
+                </div>
+                <div class="logo-text">
+                    <span class="lt-stock">STOCK</span>
+                    <span class="lt-flow">FLOW</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="signupCard">
+            <h1 class="card-title">تسجيل شركة جديدة</h1>
+            <p class="card-subtitle">أدخل بيانات الشركة لإنشاء حساب جديد بنفس سهولة صفحة الدخول</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' if category == 'info' else 'warning' }}" role="alert">
+                            <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' if category == 'info' else 'triangle-exclamation' }}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('signup_company') }}">
+                <div class="fgroup">
+                    <label class="flabel" for="username">اسم المستخدم</label>
+                    <div class="fbox">
+                        <div class="ficon"><i class="fas fa-user"></i></div>
+                        <input class="finput" id="username" name="username" type="text" placeholder="اكتب اسم المستخدم" autocomplete="username" required>
+                    </div>
+                    <div class="help-text">سيستخدم هذا الاسم لاحقاً في تسجيل الدخول.</div>
+                </div>
+
+                <div class="fgroup">
+                    <label class="flabel" for="password">كلمة المرور</label>
+                    <div class="fbox">
+                        <div class="ficon"><i class="fas fa-lock"></i></div>
+                        <input class="finput" id="password" name="password" type="password" placeholder="........" autocomplete="new-password" minlength="6" required>
+                        <span class="pwtoggle" onclick="togglePw('password', 'pwIco')"><i class="fas fa-eye" id="pwIco"></i></span>
+                    </div>
+                    <div class="help-text">يجب أن تكون ستة أحرف على الأقل.</div>
+                </div>
+
+                <div class="fgroup">
+                    <label class="flabel" for="confirm_password">تأكيد كلمة المرور</label>
+                    <div class="fbox">
+                        <div class="ficon"><i class="fas fa-shield-halved"></i></div>
+                        <input class="finput" id="confirm_password" name="confirm_password" type="password" placeholder="أعد كتابة كلمة المرور" autocomplete="new-password" required>
+                        <span class="pwtoggle" onclick="togglePw('confirm_password', 'confirmPwIco')"><i class="fas fa-eye" id="confirmPwIco"></i></span>
+                    </div>
+                </div>
+
+                <div class="fgroup">
+                    <label class="flabel" for="company_name">اسم الشركة</label>
+                    <div class="fbox">
+                        <div class="ficon"><i class="fas fa-building"></i></div>
+                        <input class="finput" id="company_name" name="company_name" type="text" placeholder="اكتب اسم الشركة" required>
+                    </div>
+                </div>
+
+                <div class="fgroup">
+                    <label class="flabel" for="email">البريد الإلكتروني</label>
+                    <div class="fbox">
+                        <div class="ficon"><i class="fas fa-envelope"></i></div>
+                        <input class="finput" id="email" name="email" type="email" placeholder="اختياري">
+                    </div>
+                </div>
+
+                <div class="fgroup">
+                    <label class="flabel" for="phone">رقم الهاتف</label>
+                    <div class="fbox">
+                        <div class="ficon"><i class="fas fa-phone"></i></div>
+                        <input class="finput" id="phone" name="phone" type="tel" placeholder="مثال: 010xxxxxxxx" pattern="01[0-9]{9}" minlength="11" maxlength="11" inputmode="numeric" required>
+                    </div>
+                    <div class="help-text">يجب أن يتكون من أحد عشر رقمًا ويبدأ بـ صفر واحد.</div>
+                </div>
+
+                <div class="fgroup">
+                    <label class="flabel" for="invite_code">كود الدعوة</label>
+                    <div class="fbox">
+                        <div class="ficon"><i class="fas fa-ticket-alt"></i></div>
+                        <input class="finput" id="invite_code" name="invite_code" type="text" placeholder="اكتب كود الدعوة" required>
+                    </div>
+                    <div class="help-text warn">مطلوب للتسجيل. احصل عليه من الإدارة.</div>
+                </div>
+
+                <div class="btn-gap" style="margin-top:1.2rem">
+                    <button class="ubtn ubtn-login" type="submit">
+                        <i class="fas fa-user-plus"></i>
+                        إنشاء الحساب
+                    </button>
+                    <a href="{{ url_for('login') }}" class="ubtn ubtn-secondary">
+                        <i class="fas fa-arrow-right"></i>
+                        الرجوع إلى تسجيل الدخول
+                    </a>
+                </div>
+            </form>
+
+            <div class="orline">معلومة</div>
+            <div class="signup" style="margin-top:0">
+                إذا كان عندك حساب بالفعل يمكنك العودة إلى
+                <a href="{{ url_for('login') }}">صفحة تسجيل الدخول</a>
+            </div>
+        </div>
+
+        <div class="ver">
+            <div>STOCK FLOW v1.4.8</div>
+            <div>© DATA-DRIVEN INTELLIGENCE 2026</div>
+        </div>
+    </div>
+
+    <div class="wa-float">
+        <a href="https://wa.me/201554077727" target="_blank" class="wa-ball">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+    </div>
+
+    <script>
+    !function(){
+        const c = document.getElementById('pts');
+        for(let i = 0; i < 32; i++){
+            const d = document.createElement('div');
+            d.className = 'pt';
+            const sz = Math.random() * 4 + 1.5;
+            d.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}vw;bottom:-${sz}px;opacity:${Math.random()*.13+.04};animation:ptUp ${Math.random()*18+14}s ${Math.random()*14}s linear infinite;`;
+            c.appendChild(d);
+        }
+    }();
+
+    !function(){
+        const b = document.getElementById('aBtn');
+        if (window.innerWidth <= 520) return;
+        setTimeout(() => {
+            b.classList.add('open');
+            setTimeout(() => b.classList.remove('open'), 5200);
+        }, 900);
+    }();
+
+    function togglePw(inputId, iconId){
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    }
+
+    document.getElementById('phone').addEventListener('input', function(){
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+    });
+
+    const inviteCodeFromUrl = new URLSearchParams(window.location.search).get('invite_code');
+    if (inviteCodeFromUrl) {
+        document.getElementById('invite_code').value = inviteCodeFromUrl;
+    }
+
+    !function(){
+        const card = document.getElementById('signupCard');
+        document.body.addEventListener('mousemove', e => {
+            if (window.innerWidth < 768) return;
+            const r = card.getBoundingClientRect();
+            const rx = (e.clientY - r.top - r.height / 2) / r.height * 4.5;
+            const ry = (e.clientX - r.left - r.width / 2) / r.width * -4.5;
+            card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.008)`;
+            card.style.boxShadow = `${ry/2}px ${-rx/2}px 50px rgba(4,12,40,.4),0 8px 28px rgba(4,12,40,.2)`;
+        });
+        document.body.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(900px) rotateX(0) rotateY(0) scale(1)';
+            card.style.boxShadow = '';
+        });
+    }();
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{% extends "admin_base.html" %}
+
+{% block title %}صلاحيات المخزن{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>صلاحيات مخزن {{ warehouse.name }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">حدد الأدوات والصفحات التي تظهر لأدمن هذا المخزن فقط.</p>
+                <form method="post">
+                    <div class="row">
+                        {% for perm_key, perm_name in all_permissions.items() %}
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check border rounded p-3 h-100">
+                                <input class="form-check-input" type="checkbox" name="permissions" value="{{ perm_key }}" id="perm_{{ perm_key }}"
+                                       {% if perm_key in enabled_permissions %}checked{% endif %}>
+                                <label class="form-check-label fw-semibold" for="perm_{{ perm_key }}">
+                                    {{ perm_name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>حفظ الصلاحيات
+                        </button>
+                        <a href="{{ url_for('manage_warehouses') }}" class="btn btn-secondary">رجوع</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

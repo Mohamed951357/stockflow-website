@@ -1,0 +1,104 @@
+# ============================================
+# StockFlow - .gitignore
+# ============================================
+
+# --- قواعد البيانات ---
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+site.db
+db.sqlite3
+
+# --- ملفات الضغط والنسخ الاحتياطية ---
+*.zip
+*.tar.gz
+*.tar
+*.rar
+backup/
+backups/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+env/
+venv/
+.venv/
+ENV/
+.virtualenvs/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# --- ملفات البيئة والإعدادات الحساسة ---
+.env
+.env.*
+config_local.py
+secrets.py
+*.key
+*.pem
+*.cert
+
+# --- ملفات الرفع (uploads) ---
+uploads/
+ad_images/
+apk_files/
+logos/
+
+# --- Chrome profiles (ملفات كبيرة ومؤقتة) ---
+chrome_*/
+chrome_about_*/
+chrome_cdp_*/
+chrome_login_*/
+
+# --- ملفات مؤقتة ونظام ---
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IDE والمحررات ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- ملفات Python history وcache ---
+.bash_history
+.python_history
+.sqlite_history
+.bashrc
+.profile
+.vimrc
+.my.cnf
+.gitconfig
+.cache/
+.ipython/
+.local/
+.pythonstartup.py
+pythonstartup.py
+
+# --- ملفات Instance (Flask) ---
+instance/
+
+# --- ملفات dist وbuild ---
+dist/
+build/
+
+# --- صور السكرين شوت المؤقتة ---
+about_*.png
+login_*.png
+
+# --- ملفات الخدمة (systemd) - اختياري ---
+# stockflow-telegram-backup.service
+# stockflow-telegram-backup.timer

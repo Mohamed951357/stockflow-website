@@ -1,0 +1,175 @@
+:root {
+    --sf-admin-primary: #1243C4;
+    --sf-admin-primary-dark: #0A2DA0;
+    --sf-admin-primary-soft: rgba(18, 67, 196, 0.1);
+    --sf-admin-accent: #08A6C9;
+    --sf-admin-success: #10B981;
+    --sf-admin-warning: #F59E0B;
+    --sf-admin-danger: #DC3545;
+    --sf-admin-bg: #F5F7FB;
+    --sf-admin-surface: #FFFFFF;
+    --sf-admin-border: #E2E8F0;
+    --sf-admin-text: #172033;
+    --sf-admin-muted: #64748B;
+    --sf-admin-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    --sf-admin-shadow-soft: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+body {
+    background: var(--sf-admin-bg) !important;
+    color: var(--sf-admin-text);
+}
+
+.navbar {
+    background: linear-gradient(135deg, var(--sf-admin-primary) 0%, var(--sf-admin-primary-dark) 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 10px 28px rgba(10, 45, 160, 0.24) !important;
+}
+
+.navbar.bg-dark {
+    background: linear-gradient(135deg, var(--sf-admin-primary) 0%, var(--sf-admin-primary-dark) 100%) !important;
+}
+
+.navbar .navbar-brand {
+    color: #fff !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+.navbar .nav-link,
+.navbar .navbar-text {
+    color: rgba(255, 255, 255, 0.88) !important;
+    font-weight: 700;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+}
+
+.admin-navbar-logo,
+.navbar-logo.admin-navbar-logo {
+    height: 36px !important;
+    width: auto !important;
+    max-width: 104px;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.14));
+}
+
+.page-header,
+.filters-card,
+.results-card,
+.add-form,
+.blocked-list,
+.filter-section,
+.report-header,
+.card,
+.dashboard-card,
+.stat-card,
+.notification-card,
+.file-card,
+.modal-content {
+    background: var(--sf-admin-surface) !important;
+    border: 1px solid var(--sf-admin-border) !important;
+    box-shadow: var(--sf-admin-shadow-soft) !important;
+}
+
+.page-header,
+.filters-card,
+.results-card,
+.add-form,
+.blocked-list,
+.filter-section,
+.report-header,
+.dashboard-card,
+.stat-card {
+    border-radius: 14px !important;
+}
+
+.dashboard-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.dashboard-card:hover {
+    border-color: rgba(18, 67, 196, 0.3) !important;
+    box-shadow: var(--sf-admin-shadow) !important;
+}
+
+.card-icon,
+.stat-icon {
+    background: linear-gradient(135deg, var(--sf-admin-primary) 0%, var(--sf-admin-accent) 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 12px 24px rgba(18, 67, 196, 0.22);
+}
+
+.btn-primary,
+.btn-upload {
+    background: linear-gradient(135deg, var(--sf-admin-primary) 0%, var(--sf-admin-primary-dark) 100%) !important;
+    border-color: transparent !important;
+    box-shadow: 0 8px 18px rgba(18, 67, 196, 0.18);
+}
+
+.btn-primary:hover,
+.btn-upload:hover {
+    background: linear-gradient(135deg, #173FB4 0%, #08257F 100%) !important;
+    border-color: transparent !important;
+}
+
+.btn-outline-primary {
+    color: var(--sf-admin-primary) !important;
+    border-color: rgba(18, 67, 196, 0.45) !important;
+}
+
+.btn-outline-primary:hover {
+    color: #fff !important;
+    background: var(--sf-admin-primary) !important;
+    border-color: var(--sf-admin-primary) !important;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--sf-admin-danger) 0%, #B4232F 100%) !important;
+    border-color: transparent !important;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--sf-admin-warning) 0%, #D97706 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+.text-primary {
+    color: var(--sf-admin-primary) !important;
+}
+
+.badge.bg-primary,
+.alert-info {
+    background-color: var(--sf-admin-primary-soft) !important;
+    color: var(--sf-admin-primary) !important;
+    border-color: rgba(18, 67, 196, 0.18) !important;
+}
+
+.table thead th {
+    background: #EEF4FF !important;
+    color: var(--sf-admin-primary-dark) !important;
+    border-bottom-color: rgba(18, 67, 196, 0.18) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: rgba(18, 67, 196, 0.55) !important;
+    box-shadow: 0 0 0 0.2rem rgba(18, 67, 196, 0.14) !important;
+}
+
+a {
+    color: var(--sf-admin-primary);
+}
+
+a:hover {
+    color: var(--sf-admin-primary-dark);
+}
+

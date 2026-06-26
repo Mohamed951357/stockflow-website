@@ -1,0 +1,139 @@
+{% set _admin_permissions = current_user_permissions|default([]) %}
+{% set _admin_is_super = current_user.is_authenticated and current_user.role == 'super' %}
+<style>
+    .stockflow-admin-navbar {
+        background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.18) !important;
+        box-shadow: 0 10px 28px rgba(10,45,160,0.24) !important;
+        padding: 0.75rem 0 !important;
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        direction: rtl;
+    }
+    .stockflow-admin-navbar .container,
+    .stockflow-admin-navbar .container-fluid {
+        max-width: 1320px;
+    }
+    .stockflow-admin-brand {
+        color: #fff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap;
+    }
+    .stockflow-admin-navbar .navbar-toggler {
+        border-color: rgba(255,255,255,0.32) !important;
+        box-shadow: none !important;
+    }
+    .stockflow-admin-navbar .navbar-nav {
+        gap: 0.25rem;
+    }
+    .stockflow-admin-navbar .nav-link {
+        color: rgba(255,255,255,0.9) !important;
+        font-weight: 700 !important;
+        border-radius: 10px;
+        padding: 0.55rem 0.8rem !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    .stockflow-admin-navbar .nav-link:hover,
+    .stockflow-admin-navbar .nav-link:focus {
+        color: #fff !important;
+        background: rgba(255,255,255,0.13) !important;
+        transform: translateY(-1px);
+    }
+    .stockflow-admin-navbar .nav-link.text-danger {
+        color: #ffe2e2 !important;
+    }
+    .stockflow-admin-navbar .admin-navbar-logo,
+    .stockflow-admin-navbar .navbar-logo.admin-navbar-logo {
+        height: 36px !important;
+        width: auto !important;
+        max-width: 104px !important;
+        object-fit: contain !important;
+        margin-left: 0.55rem !important;
+    }
+    @media (max-width: 991.98px) {
+        .stockflow-admin-navbar .navbar-collapse {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.16);
+        }
+        .stockflow-admin-navbar .nav-link {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+</style>
+<nav class="navbar navbar-expand-lg navbar-dark stockflow-admin-navbar">
+    <div class="container">
+        <a class="navbar-brand stockflow-admin-brand" href="{{ url_for('admin_dashboard') }}">
+            {% include '_admin_nav_logo.html' %}
+            <span>لوحة الإدارة</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#stockflowAdminNavbar" aria-controls="stockflowAdminNavbar" aria-expanded="false" aria-label="فتح القائمة">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="stockflowAdminNavbar">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-home"></i>
+                        الرئيسية
+                    </a>
+                </li>
+                {% if _admin_is_super or 'manage_users' in _admin_permissions %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('manage_users') }}">
+                        <i class="fas fa-users-cog"></i>
+                        الشركات
+                    </a>
+                </li>
+                {% endif %}
+                {% if _admin_is_super or 'view_reports' in _admin_permissions %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('reports') }}">
+                        <i class="fas fa-chart-line"></i>
+                        التقارير
+                    </a>
+                </li>
+                {% endif %}
+                {% if _admin_is_super or 'upload_files' in _admin_permissions or 'manage_files' in _admin_permissions %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('manage_files') }}">
+                        <i class="fas fa-file-upload"></i>
+                        الملفات
+                    </a>
+                </li>
+                {% endif %}
+                {% if _admin_is_super or 'send_notifications' in _admin_permissions %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_notifications') }}">
+                        <i class="fas fa-bell"></i>
+                        الإشعارات
+                    </a>
+                </li>
+                {% endif %}
+                {% if _admin_is_super or 'manage_settings' in _admin_permissions %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('system_settings') }}">
+                        <i class="fas fa-cog"></i>
+                        الإعدادات
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i>
+                        خروج
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
