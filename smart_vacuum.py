@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import re
 from datetime import datetime, timedelta
 
 # إعدادات
@@ -18,8 +19,13 @@ def copy_table(table_name, old_conn, new_conn):
     
     # قراءة هيكل الجدول
     cursor = old_conn.cursor()
-    cursor.execute(f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{table_name}'")
-    create_statement = cursor.fetchone()[0]
+    # Use parameterized query to fetch create SQL safely
+    cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
+    row = cursor.fetchone()
+    if not row:
+        print(f"   ⚠️ لا يوجد تعريف جدول في sqlite_master لـ {table_name}; تخطي")
+        return
+    create_statement = row[0]
     
     # إنشاء الجدول في القاعدة الجديدة
     new_conn.execute(create_statement)
@@ -46,7 +52,11 @@ def copy_table(table_name, old_conn, new_conn):
         date_col = None
         
         # فحص أعمدة الجدول
-        cursor.execute(f"PRAGMA table_info({table_name})")
+        # Validate table_name before interpolating into PRAGMA
+        if not re.match(r'^[A-Za-z0-9_]+$', table_name):
+            print(f"   ✖️ تخطي جدول باسم غير صالح: {table_name}")
+            return
+        cursor.execute(f'PRAGMA table_info("{table_name}")')
         columns = [info[1] for info in cursor.fetchall()]
         
         for col in date_columns:
@@ -56,11 +66,11 @@ def copy_table(table_name, old_conn, new_conn):
         
         if date_col:
             print(f"   🧹 تنظيف {table_name}: الاحتفاظ بالبيانات بعد {cutoff_date}")
-            query = f"SELECT * FROM {table_name} WHERE {date_col} >= ?"
+            query = f'SELECT * FROM "{table_name}" WHERE "{date_col}" >= ?'
             params = (cutoff_date,)
         else:
             print(f"   ⚠️ لم يتم العثور على عمود تاريخ في {table_name}، سيتم نسخ الكل.")
-            query = f"SELECT * FROM {table_name}"
+            query = f'SELECT * FROM "{table_name}"'
             params = ()
             
     else:
@@ -75,7 +85,7 @@ def copy_table(table_name, old_conn, new_conn):
     
     if rows:
         placeholders = ','.join(['?'] * len(rows[0]))
-        new_conn.executemany(f"INSERT INTO {table_name} VALUES ({placeholders})", rows)
+        new_conn.executemany(f'INSERT INTO "{table_name}" VALUES ({placeholders})', rows)
         new_conn.commit()
     
     print(f"   ✨ تم نسخ {len(rows)} سجل.")

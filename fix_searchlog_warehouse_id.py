@@ -4,6 +4,7 @@
 """
 import sys
 import os
+import re
 
 # ── إضافة مسار المشروع ──
 sys.path.insert(0, os.path.dirname(__file__))
@@ -28,9 +29,14 @@ def run_migration():
         if not column_exists('search_log', 'warehouse_id'):
             print("✗  عمود warehouse_id غير موجود في search_log — جاري الإضافة...")
             with db.engine.connect() as conn:
-                conn.execute(text(
-                    "ALTER TABLE search_log ADD COLUMN warehouse_id INTEGER REFERENCES warehouse(id)"
-                ))
+                # Safe-guard: validate table name before running DDL
+                table = 'search_log'
+                if not re.match(r'^[A-Za-z0-9_]+$', table):
+                    print(f"Skipping unsafe table name: {table}")
+                else:
+                    conn.execute(text(
+                        'ALTER TABLE "search_log" ADD COLUMN "warehouse_id" INTEGER REFERENCES warehouse(id)'
+                    ))
                 conn.commit()
             print("✓  تم إضافة warehouse_id لجدول search_log بنجاح")
         else:
@@ -40,9 +46,13 @@ def run_migration():
         if not column_exists('product_file', 'warehouse_id'):
             print("✗  عمود warehouse_id غير موجود في product_file — جاري الإضافة...")
             with db.engine.connect() as conn:
-                conn.execute(text(
-                    "ALTER TABLE product_file ADD COLUMN warehouse_id INTEGER REFERENCES warehouse(id)"
-                ))
+                table = 'product_file'
+                if not re.match(r'^[A-Za-z0-9_]+$', table):
+                    print(f"Skipping unsafe table name: {table}")
+                else:
+                    conn.execute(text(
+                        'ALTER TABLE "product_file" ADD COLUMN "warehouse_id" INTEGER REFERENCES warehouse(id)'
+                    ))
                 conn.commit()
             print("✓  تم إضافة warehouse_id لجدول product_file بنجاح")
         else:
@@ -52,9 +62,13 @@ def run_migration():
         if not column_exists('appointment', 'warehouse_id'):
             print("✗  عمود warehouse_id غير موجود في appointment — جاري الإضافة...")
             with db.engine.connect() as conn:
-                conn.execute(text(
-                    "ALTER TABLE appointment ADD COLUMN warehouse_id INTEGER REFERENCES warehouse(id)"
-                ))
+                table = 'appointment'
+                if not re.match(r'^[A-Za-z0-9_]+$', table):
+                    print(f"Skipping unsafe table name: {table}")
+                else:
+                    conn.execute(text(
+                        'ALTER TABLE "appointment" ADD COLUMN "warehouse_id" INTEGER REFERENCES warehouse(id)'
+                    ))
                 conn.commit()
             print("✓  تم إضافة warehouse_id لجدول appointment بنجاح")
         else:
@@ -64,9 +78,13 @@ def run_migration():
         if not column_exists('product_item', 'warehouse_id'):
             print("✗  عمود warehouse_id غير موجود في product_item — جاري الإضافة...")
             with db.engine.connect() as conn:
-                conn.execute(text(
-                    "ALTER TABLE product_item ADD COLUMN warehouse_id INTEGER REFERENCES warehouse(id)"
-                ))
+                table = 'product_item'
+                if not re.match(r'^[A-Za-z0-9_]+$', table):
+                    print(f"Skipping unsafe table name: {table}")
+                else:
+                    conn.execute(text(
+                        'ALTER TABLE "product_item" ADD COLUMN "warehouse_id" INTEGER REFERENCES warehouse(id)'
+                    ))
                 conn.commit()
             print("✓  تم إضافة warehouse_id لجدول product_item بنجاح")
         else:
@@ -76,9 +94,13 @@ def run_migration():
         if not column_exists('admin', 'warehouse_id'):
             print("✗  عمود warehouse_id غير موجود في admin — جاري الإضافة...")
             with db.engine.connect() as conn:
-                conn.execute(text(
-                    "ALTER TABLE admin ADD COLUMN warehouse_id INTEGER REFERENCES warehouse(id)"
-                ))
+                table = 'admin'
+                if not re.match(r'^[A-Za-z0-9_]+$', table):
+                    print(f"Skipping unsafe table name: {table}")
+                else:
+                    conn.execute(text(
+                        'ALTER TABLE "admin" ADD COLUMN "warehouse_id" INTEGER REFERENCES warehouse(id)'
+                    ))
                 conn.commit()
             print("✓  تم إضافة warehouse_id لجدول admin بنجاح")
         else:
@@ -88,9 +110,13 @@ def run_migration():
         if not column_exists('product_stock_history', 'warehouse_id'):
             print("✗  عمود warehouse_id غير موجود في product_stock_history — جاري الإضافة...")
             with db.engine.connect() as conn:
-                conn.execute(text(
-                    "ALTER TABLE product_stock_history ADD COLUMN warehouse_id INTEGER REFERENCES warehouse(id)"
-                ))
+                table = 'product_stock_history'
+                if not re.match(r'^[A-Za-z0-9_]+$', table):
+                    print(f"Skipping unsafe table name: {table}")
+                else:
+                    conn.execute(text(
+                        'ALTER TABLE "product_stock_history" ADD COLUMN "warehouse_id" INTEGER REFERENCES warehouse(id)'
+                    ))
                 conn.commit()
             print("✓  تم إضافة warehouse_id لجدول product_stock_history بنجاح")
         else:

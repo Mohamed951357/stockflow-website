@@ -12,6 +12,7 @@
 from app import app
 from models import db, CommunityPost, PostComment
 from sqlalchemy import text
+import re
 
 def update_database():
     """تحديث قاعدة البيانات بالحقول الجديدة"""
@@ -19,7 +20,9 @@ def update_database():
         try:
             # إضافة حقل is_anonymous للمنشورات
             try:
-                db.session.execute(text("ALTER TABLE community_post ADD COLUMN is_anonymous BOOLEAN DEFAULT FALSE"))
+                if not re.match(r'^[A-Za-z0-9_]+$', 'is_anonymous'):
+                    raise ValueError('Invalid column name: is_anonymous')
+                db.session.execute(text('ALTER TABLE "community_post" ADD COLUMN "is_anonymous" BOOLEAN DEFAULT FALSE'))
                 print("✓ تم إضافة حقل is_anonymous للمنشورات")
             except Exception as e:
                 if "duplicate column name" not in str(e).lower():
@@ -27,14 +30,14 @@ def update_database():
 
             # إضافة حقل is_anonymous للتعليقات
             try:
-                db.session.execute(text("ALTER TABLE post_comment ADD COLUMN is_anonymous BOOLEAN DEFAULT FALSE"))
+                db.session.execute(text('ALTER TABLE "post_comment" ADD COLUMN "is_anonymous" BOOLEAN DEFAULT FALSE'))
                 print("✓ تم إضافة حقل is_anonymous للتعليقات")
             except Exception as e:
                 if "duplicate column name" not in str(e).lower():
                     print(f"خطأ في إضافة حقل is_anonymous للتعليقات: {e}")
 
             try:
-                db.session.execute(text("ALTER TABLE post_comment ADD COLUMN parent_id INTEGER REFERENCES post_comment(id)"))
+                db.session.execute(text('ALTER TABLE "post_comment" ADD COLUMN "parent_id" INTEGER REFERENCES post_comment(id)'))
                 print("✓ تم إضافة حقل parent_id للتعليقات")
             except Exception as e:
                 if "duplicate column name" not in str(e).lower():
@@ -42,7 +45,7 @@ def update_database():
 
             # إضافة حقل last_community_visit للشركات
             try:
-                db.session.execute(text("ALTER TABLE company ADD COLUMN last_community_visit DATETIME"))
+                db.session.execute(text('ALTER TABLE "company" ADD COLUMN "last_community_visit" DATETIME'))
                 print("✓ تم إضافة حقل last_community_visit للشركات")
             except Exception as e:
                 if "duplicate column name" not in str(e).lower():
@@ -50,7 +53,7 @@ def update_database():
 
             # إضافة حقل avatar للشركات
             try:
-                db.session.execute(text("ALTER TABLE company ADD COLUMN avatar VARCHAR(100) DEFAULT 'male-1'"))
+                db.session.execute(text('ALTER TABLE "company" ADD COLUMN "avatar" VARCHAR(100) DEFAULT \'male-1\''))
                 print("✓ تم إضافة حقل avatar للشركات")
             except Exception as e:
                 if "duplicate column name" not in str(e).lower():

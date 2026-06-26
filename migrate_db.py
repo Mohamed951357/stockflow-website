@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import re
 
 # Try both possible database locations
 db_paths = [
@@ -28,7 +29,7 @@ print(f"Using database: {db_path}")
 conn = sqlite3.connect(db_path)
 c = conn.cursor()
 
-c.execute('PRAGMA table_info(company)')
+c.execute('PRAGMA table_info("company")')
 existing_cols = [row[1] for row in c.fetchall()]
 print(f"Found {len(existing_cols)} existing columns")
 
@@ -50,7 +51,11 @@ added = 0
 for col_name, col_type in new_columns:
     if col_name not in existing_cols:
         try:
-            c.execute(f'ALTER TABLE company ADD COLUMN {col_name} {col_type}')
+            # Validate column name to avoid SQL injection via schema scripts
+            if not re.match(r'^[A-Za-z0-9_]+$', col_name):
+                print(f"Skipping invalid column name: {col_name}")
+                continue
+            c.execute(f'ALTER TABLE "company" ADD COLUMN "{col_name}" {col_type}')
             print(f'  [+] Added: {col_name}')
             added += 1
         except Exception as e:

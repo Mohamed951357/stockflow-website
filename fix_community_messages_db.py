@@ -1,6 +1,7 @@
 # fix_community_messages_db.py
 import sqlite3
 import os
+import re
 
 def fix_database():
     # المسار الخاص بـ PythonAnywhere هو الأهم
@@ -33,7 +34,7 @@ def fix_database():
         ("deleted_by", "INTEGER")
     ]
 
-    cursor.execute("PRAGMA table_info(community_message)")
+    cursor.execute('PRAGMA table_info("community_message")')
     existing_cols = {row[1] for row in cursor.fetchall()}
 
     if not existing_cols:
@@ -44,7 +45,11 @@ def fix_database():
     for col_name, col_def in columns_to_add:
         if col_name not in existing_cols:
             try:
-                cursor.execute(f"ALTER TABLE community_message ADD COLUMN {col_name} {col_def}")
+                # Validate column name
+                if not re.match(r'^[A-Za-z0-9_]+$', col_name):
+                    print(f"✖️ تخطي اسم عمود غير صالح: {col_name}")
+                    continue
+                cursor.execute(f'ALTER TABLE "community_message" ADD COLUMN "{col_name}" {col_def}')
                 print(f"➕ تم إضافة العمود: {col_name}")
             except Exception as e:
                 print(f"⚠️ خطأ أثناء إضافة {col_name}: {e}")

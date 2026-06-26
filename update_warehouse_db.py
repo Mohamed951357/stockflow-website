@@ -1,6 +1,7 @@
 # update_warehouse_db.py
 import sqlite3
 import os
+import re
 
 def update_warehouse_table():
     # Try multiple common paths for the DB, including PythonAnywhere's specific path
@@ -39,13 +40,17 @@ def update_warehouse_table():
         ("last_process_data_rows", "INTEGER DEFAULT 0")
     ]
 
-    cursor.execute("PRAGMA table_info(warehouse)")
+    cursor.execute('PRAGMA table_info("warehouse")')
     existing_cols = {row[1] for row in cursor.fetchall()}
 
     for col_name, col_def in columns_to_add:
         if col_name not in existing_cols:
             try:
-                cursor.execute(f"ALTER TABLE warehouse ADD COLUMN {col_name} {col_def}")
+                # Validate column name before running ALTER
+                if not re.match(r'^[A-Za-z0-9_]+$', col_name):
+                    print(f"Skipping invalid column name: {col_name}")
+                    continue
+                cursor.execute(f'ALTER TABLE "warehouse" ADD COLUMN "{col_name}" {col_def}')
                 print(f"Added column: {col_name}")
             except Exception as e:
                 print(f"Error adding {col_name}: {e}")

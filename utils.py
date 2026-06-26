@@ -3,6 +3,7 @@ from flask import flash, redirect, url_for, session, current_app, request
 from flask_login import current_user, logout_user # تم استيراد current_user هنا
 import json
 import os
+import re
 from datetime import datetime, date, timedelta
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
@@ -603,6 +604,16 @@ def _quote_identifier(identifier):
     return '"' + str(identifier).replace('"', '""') + '"'
 
 
+def _is_valid_identifier(name: str) -> bool:
+    return bool(re.match(r'^[A-Za-z0-9_]+$', str(name)))
+
+
+def _sanitize_identifier(name: str) -> str:
+    if not _is_valid_identifier(name):
+        raise ValueError(f"Invalid SQL identifier: {name}")
+    return name
+
+
 def _drop_company_username_uniques(db, inspector):
     """يفك أي unique قديم على company.username حتى يسمح بتشابه أسماء المستخدمين."""
     dialect = db.engine.dialect.name
@@ -656,7 +667,7 @@ def _drop_company_username_uniques(db, inspector):
             index_name = index['name']
             try:
                 print(f"Dropping old unique index on company.username: {index_name}")
-                db.session.execute(text(f"ALTER TABLE company DROP INDEX {index_name}"))
+                db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} DROP INDEX {_quote_identifier(index_name)}"))
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
@@ -679,13 +690,13 @@ def update_database_schema(app, db):
             columns = [col['name'] for col in inspector.get_columns('company')]
             if 'avatar' not in columns:
                 print("Adding avatar column to company table...")
-                db.session.execute(text("ALTER TABLE company ADD COLUMN avatar VARCHAR(100) DEFAULT 'male-1'"))
+                db.session.execute(text('ALTER TABLE "company" ADD COLUMN "avatar" VARCHAR(100) DEFAULT \'male-1\''))
                 db.session.commit()
                 print("Avatar column added successfully!")
 
             if 'receive_messages_enabled' not in columns:
                 print("Adding receive_messages_enabled column to company table...")
-                db.session.execute(text("ALTER TABLE company ADD COLUMN receive_messages_enabled BOOLEAN DEFAULT 1"))
+                db.session.execute(text('ALTER TABLE "company" ADD COLUMN "receive_messages_enabled" BOOLEAN DEFAULT 1'))
                 db.session.commit()
                 print("receive_messages_enabled column added successfully!")
 
@@ -693,36 +704,41 @@ def update_database_schema(app, db):
                 print("Adding google_id column to company table...")
                 # SQLite لا يدعم إضافة عمود UNIQUE مباشرة عبر ALTER TABLE
                 # سنقوم بإضافة العمود أولاً ثم إنشاء INDEX فريد إذا لزم الأمر
-                db.session.execute(text("ALTER TABLE company ADD COLUMN google_id VARCHAR(100)"))
-                db.session.commit()
                 try:
-                    db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_company_google_id ON company (google_id)"))
+                    safe_col = _sanitize_identifier('google_id')
+                except Exception as e:
+                    print(f"Skipping adding unsafe column name 'google_id': {e}")
+                else:
+                    db.session.execute(text(f'ALTER TABLE "company" ADD COLUMN {_quote_identifier(safe_col)} VARCHAR(100)'))
                     db.session.commit()
-                except Exception as index_e:
-                    print(f"Note: Could not create unique index for google_id: {index_e}")
-                print("google_id column added successfully!")
+                    try:
+                        db.session.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS idx_company_google_id ON company (google_id)'))
+                        db.session.commit()
+                    except Exception as index_e:
+                        print(f"Note: Could not create unique index for google_id: {index_e}")
+                    print("google_id column added successfully!")
 
             if 'expo_push_token' not in columns:
                 print("Adding expo_push_token column to company table...")
-                db.session.execute(text("ALTER TABLE company ADD COLUMN expo_push_token VARCHAR(255)"))
+                db.session.execute(text('ALTER TABLE "company" ADD COLUMN "expo_push_token" VARCHAR(255)'))
                 db.session.commit()
                 print("expo_push_token column added successfully!")
 
             if 'last_active' not in columns:
                 print("Adding last_active column to company table...")
-                db.session.execute(text("ALTER TABLE company ADD COLUMN last_active DATETIME"))
+                db.session.execute(text('ALTER TABLE "company" ADD COLUMN "last_active" DATETIME'))
                 db.session.commit()
                 print("last_active column added successfully!")
 
             if 'is_typing' not in columns:
                 print("Adding is_typing column to company table...")
-                db.session.execute(text("ALTER TABLE company ADD COLUMN is_typing BOOLEAN DEFAULT 0"))
+                db.session.execute(text('ALTER TABLE "company" ADD COLUMN "is_typing" BOOLEAN DEFAULT 0'))
                 db.session.commit()
                 print("is_typing column added successfully!")
 
             if 'monthly_search_count' not in columns:
                 print("Adding monthly_search_count column to company table...")
-                db.session.execute(text("ALTER TABLE company ADD COLUMN monthly_search_count INTEGER DEFAULT 0"))
+                db.session.execute(text('ALTER TABLE "company" ADD COLUMN "monthly_search_count" INTEGER DEFAULT 0'))
                 db.session.commit()
                 print("monthly_search_count column added successfully!")
 
@@ -742,10 +758,15 @@ def update_database_schema(app, db):
             for col_name, col_type in client_columns.items():
                 if col_name not in columns:
                     print(f"Adding {col_name} column to company table...")
+                    try:
+                        safe_col = _sanitize_identifier(col_name)
+                    except Exception as e:
+                        print(f"Skipping invalid column name {col_name}: {e}")
+                        continue
                     if is_postgres:
-                        db.session.execute(text(f"ALTER TABLE company ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} ADD COLUMN IF NOT EXISTS {_quote_identifier(safe_col)} {col_type}"))
                     else:
-                        db.session.execute(text(f"ALTER TABLE company ADD COLUMN {col_name} {col_type}"))
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                     db.session.commit()
                     print(f"{col_name} column added successfully!")
 
@@ -753,9 +774,9 @@ def update_database_schema(app, db):
                 print("Adding subscription_plan column to company table...")
                 try:
                     if db.engine.dialect.name == 'postgresql':
-                        db.session.execute(text("ALTER TABLE company ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(50) DEFAULT 'standard'"))
-                    else:
-                        db.session.execute(text("ALTER TABLE company ADD COLUMN subscription_plan VARCHAR(50) DEFAULT 'standard'"))
+                            db.session.execute(text(f'ALTER TABLE "company" ADD COLUMN IF NOT EXISTS {_quote_identifier("subscription_plan")} VARCHAR(50) DEFAULT \'standard\''))
+                        else:
+                            db.session.execute(text(f'ALTER TABLE "company" ADD COLUMN {_quote_identifier("subscription_plan")} VARCHAR(50) DEFAULT \'standard\''))
                     db.session.commit()
                     print("subscription_plan column added successfully!")
                 except Exception as sub_plan_e:
@@ -776,7 +797,12 @@ def update_database_schema(app, db):
             for col_name, col_type in trial_columns.items():
                 if col_name not in columns:
                     print(f"Adding {col_name} column to company table...")
-                    db.session.execute(text(f"ALTER TABLE company ADD COLUMN {col_name} {col_type}"))
+                    try:
+                        safe_col = _sanitize_identifier(col_name)
+                    except Exception as e:
+                        print(f"Skipping invalid trial column {col_name}: {e}")
+                        continue
+                    db.session.execute(text(f"ALTER TABLE company ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                     db.session.commit()
                     print(f"{col_name} column added successfully!")
 
@@ -784,7 +810,7 @@ def update_database_schema(app, db):
             cp_columns = [col['name'] for col in inspector.get_columns('community_post')]
             if 'is_anonymous' not in cp_columns:
                 print("Adding is_anonymous column to community_post table...")
-                db.session.execute(text("ALTER TABLE community_post ADD COLUMN is_anonymous BOOLEAN DEFAULT 0"))
+                db.session.execute(text('ALTER TABLE "community_post" ADD COLUMN "is_anonymous" BOOLEAN DEFAULT 0'))
                 db.session.commit()
                 print("is_anonymous column added successfully!")
             community_post_expected_cols = {
@@ -794,7 +820,12 @@ def update_database_schema(app, db):
             for col_name, col_type in community_post_expected_cols.items():
                 if col_name not in cp_columns:
                     print(f"Adding {col_name} column to community_post table...")
-                    db.session.execute(text(f"ALTER TABLE community_post ADD COLUMN {col_name} {col_type}"))
+                    try:
+                        safe_col = _sanitize_identifier(col_name)
+                    except Exception as e:
+                        print(f"Skipping invalid community_post column {col_name}: {e}")
+                        continue
+                    db.session.execute(text(f"ALTER TABLE community_post ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                     db.session.commit()
                     print(f"{col_name} column added successfully!")
 
@@ -814,7 +845,8 @@ def update_database_schema(app, db):
                 if col_name not in cm_columns:
                     print(f"Adding {col_name} column to community_message table...")
                     try:
-                        db.session.execute(text(f"ALTER TABLE community_message ADD COLUMN {col_name} {col_type}"))
+                        safe_col = _sanitize_identifier(col_name)
+                        db.session.execute(text(f"ALTER TABLE community_message ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                         db.session.commit()
                         print(f"{col_name} column added successfully!")
                     except Exception as e:
@@ -842,7 +874,12 @@ def update_database_schema(app, db):
                     continue
                 try:
                     print(f"Adding {col_name} column to warehouse table...")
-                    db.session.execute(text(f"ALTER TABLE warehouse ADD COLUMN {col_name} {col_type}"))
+                    try:
+                        safe_col = _sanitize_identifier(col_name)
+                    except Exception as e:
+                        print(f"Skipping invalid warehouse column {col_name}: {e}")
+                        continue
+                    db.session.execute(text(f"ALTER TABLE warehouse ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                     db.session.commit()
                     print(f"{col_name} column added successfully!")
                 except Exception as w_e:
@@ -855,7 +892,8 @@ def update_database_schema(app, db):
                 if col_name not in product_item_columns:
                     try:
                         print(f"Adding {col_name} column to product_item table...")
-                        db.session.execute(text(f"ALTER TABLE product_item ADD COLUMN {col_name} {col_type}"))
+                        safe_col = _sanitize_identifier(col_name)
+                        db.session.execute(text(f"ALTER TABLE product_item ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                         db.session.commit()
                     except Exception as p_e:
                         print(f"Error adding product_item column {col_name}: {p_e}")
@@ -867,7 +905,8 @@ def update_database_schema(app, db):
                 if col_name not in product_stock_history_columns:
                     try:
                         print(f"Adding {col_name} column to product_stock_history table...")
-                        db.session.execute(text(f"ALTER TABLE product_stock_history ADD COLUMN {col_name} {col_type}"))
+                        safe_col = _sanitize_identifier(col_name)
+                        db.session.execute(text(f"ALTER TABLE product_stock_history ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                         db.session.commit()
                     except Exception as h_e:
                         print(f"Error adding product_stock_history column {col_name}: {h_e}")

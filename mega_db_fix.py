@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import sys
+import re
 
 def fix_database(db_path):
     if not os.path.exists(db_path):
@@ -62,13 +63,16 @@ def fix_database(db_path):
         ("monthly_search_count", "INTEGER DEFAULT 0")
     ]
 
-    cursor.execute("PRAGMA table_info(company)")
+    cursor.execute('PRAGMA table_info("company")')
     existing_company_cols = {row[1] for row in cursor.fetchall()}
 
     for col_name, col_def in company_columns:
         if col_name not in existing_company_cols:
             try:
-                cursor.execute(f"ALTER TABLE company ADD COLUMN {col_name} {col_def}")
+                if not re.match(r'^[A-Za-z0-9_]+$', col_name):
+                    print(f"Skipping invalid column name: {col_name}")
+                    continue
+                cursor.execute(f'ALTER TABLE "company" ADD COLUMN "{col_name}" {col_def}')
                 print(f"➕ إضافة عمود جديد لـ Company: {col_name}")
             except Exception as e:
                 print(f"⚠️ لم يتم إضافة {col_name}: {e}")
@@ -76,11 +80,14 @@ def fix_database(db_path):
     # 3. إضافة warehouse_id للجداول الأخرى
     other_tables = ["admin", "product_item", "appointment"]
     for table in other_tables:
-        cursor.execute(f"PRAGMA table_info({table})")
+        if not re.match(r'^[A-Za-z0-9_]+$', table):
+            print(f"Skipping invalid table name: {table}")
+            continue
+        cursor.execute(f'PRAGMA table_info("{table}")')
         existing_cols = {row[1] for row in cursor.fetchall()}
         if "warehouse_id" not in existing_cols:
             try:
-                cursor.execute(f"ALTER TABLE {table} ADD COLUMN warehouse_id INTEGER REFERENCES warehouse(id)")
+                cursor.execute(f"ALTER TABLE \"{table}\" ADD COLUMN \"warehouse_id\" INTEGER REFERENCES warehouse(id)")
                 print(f"➕ إضافة warehouse_id لجدول: {table}")
             except Exception as e:
                 print(f"⚠️ خطأ في جدول {table}: {e}")

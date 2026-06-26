@@ -102,3 +102,10 @@ login_*.png
 # --- ملفات الخدمة (systemd) - اختياري ---
 # stockflow-telegram-backup.service
 # stockflow-telegram-backup.timer
+
+# --- ملفات مساعدة مؤقتة ---
+COMMIT_MSG.txt
+do_commit.bat
+git_commit.bat
+git_out.txt
+git_err.txt

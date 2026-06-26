@@ -1,6 +1,7 @@
 import sqlite3
 import sys
 import os
+import re
 
 # الاستخدام:
 # python add_reaction_column.py path/to/site.db
@@ -19,7 +20,7 @@ def main(db_path: str):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    cur.execute("PRAGMA table_info(post_like)")
+    cur.execute('PRAGMA table_info("post_like")')
     existing_cols = {row[1] for row in cur.fetchall()}
 
     for col_name, col_def in COLUMNS_TO_ADD:
@@ -27,7 +28,10 @@ def main(db_path: str):
             print(f"✅ العمود '{col_name}' موجود بالفعل في جدول post_like")
             continue
         try:
-            ddl = f"ALTER TABLE post_like ADD COLUMN {col_name} {col_def}"
+            if not re.match(r'^[A-Za-z0-9_]+$', col_name):
+                print(f"✖️ تخطي اسم عمود غير صالح: {col_name}")
+                continue
+            ddl = f'ALTER TABLE "post_like" ADD COLUMN "{col_name}" {col_def}'
             print(f"➕ إضافة العمود '{col_name}': {ddl}")
             cur.execute(ddl)
             print("🎉 تمت الإضافة بنجاح.")
