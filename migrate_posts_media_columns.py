@@ -29,6 +29,7 @@ def run_migration():
         result = db.session.execute(text('PRAGMA table_info("community_post")'))
         existing = {row[1] for row in result.fetchall()}
 
+        changed = False
         for col_name, col_type in columns_to_add:
             try:
                 if col_name in existing:
@@ -41,12 +42,17 @@ def run_migration():
 
                 alter_sql = text(f'ALTER TABLE "community_post" ADD COLUMN "{col_name}" {col_type}')
                 db.session.execute(alter_sql)
-                db.session.commit()
+                changed = True
                 print(f"  ✅ تمت إضافة العمود '{col_name}' بنجاح")
             except Exception as e:
                 db.session.rollback()
                 print(f"  ⚠️ خطأ أثناء إضافة '{col_name}': {e}")
-        
+        if changed:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
         print("\n✅ Migration اكتمل بنجاح!")
         
         # عرض البنية الحالية للتأكد
