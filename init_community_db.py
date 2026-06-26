@@ -13,6 +13,7 @@ def update_community_database():
     """تحديث قاعدة البيانات لإضافة الأعمدة الجديدة"""
     with app.app_context():
         try:
+            changed = False
             # التحقق من وجود العمود is_pinned
             result = db.session.execute(text('PRAGMA table_info("community_post")')).fetchall()
             columns = [column[1] for column in result]
@@ -21,23 +22,28 @@ def update_community_database():
             if 'is_pinned' not in columns:
                 print("إضافة عمود is_pinned...")
                 db.session.execute(text('ALTER TABLE "community_post" ADD COLUMN "is_pinned" BOOLEAN DEFAULT 0'))
-                db.session.commit()
+                changed = True
                 print("تم إضافة عمود is_pinned بنجاح")
             
             # إضافة العمود pinned_until إذا لم يكن موجوداً
             if 'pinned_until' not in columns:
                 print("إضافة عمود pinned_until...")
                 db.session.execute(text('ALTER TABLE "community_post" ADD COLUMN "pinned_until" DATETIME'))
-                db.session.commit()
+                changed = True
                 print("تم إضافة عمود pinned_until بنجاح")
             
             # إضافة العمود views_count إذا لم يكن موجوداً
             if 'views_count' not in columns:
                 print("إضافة عمود views_count...")
                 db.session.execute(text('ALTER TABLE "community_post" ADD COLUMN "views_count" INTEGER DEFAULT 0'))
-                db.session.commit()
+                changed = True
                 print("تم إضافة عمود views_count بنجاح")
             
+            if changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
             print("تم تحديث قاعدة البيانات بنجاح!")
             
         except Exception as e:
