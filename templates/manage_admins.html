@@ -232,7 +232,7 @@
                                                             <i class="fas fa-{{ 'pause' if admin.is_active else 'play' }}"></i> <span class="d-none d-lg-inline">{{ 'تعطيل' if admin.is_active else 'تفعيل' }}</span>
                                                         </a>
                                                         <button type="button" class="btn btn-sm btn-danger"
-                                                                onclick="confirmDelete({{ admin.id }}, '{{ admin.full_name or admin.username | escape }}')"
+                                                                onclick="confirmDelete({{ admin.id }}, {{ (admin.full_name or admin.username)|tojson }})"
                                                                 title="حذف">
                                                             <i class="fas fa-trash-alt"></i> <span class="d-none d-lg-inline">حذف</span>
                                                         </button>

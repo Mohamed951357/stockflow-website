@@ -1,1 +1,1 @@
-Initial commit
+Add git manager and update gitignore

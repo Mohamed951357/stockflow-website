@@ -142,7 +142,7 @@
                                 </div>
                                 <div class="col-md-2 text-end">
                                     <button class="btn btn-sm btn-danger btn-action"
-                                            onclick="confirmDeleteItem({{ item.id }}, '{{ item.name | escape }}')">
+                                            onclick="confirmDeleteItem({{ item.id }}, {{ item.name|tojson }})">
                                         <i class="fas fa-trash-alt"></i> حذف
                                     </button>
                                 </div>

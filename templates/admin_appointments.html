@@ -213,25 +213,25 @@
                                         <div class="col-md-3 text-end">
                                             {% if has_permission('manage_appointments') %}
                                                 <button class="btn btn-sm btn-success btn-action"
-                                                        onclick="updateAppointment({{ appointment.id }}, 'approved', '{{ appointment.company.company_name | replace("'", "&#39;") }}')">
+                                                    onclick="updateAppointment({{ appointment.id }}, 'approved', {{ appointment.company.company_name|tojson }})">
                                                     <i class="fas fa-check"></i> موافقة
                                                 </button>
                                                 <button class="btn btn-sm btn-danger btn-action"
-                                                        onclick="updateAppointment({{ appointment.id }}, 'rejected', '{{ appointment.company.company_name | replace("'", "&#39;") }}')">
+                                                    onclick="updateAppointment({{ appointment.id }}, 'rejected', {{ appointment.company.company_name|tojson }})">
                                                     <i class="fas fa-times"></i> رفض
                                                 </button>
                                                 <button class="btn btn-sm btn-warning btn-action"
-                                                        onclick="editAppointment({{ appointment.id }}, '{{ appointment.appointment_date }}', '{{ appointment.appointment_time.strftime('%H:%M') }}', '{{ appointment.purpose | replace("'", "&#39;") }}', '{{ appointment.notes or '' | replace("'", "&#39;") }}', '{{ appointment.collection_amount or '' }}', '{{ appointment.product_item_name | replace("'", "&#39;") }}')">
+                                                    onclick="editAppointment({{ appointment.id }}, {{ appointment.appointment_date|tojson }}, {{ appointment.appointment_time.strftime('%H:%M')|tojson }}, {{ appointment.purpose|tojson }}, {{ (appointment.notes or '')|tojson }}, {{ (appointment.collection_amount or '')|tojson }}, {{ appointment.product_item_name|tojson }})">
                                                     <i class="fas fa-edit"></i> تعديل
                                                 </button>
                                             {% else %}
                                                 <button class="btn btn-sm btn-info btn-action"
-                                                        onclick="viewDetails({{ appointment.id }}, '{{ appointment.company.company_name | replace("'", "&#39;") }}', '{{ appointment.purpose | replace("'", "&#39;") }}', '{{ appointment.notes or '' | replace("'", "&#39;") }}', '{{ appointment.admin_response or '' | replace("'", "&#39;") }}', '{{ appointment.collection_amount or '' }}', '{{ appointment.product_item_name | replace("'", "&#39;") }}')">
+                                                    onclick="viewDetails({{ appointment.id }}, {{ appointment.company.company_name|tojson }}, {{ appointment.purpose|tojson }}, {{ (appointment.notes or '')|tojson }}, {{ (appointment.admin_response or '')|tojson }}, {{ (appointment.collection_amount or '')|tojson }}, {{ appointment.product_item_name|tojson }})">
                                                     <i class="fas fa-eye"></i> عرض
                                                 </button>
                                                 {% if appointment.status == 'approved' %}
                                                     <button class="btn btn-sm btn-warning btn-action"
-                                                            onclick="editAppointment({{ appointment.id }}, '{{ appointment.appointment_date }}', '{{ appointment.appointment_time.strftime('%H:%M') }}', '{{ appointment.purpose | replace("'", "&#39;") }}', '{{ appointment.notes or '' | replace("'", "&#39;") }}', '{{ appointment.collection_amount or '' }}', '{{ appointment.product_item_name | replace("'", "&#39;") }}')">
+                                                            onclick="editAppointment({{ appointment.id }}, {{ appointment.appointment_date|tojson }}, {{ appointment.appointment_time.strftime('%H:%M')|tojson }}, {{ appointment.purpose|tojson }}, {{ (appointment.notes or '')|tojson }}, {{ (appointment.collection_amount or '')|tojson }}, {{ appointment.product_item_name|tojson }})">
                                                         <i class="fas fa-edit"></i> تعديل
                                                     </button>
                                                 {% endif %}

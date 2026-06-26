@@ -774,9 +774,9 @@ def update_database_schema(app, db):
                 print("Adding subscription_plan column to company table...")
                 try:
                     if db.engine.dialect.name == 'postgresql':
-                            db.session.execute(text(f'ALTER TABLE "company" ADD COLUMN IF NOT EXISTS {_quote_identifier("subscription_plan")} VARCHAR(50) DEFAULT \'standard\''))
-                        else:
-                            db.session.execute(text(f'ALTER TABLE "company" ADD COLUMN {_quote_identifier("subscription_plan")} VARCHAR(50) DEFAULT \'standard\''))
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} ADD COLUMN IF NOT EXISTS {_quote_identifier('subscription_plan')} VARCHAR(50) DEFAULT 'standard'"))
+                    else:
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} ADD COLUMN {_quote_identifier('subscription_plan')} VARCHAR(50) DEFAULT 'standard'"))
                     db.session.commit()
                     print("subscription_plan column added successfully!")
                 except Exception as sub_plan_e:
@@ -802,7 +802,7 @@ def update_database_schema(app, db):
                     except Exception as e:
                         print(f"Skipping invalid trial column {col_name}: {e}")
                         continue
-                    db.session.execute(text(f"ALTER TABLE company ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
+                    db.session.execute(text(f"ALTER TABLE {_quote_identifier('company')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                     db.session.commit()
                     print(f"{col_name} column added successfully!")
 
@@ -825,7 +825,7 @@ def update_database_schema(app, db):
                     except Exception as e:
                         print(f"Skipping invalid community_post column {col_name}: {e}")
                         continue
-                    db.session.execute(text(f"ALTER TABLE community_post ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
+                    db.session.execute(text(f"ALTER TABLE {_quote_identifier('community_post')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                     db.session.commit()
                     print(f"{col_name} column added successfully!")
 
@@ -846,7 +846,7 @@ def update_database_schema(app, db):
                     print(f"Adding {col_name} column to community_message table...")
                     try:
                         safe_col = _sanitize_identifier(col_name)
-                        db.session.execute(text(f"ALTER TABLE community_message ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('community_message')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                         db.session.commit()
                         print(f"{col_name} column added successfully!")
                     except Exception as e:
@@ -879,7 +879,7 @@ def update_database_schema(app, db):
                     except Exception as e:
                         print(f"Skipping invalid warehouse column {col_name}: {e}")
                         continue
-                    db.session.execute(text(f"ALTER TABLE warehouse ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
+                    db.session.execute(text(f"ALTER TABLE {_quote_identifier('warehouse')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                     db.session.commit()
                     print(f"{col_name} column added successfully!")
                 except Exception as w_e:
@@ -893,7 +893,7 @@ def update_database_schema(app, db):
                     try:
                         print(f"Adding {col_name} column to product_item table...")
                         safe_col = _sanitize_identifier(col_name)
-                        db.session.execute(text(f"ALTER TABLE product_item ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('product_item')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                         db.session.commit()
                     except Exception as p_e:
                         print(f"Error adding product_item column {col_name}: {p_e}")
@@ -906,7 +906,7 @@ def update_database_schema(app, db):
                     try:
                         print(f"Adding {col_name} column to product_stock_history table...")
                         safe_col = _sanitize_identifier(col_name)
-                        db.session.execute(text(f"ALTER TABLE product_stock_history ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('product_stock_history')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
                         db.session.commit()
                     except Exception as h_e:
                         print(f"Error adding product_stock_history column {col_name}: {h_e}")

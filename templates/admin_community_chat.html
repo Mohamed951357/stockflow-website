@@ -900,7 +900,7 @@
           الشات مع <span id="companyNameHeader">الإدارة</span>
         </h5>
         {# NEW: Back button #}
-        <button class="back-button" onclick="window.location.href = '{{ url_for('admin_dashboard') }}'">
+        <button class="back-button" onclick="window.location.href = {{ url_for('admin_dashboard')|tojson }}">
             <i class="fas fa-arrow-right"></i> الرئيسية
         </button>
       </div>

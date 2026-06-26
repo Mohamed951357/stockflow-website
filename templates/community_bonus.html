@@ -960,7 +960,7 @@
         <!-- Mobile Header -->
         <div class="mobile-header">
             <div class="header-content">
-                <button class="header-btn" onclick="window.location.href='{{ url_for('company_dashboard') }}'" title="الرئيسية">
+                <button class="header-btn" onclick="window.location.href = {{ url_for('company_dashboard')|tojson }}" title="الرئيسية">
                     <i class="fas fa-home"></i>
                 </button>
                 <div class="header-title">

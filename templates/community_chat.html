@@ -936,7 +936,7 @@
 
   <div class="chat-container">
     <div class="chat-header">
-      <button class="back-button" onclick="window.location.href = '{{ url_for('company_dashboard') }}'">
+      <button class="back-button" onclick="window.location.href = {{ url_for('company_dashboard')|tojson }}">
           <i class="fas fa-arrow-right"></i>
       </button>
       <h2>توبي <img src="{{ url_for('static', filename='images/toby_robot_cartoon.png') }}" alt="Toby" class="toby-header-image"></h2>
@@ -949,7 +949,7 @@
         <i class="fas fa-star fa-3x text-warning mb-3"></i>
         <h5>هذه الميزة متاحة فقط للمشتركين في STOCKFLOW PLUS!</h5>
         <p id="premiumMessageText">للأسف، لا يمكنك استخدام ميزة الدردشة الذكية لأن هذه الميزة تتطلب اشتراكًا مميزًا.</p>
-        <button type="button" class="btn" onclick="window.location.href = '{{ url_for('subscribe_plus') }}'">
+        <button type="button" class="btn" onclick="window.location.href = {{ url_for('subscribe_plus')|tojson }}">
             <i class="fas fa-crown me-2"></i> اشترك الآن في STOCKFLOW PLUS!
         </button>
     </div>

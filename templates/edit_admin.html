@@ -154,7 +154,7 @@
                                 <div class="row">
                                     {% for role_key, role_info in admin_roles.items() %}
                                     <div class="col-md-6 mb-3">
-                                        <div class="card role-card {{ 'selected' if admin.role == role_key else '' }}" data-role-key="{{ role_key }}" onclick="selectRole('{{ role_key }}', this)">
+                                        <div class="card role-card {{ 'selected' if admin.role == role_key else '' }}" data-role-key="{{ role_key }}" onclick="selectRole({{ role_key|tojson }}, this)">
                                             <div class="card-body">
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="role" id="role_{{ role_key }}" value="{{ role_key }}" {{ 'checked' if admin.role == role_key else '' }}>

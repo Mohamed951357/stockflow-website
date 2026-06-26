@@ -653,14 +653,14 @@
                             <div class="avatar-grid">
                                 {% for i in range(1, 2) %}
                                 <div class="avatar-option" data-value="male-{{ i }}"
-                                    onclick="selectAvatar('male-{{ i }}')">
+                                    onclick="selectAvatar({{ ('male-' ~ i)|tojson }})">
                                     <img src="{{ url_for('static', filename='images/avatars/male-' + i|string + '.jpg') }}"
                                         alt="Male {{ i }}">
                                 </div>
                                 {% endfor %}
                                 {% for i in range(1, 2) %}
                                 <div class="avatar-option" data-value="female-{{ i }}"
-                                    onclick="selectAvatar('female-{{ i }}')">
+                                    onclick="selectAvatar({{ ('female-' ~ i)|tojson }})">
                                     <img src="{{ url_for('static', filename='images/avatars/female-' + i|string + '.jpg') }}"
                                         alt="Female {{ i }}">
                                 </div>
