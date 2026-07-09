@@ -3612,9 +3612,8 @@ def upload_media_to_telegram():
 
 
 @api_mobile_bp.route('/media/proxy/<path:file_id>', methods=['GET'])
-@login_required
 def proxy_telegram_media(file_id):
-    """Stream Telegram-hosted media through the API for authenticated clients."""
+    """Stream Telegram-hosted media through the API. Supports HTTP Range requests for video seeking."""
     if not file_id:
         return jsonify({'success': False, 'message': 'file_id is required.'}), 400
 
@@ -3640,24 +3639,49 @@ def proxy_telegram_media(file_id):
     elif '.webp' in tg_url.lower():
         content_type = 'image/webp'
 
+    # Forward Range header for video/audio streaming (required by mobile video players)
+    range_header = request.headers.get('Range', None)
+    tg_request_headers = {}
+    if range_header:
+        tg_request_headers['Range'] = range_header
+
     try:
-        tg_response = requests.get(tg_url, timeout=30, stream=True)
-        if tg_response.status_code != 200:
+        tg_response = requests.get(
+            tg_url,
+            headers=tg_request_headers,
+            timeout=30,
+            stream=True
+        )
+
+        # Accept both 200 (full) and 206 (partial) responses
+        if tg_response.status_code not in (200, 206):
             return jsonify({'success': False, 'message': 'Failed to fetch media from Telegram.'}), 502
 
         def generate():
-            for chunk in tg_response.iter_content(chunk_size=8192):
+            for chunk in tg_response.iter_content(chunk_size=65536):
                 if chunk:
                     yield chunk
 
+        # Return 206 if Telegram returned partial content, else 200
+        resp_status = tg_response.status_code
+
         response = Response(
             generate(),
-            status=200,
+            status=resp_status,
             content_type=content_type,
         )
+
+        # Forward Range-related headers so the player can seek
+        response.headers['Accept-Ranges'] = 'bytes'
+        if 'Content-Range' in tg_response.headers:
+            response.headers['Content-Range'] = tg_response.headers['Content-Range']
+        if 'Content-Length' in tg_response.headers:
+            response.headers['Content-Length'] = tg_response.headers['Content-Length']
+
         response.headers['Cache-Control'] = 'public, max-age=86400'
         response.headers['X-File-Id'] = file_id
         return response
+
     except requests.Timeout:
         return jsonify({'success': False, 'message': 'Telegram media request timed out.'}), 504
     except Exception as e:
@@ -3666,7 +3690,6 @@ def proxy_telegram_media(file_id):
 
 
 @api_mobile_bp.route('/media/url/<path:file_id>', methods=['GET'])
-@login_required
 def get_media_url(file_id):
     """Redirect authenticated media requests to the proxy endpoint."""
     from flask import redirect
