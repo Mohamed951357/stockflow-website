@@ -4064,13 +4064,6 @@
     </div>
     </div> <!-- End dashboard-content -->
 
-    <!-- Spinner Overlay -->
-    <div class="spinner-overlay" id="pageSpinner">
-        <div class="elegant-spinner">
-            <div class="spinner-dot"></div>
-        </div>
-    </div>
-
     <!-- تأثيرات الجليتر -->
     {% if ramadan_glitter_enabled %}
     <script>
@@ -4617,28 +4610,48 @@
             setInterval(updateNotificationCounts, 60000); // كل دقيقة
         });
 
-        window.addEventListener('pageshow', function () {
-            const spinner = document.getElementById('pageSpinner');
-            if (spinner) {
-                spinner.classList.remove('active');
-            }
-        });
+        (function keepDashboardBackNavigationStable() {
+            var refreshKey = 'stockflow_dashboard_history_refresh';
 
-        window.addEventListener('popstate', function () {
-            const spinner = document.getElementById('pageSpinner');
-            if (spinner) {
-                spinner.classList.remove('active');
-            }
-        });
-
-        document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) {
-                const spinner = document.getElementById('pageSpinner');
-                if (spinner) {
+            function hideAllSpinners() {
+                document.querySelectorAll('.spinner-overlay').forEach(function (spinner) {
                     spinner.classList.remove('active');
-                }
+                });
             }
-        });
+
+            function isHistoryRestore(event) {
+                var entries = window.performance && performance.getEntriesByType
+                    ? performance.getEntriesByType('navigation')
+                    : [];
+                var navigationType = entries.length ? entries[0].type : '';
+                return !!(event && event.persisted) || navigationType === 'back_forward';
+            }
+
+            window.addEventListener('pageshow', function (event) {
+                hideAllSpinners();
+
+                // عند الرجوع الطبيعي للوحة من صفحة أخرى نطلب نسخة جديدة مرة واحدة فقط.
+                // هذا يمنع استعادة سبينر قديم من BFCache من غير إنشاء حلقة إعادة تحميل.
+                if (!isHistoryRestore(event)) {
+                    sessionStorage.removeItem(refreshKey);
+                    return;
+                }
+
+                if (!sessionStorage.getItem(refreshKey)) {
+                    sessionStorage.setItem(refreshKey, '1');
+                    window.location.reload();
+                    return;
+                }
+
+                sessionStorage.removeItem(refreshKey);
+            });
+
+            window.addEventListener('popstate', hideAllSpinners);
+
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) hideAllSpinners();
+            });
+        })();
 
         let adStoriesCache = [];
         let activeStoryId = null;
