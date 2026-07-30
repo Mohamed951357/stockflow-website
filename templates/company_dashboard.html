@@ -4508,7 +4508,8 @@
             }
         })();
 
-                        // Initial update on page load
+        document.addEventListener('DOMContentLoaded', function () {
+        // Initial update on page load
             updateNotificationCounts();
 
             // Set interval for periodic updates
