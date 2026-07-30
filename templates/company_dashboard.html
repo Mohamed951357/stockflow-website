@@ -3795,7 +3795,7 @@
             <div class="carousel-inner">
                 {% for image in ad_images %}
                 <div class="carousel-item {{ 'active' if loop.first }}">
-                    {% set is_gif_ad = image.original_filename|lower|endswith('.gif') or image.filename|lower|endswith('.gif') %}
+                    {% set is_gif_ad = image.original_filename.lower().endswith('.gif') or image.filename.lower().endswith('.gif') %}
                     {% if image.filename.startswith('http') %}
                     <img src="{{ image.filename }}" class="d-block w-100"
                         alt="{{ image.description or image.original_filename }}"
@@ -4291,253 +4291,224 @@
                 .catch(error => console.error('Error fetching unread counts:', error));
         }
 
-        // Function to manage GIF playback and ensure smooth transitions
-        document.addEventListener('DOMContentLoaded', function () {
+        // ── Ad Carousel: Reliable + Fast ─────────────────────────────────────────
+        (function initAdCarousel() {
+            return;
             var adCarousel = document.getElementById('adCarousel');
-            if (adCarousel) {
-                var carouselInstance = bootstrap.Carousel.getInstance(adCarousel);
-                if (!carouselInstance) {
-                    carouselInstance = new bootstrap.Carousel(adCarousel, { interval: false, ride: false, pause: false, wrap: true, touch: true });
+            if (!adCarousel) return;
+
+            var carouselInstance = bootstrap.Carousel.getInstance(adCarousel)
+                || new bootstrap.Carousel(adCarousel, {
+                    interval: false, ride: false, pause: false,
+                    wrap: true, touch: true
+                });
+            carouselInstance._config.interval = false;
+
+            var advanceTimer    = null;
+            var isTransitioning = false;
+            var GIF_MS  = 9000;   // ثابت للـ GIF
+            var IMG_MS  = 7000;   // ثابت للصور العادية
+
+            // ─── هل صورة GIF؟ ───────────────────────────────────────────
+            function isGif(img) {
+                if (!img) return false;
+                if (img.getAttribute('data-is-gif') === 'true') return true;
+                var src = img.getAttribute('data-original-src') || img.src || '';
+                return /\.gif(\?|$)/i.test(src);
+            }
+
+            // ─── ضبط timer الانتقال ──────────────────────────────────────
+            function scheduleNext(ms) {
+                if (advanceTimer) clearTimeout(advanceTimer);
+                advanceTimer = setTimeout(function () {
+                    var items = adCarousel.querySelectorAll('.carousel-item');
+                    if (items.length <= 1) { scheduleNext(ms); return; } // شريحة واحدة → كرر
+                    if (isTransitioning) return;
+                    var active = adCarousel.querySelector('.carousel-item.active');
+                    var next   = (Array.from(items).indexOf(active) + 1) % items.length;
+                    isTransitioning = true;
+                    carouselInstance.to(next);
+                }, ms);
+            }
+
+            // ─── تفعيل شريحة ────────────────────────────────────────────
+            function activateSlide(item) {
+                if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+
+                var img = item ? item.querySelector('img') : null;
+                if (!img) { scheduleNext(IMG_MS); return; }
+
+                if (isGif(img)) {
+                    // أعِد تشغيل الـ GIF من البداية بدون cache buster
+                    var src = img.getAttribute('data-original-src') || img.src;
+                    img.style.opacity = '0';
+                    img.src = '';                          // أوقف الـ GIF
+                    requestAnimationFrame(function () {
+                        img.src = src;                     // أعِد من البداية
+                        img.style.opacity = '1';
+                        scheduleNext(GIF_MS);              // timer ثابت موثوق
+                    });
                 } else {
-                    carouselInstance._config.interval = false;
-                    carouselInstance.pause();
+                    img.style.opacity = '1';
+                    scheduleNext(IMG_MS);
                 }
-                var carouselItems = adCarousel.querySelectorAll('.carousel-item');
-                var isTransitioning = false; // لتجنب التداخل في الانتقالات
-                var advanceTimerId = null; // مؤقت الانتقال للصورة التالية
+            }
 
-                function isGifImage(imgElement) {
-                    if (!imgElement) return false;
-                    if (imgElement.getAttribute('data-is-gif') === 'true') return true;
-                    var src = imgElement.getAttribute('data-original-src') || imgElement.src || '';
-                    return /\.gif(\?|$)/i.test(src);
+            // ─── إخفاء الشرائح غير active عند البداية ────────────────────
+            adCarousel.querySelectorAll('.carousel-item').forEach(function (item) {
+                var img = item.querySelector('img');
+                if (!img) return;
+                if (isGif(img) && !img.getAttribute('data-original-src')) {
+                    img.setAttribute('data-original-src', img.src);
                 }
+                if (!item.classList.contains('active')) {
+                    img.style.opacity = '0';
+                    if (isGif(img)) img.src = ''; // وقف الـ GIF قبل ما يظهر
+                }
+            });
 
-                // تهيئة الصور وتخزين مسارات GIF
-                carouselItems.forEach(item => {
-                    var img = item.querySelector('img');
-                    if (img && isGifImage(img)) {
-                        if (!img.getAttribute('data-original-src')) {
-                            img.setAttribute('data-original-src', img.src);
-                        }
-                        if (!item.classList.contains('active')) {
-                            img.src = '';
-                            img.style.opacity = '0';
-                        }
-                    } else if (img) {
-                        img.style.opacity = '0';
+            // ─── Bootstrap Events ────────────────────────────────────────
+            adCarousel.addEventListener('slide.bs.carousel', function () {
+                if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+                // أوقف GIF الشريحة الحالية
+                var cur = adCarousel.querySelector('.carousel-item.active img');
+                if (cur && isGif(cur)) { cur.src = ''; cur.style.opacity = '0'; }
+            });
+
+            adCarousel.addEventListener('slid.bs.carousel', function (e) {
+                isTransitioning = false;
+                activateSlide(e.relatedTarget);
+            });
+
+            // ─── بدء الكاروسيل بعد تحميل الصفحة كاملاً ──────────────────
+            // نستخدم window.load + requestIdleCallback عشان الصفحة تفتح أولاً
+            function start() {
+                var idle = window.requestIdleCallback || function (fn) { setTimeout(fn, 50); };
+                idle(function () {
+                    activateSlide(adCarousel.querySelector('.carousel-item.active'));
+                });
+            }
+
+            if (document.readyState === 'complete') {
+                start();
+            } else {
+                window.addEventListener('load', start, { once: true });
+            }
+        })();
+
+        // Ad Carousel: keep image sources intact while Bootstrap changes slides.
+        (function initReliableAdCarousel() {
+            function init() {
+                var adCarousel = document.getElementById('adCarousel');
+                if (!adCarousel || !window.bootstrap || !bootstrap.Carousel) return;
+
+                var items = Array.from(adCarousel.querySelectorAll('.carousel-item'));
+                if (!items.length) return;
+
+                var carouselInstance = bootstrap.Carousel.getInstance(adCarousel)
+                    || new bootstrap.Carousel(adCarousel, {
+                        interval: false,
+                        ride: false,
+                        pause: false,
+                        wrap: true,
+                        touch: true
+                    });
+                carouselInstance.pause();
+
+                var advanceTimer = null;
+                var isTransitioning = false;
+                var GIF_MS = 9000;
+                var IMG_MS = 7000;
+
+                function clearAdvanceTimer() {
+                    if (advanceTimer !== null) {
+                        clearTimeout(advanceTimer);
+                        advanceTimer = null;
                     }
+                }
+
+                function getImage(item) {
+                    return item ? item.querySelector('img') : null;
+                }
+
+                function getSource(img) {
+                    if (!img) return '';
+                    var source = img.getAttribute('data-carousel-src');
+                    if (!source) {
+                        source = img.getAttribute('src') || '';
+                        img.setAttribute('data-carousel-src', source);
+                    }
+                    return source;
+                }
+
+                function isGif(img) {
+                    var source = getSource(img);
+                    return !!img && (
+                        img.getAttribute('data-is-gif') === 'true'
+                        || /\.gif(?:[?#]|$)/i.test(source)
+                    );
+                }
+
+                function restartGif(img) {
+                    if (!isGif(img)) return;
+                    var source = getSource(img);
+                    if (!source) return;
+
+                    // إعادة التشغيل عند ظهور الشريحة فقط، بدون تفريغ src أثناء انتقال Bootstrap.
+                    var separator = source.indexOf('?') === -1 ? '?' : '&';
+                    img.src = source + separator + '_carousel=' + Date.now();
+                }
+
+                function scheduleNext(item) {
+                    clearAdvanceTimer();
+                    if (items.length < 2) return;
+
+                    var duration = isGif(getImage(item)) ? GIF_MS : IMG_MS;
+                    advanceTimer = setTimeout(function () {
+                        if (isTransitioning) return;
+                        isTransitioning = true;
+                        carouselInstance.next();
+                    }, duration);
+                }
+
+                function activateSlide(item) {
+                    item = item || adCarousel.querySelector('.carousel-item.active');
+                    if (!item) return;
+
+                    var img = getImage(item);
+                    if (img) {
+                        getSource(img);
+                        if (isGif(img)) restartGif(img);
+                    }
+                    scheduleNext(item);
+                }
+
+                items.forEach(function (item) {
+                    var img = getImage(item);
+                    if (img) getSource(img);
                 });
 
-                // دالة لتشغيل GIF من البداية
-                function playGifFromStart(imgElement) {
-                    if (imgElement && isGifImage(imgElement) && imgElement.getAttribute('data-original-src')) {
-                        // إيقاف GIF الحالي تماماً
-                        imgElement.src = '';
-                        imgElement.style.display = 'none';
-
-                        // إعادة تشغيل GIF من البداية
-                        setTimeout(() => {
-                            imgElement.src = imgElement.getAttribute('data-original-src');
-                            imgElement.style.display = 'block';
-                        }, 100); // تأخير أكبر لضمان إعادة التحميل الكامل
-                    }
-                }
-
-                // دالة لإيقاف GIF
-                function pauseGif(imgElement) {
-                    if (imgElement && isGifImage(imgElement)) {
-                        imgElement.src = '';
-                    }
-                }
-
-                // دوال مساعدة للانتقال بين الشرائح
-                function getActiveIndex() {
-                    var items = Array.from(adCarousel.querySelectorAll('.carousel-item'));
-                    var active = adCarousel.querySelector('.carousel-item.active');
-                    return items.indexOf(active);
-                }
-
-                function goToNextSlide() {
-                    var items = adCarousel.querySelectorAll('.carousel-item');
-                    var count = items.length;
-                    if (count <= 1) return;
-                    var currentIndex = getActiveIndex();
-                    var nextIndex = (currentIndex + 1) % count;
-                    if (carouselInstance) {
-                        carouselInstance.to(nextIndex);
-                    }
-                }
-
-                // دالة للانتقال الآمن للصورة التالية
-                function safeNextSlide() {
-                    if (!isTransitioning) {
-                        isTransitioning = true;
-                        goToNextSlide();
-                        // إعادة تعيين بعد ثانية واحدة
-                        setTimeout(() => {
-                            isTransitioning = false;
-                        }, 1000);
-                    }
-                }
-
-                // دالة لحساب مدة GIF الفعلية
-                function calculateGifDuration(imgElement) {
-                    return new Promise((resolve) => {
-                        if (imgElement && isGifImage(imgElement) && imgElement.getAttribute('data-original-src')) {
-                            // تحميل البيانات وحساب المدة الفعلية
-                            var xhr = new XMLHttpRequest();
-                            xhr.open('GET', imgElement.getAttribute('data-original-src'), true);
-                            xhr.responseType = 'arraybuffer';
-
-                            xhr.onload = function () {
-                                if (xhr.status === 200) {
-                                    var buffer = xhr.response;
-                                    var view = new DataView(buffer);
-                                    var totalDuration = 0;
-                                    var frameCount = 0;
-
-                                    // البحث عن جميع إطارات GIF وحساب مدتها
-                                    for (var i = 0; i < buffer.byteLength - 6; i++) {
-                                        // البحث عن Graphic Control Extension (21 F9)
-                                        if (view.getUint8(i) === 0x21 && view.getUint8(i + 1) === 0xF9) {
-                                            try {
-                                                if (i + 6 < buffer.byteLength) {
-                                                    var delay = view.getUint16(i + 4, true); // قراءة التأخير
-                                                    if (delay > 0) {
-                                                        var frameDelay = delay * 10; // تحويل إلى ميلي ثانية
-                                                        totalDuration += frameDelay;
-                                                        frameCount++;
-                                                    }
-                                                }
-                                            } catch (e) {
-                                                // تجاهل الأخطاء والاستمرار
-                                            }
-                                        }
-                                    }
-
-                                    // إذا لم نجد إطارات، استخدم حساب بديل
-                                    if (frameCount === 0 || totalDuration === 0) {
-                                        // تقدير المدة بناءً على حجم الملف
-                                        var fileSizeKB = buffer.byteLength / 1024;
-                                        var estimatedDuration = Math.max(3000, Math.min(20000, fileSizeKB * 100));
-                                        console.log('تقدير مدة GIF بناءً على الحجم:', estimatedDuration, 'ms');
-                                        resolve(estimatedDuration);
-                                    } else {
-                                        // استخدام المدة المحسوبة مع إضافة وقت إضافي للأمان
-                                        var finalDuration = totalDuration + 1000; // إضافة ثانية واحدة للأمان
-                                        console.log('مدة GIF المحسوبة:', finalDuration, 'ms', '(الإطارات:', frameCount, ')');
-                                        resolve(finalDuration);
-                                    }
-                                } else {
-                                    console.log('فشل في تحميل GIF، استخدام مدة افتراضية');
-                                    resolve(8000); // مدة افتراضية في حالة الفشل
-                                }
-                            };
-
-                            xhr.onerror = function () {
-                                console.log('خطأ في تحميل GIF، استخدام مدة افتراضية');
-                                resolve(8000); // مدة افتراضية في حالة الخطأ
-                            };
-
-                            xhr.send();
-                        } else {
-                            resolve(7000); // 7 ثوانٍ للصور العادية
-                        }
-                    });
-                }
-
-                // إدارة الانتقال بين الصور
-                adCarousel.addEventListener('slide.bs.carousel', function (event) {
-                    var currentActiveItem = adCarousel.querySelector('.carousel-item.active');
-                    if (currentActiveItem) {
-                        var currentActiveImg = currentActiveItem.querySelector('img');
-                        if (currentActiveImg) {
-                            pauseGif(currentActiveImg);
-                            currentActiveImg.style.opacity = '0';
-                        }
-                    }
-                    // إلغاء أي مؤقت انتقال سابق لمنع التداخل
-                    if (advanceTimerId) {
-                        clearTimeout(advanceTimerId);
-                        advanceTimerId = null;
-                    }
+                adCarousel.addEventListener('slide.bs.carousel', function () {
+                    clearAdvanceTimer();
+                    isTransitioning = true;
                 });
 
                 adCarousel.addEventListener('slid.bs.carousel', function (event) {
-                    var newlyActiveItem = event.relatedTarget;
-                    var newlyActiveImg = newlyActiveItem.querySelector('img');
-
-                    if (newlyActiveImg) {
-                        if (isGifImage(newlyActiveImg)) {
-                            newlyActiveImg.style.opacity = '0';
-
-                            // تشغيل GIF من البداية
-                            playGifFromStart(newlyActiveImg);
-
-                            newlyActiveImg.onload = function () {
-                                newlyActiveImg.style.opacity = '1';
-                                newlyActiveImg.onload = null;
-
-                                // حساب مدة GIF والانتظار حتى انتهائه
-                                calculateGifDuration(newlyActiveImg).then((duration) => {
-                                    // الانتقال للصورة التالية بعد انتهاء GIF
-                                    advanceTimerId = setTimeout(() => {
-                                        safeNextSlide();
-                                    }, duration);
-                                });
-                            };
-
-                            if (newlyActiveImg.complete && newlyActiveImg.src) {
-                                newlyActiveImg.onload();
-                            }
-                        } else {
-                            newlyActiveImg.style.opacity = '1';
-                            // للصور العادية، الانتقال بعد 7 ثوانٍ
-                            advanceTimerId = setTimeout(() => {
-                                safeNextSlide();
-                            }, 7000);
-                        }
-                    }
+                    isTransitioning = false;
+                    activateSlide(event.relatedTarget);
                 });
 
-                // تهيئة الصورة الأولى
-                var initialActiveItem = adCarousel.querySelector('.carousel-item.active');
-                if (initialActiveItem) {
-                    var initialActiveImg = initialActiveItem.querySelector('img');
-                    if (initialActiveImg) {
-                        if (isGifImage(initialActiveImg)) {
-                            if (!initialActiveImg.getAttribute('data-original-src')) {
-                                initialActiveImg.setAttribute('data-original-src', initialActiveImg.src);
-                            }
-                            playGifFromStart(initialActiveImg);
-                            initialActiveImg.style.opacity = '0';
-                            initialActiveImg.onload = function () {
-                                initialActiveImg.style.opacity = '1';
-                                initialActiveImg.onload = null;
-
-                                // حساب مدة GIF الأول والانتظار حتى انتهائه
-                                calculateGifDuration(initialActiveImg).then((duration) => {
-                                    // بدء دورة الانتقال التلقائي بعد انتهاء GIF
-                                    advanceTimerId = setTimeout(() => {
-                                        safeNextSlide();
-                                    }, duration);
-                                });
-                            }
-                            if (initialActiveImg.complete && initialActiveImg.src) {
-                                initialActiveImg.onload();
-                            }
-                        } else {
-                            initialActiveImg.style.opacity = '1';
-                            // للصور العادية، الانتقال بعد 7 ثوانٍ
-                            advanceTimerId = setTimeout(() => {
-                                safeNextSlide();
-                            }, 7000);
-                        }
-                    }
-                }
+                activateSlide(adCarousel.querySelector('.carousel-item.active'));
             }
-            // Initial update on page load
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init, { once: true });
+            } else {
+                init();
+            }
+        })();
+
+                        // Initial update on page load
             updateNotificationCounts();
 
             // Set interval for periodic updates
