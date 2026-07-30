@@ -1292,7 +1292,7 @@
             }
 
             /* تصغير اللوحة الإعلانية قليلاً على الموبايل */
-            .ad-carousel .carousel-item img {
+            .ad-carousel .ad-media {
                 height: 150px;
             }
 
@@ -1653,9 +1653,74 @@
             transition: all 0.5s ease;
         }
 
-        .ad-carousel .carousel-item img {
-            width: 100%;
+        .ad-carousel .ad-media {
+            position: relative;
             height: 250px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.32), transparent 34%),
+                linear-gradient(135deg, #1243c4 0%, #0a2da0 58%, #0d9488 100%);
+        }
+
+        .ad-carousel .ad-media::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 13px);
+        }
+
+        .ad-carousel .ad-media-placeholder {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #fff;
+            text-align: center;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .ad-carousel .ad-media-placeholder i {
+            font-size: 2.2rem;
+            opacity: 0.9;
+        }
+
+        .ad-carousel .ad-media-spinner {
+            width: 26px;
+            height: 26px;
+            border: 3px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: ad-media-spin 0.85s linear infinite;
+        }
+
+        .ad-carousel .ad-media-placeholder-text {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .ad-carousel .ad-media.is-ready .ad-media-placeholder {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .ad-carousel .ad-media.is-failed .ad-media-spinner {
+            display: none;
+        }
+
+        @keyframes ad-media-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .ad-carousel .carousel-item img {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
             /* Fixed height for consistency */
             object-fit: cover;
             /* Covers the area, cropping if necessary */
@@ -1668,10 +1733,8 @@
             transform: scale(1.05);
         }
 
-        /* Important: Control active state via JS, don't rely solely on .active class for opacity */
-        .ad-carousel .carousel-item.active img {
+        .ad-carousel .ad-media.is-ready img {
             opacity: 1;
-            /* Make active image visible */
             transform: scale(1);
         }
 
@@ -1726,7 +1789,7 @@
 
         /* Adjustments for smaller screens for carousel */
         @media (max-width: 767.98px) {
-            .ad-carousel .carousel-item img {
+            .ad-carousel .ad-media {
                 height: 180px;
                 /* Smaller height on mobile */
             }
@@ -3796,15 +3859,20 @@
                 {% for image in ad_images %}
                 <div class="carousel-item {{ 'active' if loop.first }}">
                     {% set is_gif_ad = image.original_filename.lower().endswith('.gif') or image.filename.lower().endswith('.gif') %}
-                    {% if image.filename.startswith('http') %}
-                    <img src="{{ image.filename }}" class="d-block w-100"
-                        alt="{{ image.description or image.original_filename }}"
-                        {% if is_gif_ad %}data-is-gif="true"{% endif %}>
-                    {% else %}
-                    <img src="{{ url_for('serve_ad_image', filename=image.filename) }}" class="d-block w-100"
-                        alt="{{ image.description or image.original_filename }}"
-                        {% if is_gif_ad %}data-is-gif="true"{% endif %}>
-                    {% endif %}
+                    <div class="ad-media" data-ad-media aria-label="إعلان">
+                        <div class="ad-media-placeholder" aria-hidden="true">
+                            <div class="ad-media-spinner"></div>
+                            <i class="fas fa-image"></i>
+                            <span class="ad-media-placeholder-text">جارٍ تحميل الإعلان</span>
+                        </div>
+                        {% if image.filename.startswith('http') %}
+                        <img src="{{ image.filename }}" class="d-block w-100" alt=""
+                            {% if is_gif_ad %}data-is-gif="true"{% endif %}>
+                        {% else %}
+                        <img src="{{ url_for('serve_ad_image', filename=image.filename) }}" class="d-block w-100" alt=""
+                            {% if is_gif_ad %}data-is-gif="true"{% endif %}>
+                        {% endif %}
+                    </div>
                     {% if image.description %}
                     <div class="carousel-caption d-none d-md-block">
                         <h5>إعلان</h5>
@@ -4431,6 +4499,35 @@
                     return item ? item.querySelector('img') : null;
                 }
 
+                function setMediaState(img, state) {
+                    var media = img ? img.closest('[data-ad-media]') : null;
+                    if (!media) return;
+
+                    media.classList.toggle('is-ready', state === 'ready');
+                    media.classList.toggle('is-failed', state === 'failed');
+
+                    var status = media.querySelector('.ad-media-placeholder-text');
+                    if (status) {
+                        status.textContent = state === 'failed' ? 'تعذر تحميل الإعلان' : 'جارٍ تحميل الإعلان';
+                    }
+                }
+
+                function watchImage(img) {
+                    if (!img || img.dataset.adMediaWatched === 'true') return;
+                    img.dataset.adMediaWatched = 'true';
+
+                    img.addEventListener('load', function () {
+                        setMediaState(img, 'ready');
+                    });
+                    img.addEventListener('error', function () {
+                        setMediaState(img, 'failed');
+                    });
+
+                    if (img.complete) {
+                        setMediaState(img, img.naturalWidth > 0 ? 'ready' : 'failed');
+                    }
+                }
+
                 function getSource(img) {
                     if (!img) return '';
                     var source = img.getAttribute('data-carousel-src');
@@ -4454,6 +4551,7 @@
                     var source = getSource(img);
                     if (!source) return;
 
+                    setMediaState(img, 'loading');
                     // إعادة التشغيل عند ظهور الشريحة فقط، بدون تفريغ src أثناء انتقال Bootstrap.
                     var separator = source.indexOf('?') === -1 ? '?' : '&';
                     img.src = source + separator + '_carousel=' + Date.now();
@@ -4485,7 +4583,10 @@
 
                 items.forEach(function (item) {
                     var img = getImage(item);
-                    if (img) getSource(img);
+                    if (img) {
+                        getSource(img);
+                        watchImage(img);
+                    }
                 });
 
                 adCarousel.addEventListener('slide.bs.carousel', function () {
