@@ -447,6 +447,7 @@
     /* Shared company settings shell: matches Notifications, Search and Reports. */
     :root {
         --company-navbar-height: 70px;
+        --profile-navbar-gap: 14px;
         --profile-border: #dbe6fa;
         --profile-heading: #1d355f;
         --profile-muted: #667085;
@@ -461,7 +462,8 @@
     }
 
     .main-content {
-        min-height: calc(100dvh - var(--company-navbar-height));
+        min-height: calc(100dvh - var(--company-navbar-height) - var(--profile-navbar-gap));
+        margin-top: var(--profile-navbar-gap);
         padding: 2rem 0;
         background: linear-gradient(180deg, #edf3ff 0%, #e6edfc 100%);
         border-radius: 32px 32px 0 0;
@@ -752,8 +754,9 @@
         }
 
         .main-content {
-            min-height: calc(100dvh - 56px);
+            min-height: calc(100dvh - 56px - 8px);
             width: 100%;
+            margin-top: 8px;
             padding: 0.75rem 0 1.25rem;
             border-radius: 24px 24px 0 0;
         }
