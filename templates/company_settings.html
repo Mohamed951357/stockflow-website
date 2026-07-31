@@ -245,9 +245,40 @@
         }
 
         .navbar-nav-notification-wrapper {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            gap: 10px;
             max-width: 200px;
             flex-grow: 1;
             justify-content: space-around;
+        }
+
+        .navbar-nav-notification-wrapper .nav-link {
+            position: relative;
+            padding: 0.5rem;
+            transition: all 0.25s ease;
+        }
+
+        .navbar-nav-notification-wrapper .nav-link:hover {
+            transform: translateY(-2px) scale(1.06);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border: 2px solid #fff;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            line-height: 14px;
+            text-align: center;
         }
 
         .page-header {
@@ -256,6 +287,10 @@
             justify-content: space-between;
             gap: 1rem;
             margin: 0 0 0.75rem !important;
+        }
+
+        .settings-page-header {
+            margin-bottom: 0.35rem !important;
         }
 
         .page-title {
@@ -269,6 +304,12 @@
 
         .page-title i {
             color: #1243c4;
+        }
+
+        .settings-page-intro {
+            margin: 0 0 1.35rem;
+            color: var(--settings-muted);
+            font-size: 0.95rem;
         }
 
         .settings-container.settings-panel {
@@ -289,6 +330,41 @@
             border-bottom: 1px solid #e7edf8;
             color: var(--settings-muted) !important;
             font-size: 0.92rem;
+        }
+
+        .settings-panel__heading {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1.2rem 1.25rem 1rem;
+            border-bottom: 1px solid #e7edf8;
+            background: linear-gradient(90deg, #fbfdff 0%, #ffffff 72%);
+        }
+
+        .settings-panel__heading-icon {
+            display: inline-flex;
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            background: #edf3ff;
+            color: #1243c4;
+        }
+
+        .settings-panel__heading h2 {
+            margin: 0 0 0.15rem;
+            color: #263e68;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .settings-panel__heading p {
+            margin: 0;
+            color: var(--settings-muted);
+            font-size: 0.88rem;
+            line-height: 1.6;
         }
 
         .settings-panel .settings-item {
@@ -458,6 +534,16 @@
                 padding-left: 0.75rem;
             }
 
+            .navbar-nav-notification-wrapper {
+                max-width: 150px;
+                gap: 0;
+                justify-content: space-between;
+            }
+
+            .navbar-nav-notification-wrapper .nav-link {
+                padding: 0.5rem !important;
+            }
+
             .page-title {
                 font-size: 1.18rem;
             }
@@ -502,23 +588,27 @@
             <a class="navbar-brand" href="{{ url_for('company_dashboard') }}">
                 {% if current_logo_path %}
                 <img src="{{ current_logo_path }}" alt="Logo" class="navbar-logo">
+                {% else %}
+                <img src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Default Logo" class="navbar-logo">
                 {% endif %}
                 <span class="full-text">{{ system_subtitle }}</span>
                 <span class="short-text"></span>
             </a>
 
-            <div class="navbar-nav-notification-wrapper d-flex">
+            <div class="navbar-nav-notification-wrapper">
                 <a class="nav-link" href="{{ url_for('company_profile') }}" title="ملفي الشخصي">
                     <i class="fas fa-user-circle fa-lg"></i>
                 </a>
-                <a class="nav-link" href="{{ url_for('company_messages') }}">
+                <a class="nav-link" href="{{ url_for('company_messages') }}" title="المراسلات">
                     <i class="fas fa-comments fa-lg"></i>
+                    <span class="notification-badge" id="community-count" style="display: none;">0</span>
                 </a>
                 <a class="nav-link" href="{{ url_for('instructions') }}" title="تعليمات وإرشادات">
                     <i class="fas fa-question-circle fa-lg"></i>
                 </a>
-                <a class="nav-link position-relative" href="{{ url_for('notifications') }}">
+                <a class="nav-link position-relative" href="{{ url_for('notifications') }}" title="الإشعارات">
                     <i class="fas fa-bell fa-lg"></i>
+                    <span class="notification-badge" id="notification-count" style="display: none;">0</span>
                 </a>
             </div>
 
@@ -571,6 +661,18 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('community_bonus.community_bonus') }}">
+                            <i class="fas fa-users me-2"></i>
+                            مجتمع ستوك فلو
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('instructions') }}">
+                            <i class="fas fa-question-circle me-2"></i>
+                            التعليمات
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}">
                             <i class="fas fa-sign-out-alt me-2"></i>
                             تسجيل الخروج
@@ -583,11 +685,18 @@
 
     <main class="main-content">
     <div class="container settings-page-container">
-        <div class="page-header d-flex justify-content-between align-items-center mb-2">
-            <h3 class="page-title mb-0"><i class="fas fa-cog me-2"></i> إعدادات الشركة</h3>
+        <div class="page-header settings-page-header d-flex justify-content-between align-items-center mb-2">
+            <h1 class="page-title mb-0"><i class="fas fa-cog me-2"></i> إعدادات الشركة</h1>
         </div>
+        <p class="settings-page-intro">تحكم في خصوصية الحساب وخيارات التواصل من مكان واحد.</p>
         <div class="settings-container settings-panel mt-0">
-            <small class="text-muted d-block mb-3">تحكم في طريقة تواصُل الشركات الأخرى معك</small>
+            <div class="settings-panel__heading">
+                <span class="settings-panel__heading-icon"><i class="fas fa-sliders-h"></i></span>
+                <div>
+                    <h2>إعدادات الحساب</h2>
+                    <p>تحكم في طريقة تواصُل الشركات الأخرى معك.</p>
+                </div>
+            </div>
             <div class="settings-item">
                 <div class="avatar-section d-flex align-items-center gap-3">
                     {% set avatar_key = current_user.avatar if current_user.avatar else 'male-1' %}
