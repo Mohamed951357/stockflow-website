@@ -176,6 +176,323 @@
             overscroll-behavior-x: none !important;
         }
 
+        /* Shared company page shell: aligns Settings with Notifications, Search and Reports. */
+        :root {
+            --company-navbar-height: 70px;
+            --settings-border: #dbe6fa;
+            --settings-heading: #1d355f;
+            --settings-muted: #667085;
+        }
+
+        body {
+            min-height: 100dvh !important;
+            padding: var(--company-navbar-height) 0 0 !important;
+            scroll-padding-top: var(--company-navbar-height);
+            background: linear-gradient(135deg, #1243c4 0%, #0a2da0 100%) !important;
+            animation: none !important;
+        }
+
+        .main-content {
+            min-height: calc(100dvh - var(--company-navbar-height));
+            padding: 2rem 0;
+            background: linear-gradient(180deg, #edf3ff 0%, #e6edfc 100%);
+            border-radius: 32px 32px 0 0;
+        }
+
+        .settings-page-container {
+            width: 100%;
+        }
+
+        .navbar {
+            padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
+        }
+
+        .navbar .navbar-brand,
+        .navbar .navbar-brand span {
+            color: #fff !important;
+        }
+
+        .navbar .nav-link {
+            position: relative;
+            color: #000 !important;
+            transition: color 0.25s ease;
+        }
+
+        .navbar .nav-link::after {
+            content: '';
+            position: absolute;
+            right: 50%;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            opacity: 0;
+            transform: translateX(50%);
+            transition: all 0.25s ease;
+        }
+
+        .navbar .nav-link:hover::after {
+            width: 70%;
+            opacity: 1;
+        }
+
+        .navbar .navbar-text {
+            color: rgba(255, 255, 255, 0.74) !important;
+        }
+
+        .navbar i {
+            color: inherit !important;
+        }
+
+        .navbar-nav-notification-wrapper {
+            max-width: 200px;
+            flex-grow: 1;
+            justify-content: space-around;
+        }
+
+        .page-header {
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 0 0 0.75rem !important;
+        }
+
+        .page-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            color: var(--settings-heading);
+            font-size: 1.45rem;
+            font-weight: 700;
+        }
+
+        .page-title i {
+            color: #1243c4;
+        }
+
+        .settings-container.settings-panel {
+            max-width: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid var(--settings-border);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 12px 30px rgba(37, 70, 135, 0.08);
+        }
+
+        .settings-panel > small {
+            display: block;
+            margin: 0 !important;
+            padding: 1.2rem 1.25rem 0.95rem;
+            border-bottom: 1px solid #e7edf8;
+            color: var(--settings-muted) !important;
+            font-size: 0.92rem;
+        }
+
+        .settings-panel .settings-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            min-height: 96px;
+            margin: 0 !important;
+            padding: 1.25rem;
+            border: 0;
+            background: #fff;
+            transition: background-color 0.2s ease;
+        }
+
+        .settings-panel .settings-item + .settings-item,
+        .settings-panel form + .settings-item,
+        .settings-panel .settings-item + form {
+            border-top: 1px solid #e7edf8;
+        }
+
+        .settings-panel .settings-item:hover {
+            background: #fbfdff;
+        }
+
+        .settings-panel .settings-item > div:first-child {
+            min-width: 0;
+        }
+
+        .settings-panel .settings-item strong,
+        .settings-panel .settings-item .fw-bold {
+            color: #263e68;
+            font-size: 0.98rem;
+            font-weight: 700;
+        }
+
+        .settings-panel .settings-item .text-muted {
+            color: var(--settings-muted) !important;
+            line-height: 1.7;
+        }
+
+        .settings-panel .avatar-section {
+            padding: 0;
+        }
+
+        .settings-panel .avatar-preview {
+            width: 76px;
+            height: 76px;
+            border: 3px solid #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 20px rgba(35, 69, 132, 0.16);
+        }
+
+        .settings-panel .avatar-preview img {
+            width: 100% !important;
+            height: 100% !important;
+            border: 0 !important;
+            border-radius: 15px !important;
+            box-shadow: none !important;
+        }
+
+        .settings-panel .avatar-placeholder {
+            width: 100% !important;
+            height: 100% !important;
+            border: 0 !important;
+            border-radius: 15px !important;
+            box-shadow: none !important;
+        }
+
+        .btn-change-avatar,
+        .btn-save {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            border-radius: 10px;
+            font-weight: 700;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-change-avatar {
+            margin-top: 0.65rem;
+            padding: 0.5rem 0.85rem;
+            background: #edf3ff;
+            color: #1243c4;
+            box-shadow: none;
+        }
+
+        .btn-save {
+            padding: 0.65rem 1.1rem;
+            background: linear-gradient(135deg, #1243c4 0%, #0a2da0 100%);
+            box-shadow: 0 8px 18px rgba(18, 67, 196, 0.22);
+        }
+
+        .btn-change-avatar:hover,
+        .btn-save:hover {
+            transform: translateY(-1px);
+        }
+
+        .settings-panel form {
+            margin: 0;
+        }
+
+        .settings-panel form .settings-item {
+            border-top: 1px solid #e7edf8;
+        }
+
+        .settings-panel form .mt-3 {
+            display: flex;
+            justify-content: flex-start;
+            margin: 0 !important;
+            padding: 0 1.25rem 1.25rem;
+            background: #fff;
+        }
+
+        .form-switch .form-check-input {
+            width: 3.25rem;
+            height: 1.7rem;
+            margin: 0;
+            cursor: pointer;
+            background: #d7e1f2;
+            border-color: #c1d0e7;
+            box-shadow: none;
+        }
+
+        .form-switch .form-check-input::before {
+            top: 0.1rem;
+            left: 0.12rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            box-shadow: 0 2px 6px rgba(29, 53, 95, 0.2);
+        }
+
+        .form-switch .form-check-input:checked {
+            background: #1243c4;
+            border-color: #1243c4;
+            box-shadow: 0 0 0 4px rgba(18, 67, 196, 0.1);
+        }
+
+        .form-switch .form-check-input:checked::before {
+            transform: translateX(1.55rem);
+        }
+
+        .settings-panel .btn-warning {
+            border: 0;
+            border-radius: 10px;
+            background: #fbbf24;
+            color: #5b4300;
+            box-shadow: none;
+        }
+
+        .settings-panel .btn-outline-danger {
+            border-radius: 10px !important;
+            font-weight: 700 !important;
+        }
+
+        @media (max-width: 767.98px) {
+            .main-content {
+                min-height: calc(100dvh - 56px);
+                padding: 0.75rem 0 1.25rem;
+                border-radius: 24px 24px 0 0;
+            }
+
+            .settings-page-container {
+                padding-right: 0.75rem;
+                padding-left: 0.75rem;
+            }
+
+            .page-title {
+                font-size: 1.18rem;
+            }
+
+            .settings-container.settings-panel {
+                border-radius: 16px;
+            }
+
+            .settings-panel .settings-item {
+                align-items: flex-start;
+                gap: 0.85rem;
+                min-height: 0;
+                padding: 1rem;
+            }
+
+            .settings-panel .avatar-section {
+                align-items: flex-start !important;
+            }
+
+            .settings-panel .avatar-preview {
+                width: 62px;
+                height: 62px;
+                flex: 0 0 62px;
+            }
+
+            .settings-panel .settings-item > div:last-child {
+                flex: 0 0 auto;
+            }
+
+            .settings-panel .settings-item .g_id_signin {
+                transform: scale(0.88);
+                transform-origin: left top;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -264,12 +581,12 @@
         </div>
     </nav>
 
-    <div class="container">
+    <main class="main-content">
+    <div class="container settings-page-container">
         <div class="page-header d-flex justify-content-between align-items-center mb-2">
             <h3 class="page-title mb-0"><i class="fas fa-cog me-2"></i> إعدادات الشركة</h3>
-            <a href="{{ url_for('company_dashboard') }}" class="back-btn" id="settingsBackBtn">العودة للوحة الرئيسية <i class="fas fa-arrow-right ms-2"></i></a>
         </div>
-        <div class="settings-container mt-4">
+        <div class="settings-container settings-panel mt-0">
             <small class="text-muted d-block mb-3">تحكم في طريقة تواصُل الشركات الأخرى معك</small>
             <div class="settings-item">
                 <div class="avatar-section d-flex align-items-center gap-3">
@@ -365,6 +682,7 @@
             </div>
         </div>
     </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Google Sign-In GSI Library -->
@@ -455,16 +773,6 @@
                     }, { passive: false });
                 }
             });
-            var backBtn = document.getElementById('settingsBackBtn');
-            if (backBtn) {
-                backBtn.addEventListener('click', function(e){
-                    e.preventDefault();
-                    var s = ensurePageSpinner();
-                    s.classList.add('active');
-                    var href = this.getAttribute('href');
-                    setTimeout(function(){ window.location.href = href; }, 150);
-                }, { passive: false });
-            }
         });
 
         window.addEventListener('popstate', function(){
