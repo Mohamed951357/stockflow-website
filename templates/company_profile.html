@@ -745,15 +745,64 @@
     }
 
     @media (max-width: 767.98px) {
+        html,
+        body {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
         .main-content {
             min-height: calc(100dvh - 56px);
+            width: 100%;
             padding: 0.75rem 0 1.25rem;
             border-radius: 24px 24px 0 0;
         }
 
         .profile-page-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-right: auto;
+            margin-left: auto;
             padding-right: 0.75rem;
             padding-left: 0.75rem;
+        }
+
+        .profile-page-container,
+        .profile-header-container,
+        .profile-header-content,
+        .content-container,
+        .content-grid,
+        .left-column,
+        .right-column,
+        .fb-card,
+        .modern-form {
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .profile-header-container,
+        .content-container,
+        .content-grid,
+        .left-column,
+        .right-column {
+            width: 100%;
+            max-width: 100%;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            justify-items: center;
+            gap: 1rem;
+        }
+
+        .fb-card {
+            width: 100%;
+            max-width: 100%;
+            margin-right: auto;
+            margin-left: auto;
         }
 
         .page-title {
@@ -761,9 +810,22 @@
         }
 
         .profile-header-content {
+            width: 100%;
+            max-width: 100%;
             gap: 1rem;
             padding: 1rem;
+            align-items: center;
             text-align: right;
+        }
+
+        .profile-info {
+            width: 100%;
+            text-align: center;
+        }
+
+        .profile-avatar-container {
+            width: 100%;
+            justify-content: center;
         }
 
         .profile-avatar {
@@ -778,8 +840,28 @@
         }
 
         .modern-form .d-flex.justify-content-between {
+            flex-direction: column;
             align-items: flex-start !important;
+            justify-content: flex-start !important;
             gap: 0.8rem;
+        }
+
+        .modern-form .form-switch {
+            align-self: flex-start;
+        }
+
+        .modern-form .g_id_signin {
+            max-width: 100%;
+            transform: scale(0.92);
+            transform-origin: right top;
+        }
+
+        .modern-form .input-group {
+            flex-wrap: nowrap;
+        }
+
+        .modern-form .input-group .form-control {
+            min-width: 0;
         }
     }
 </style>
