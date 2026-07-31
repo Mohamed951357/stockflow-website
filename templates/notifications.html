@@ -1088,6 +1088,7 @@
 
         .notification-card__content {
             min-width: 0;
+            flex: 1 1 auto;
         }
 
         .notification-card__title {
@@ -1527,37 +1528,47 @@
                         </div>
                         
                         {% for comm_notif in community_notifications %}
+                        {% if comm_notif.notification_type == 'like' %}
+                            {% set interaction_icon = 'fa-heart' %}
+                            {% set interaction_icon_class = 'notification-card__icon--like' %}
+                            {% set interaction_title = 'إعجاب بمنشورك' %}
+                        {% elif comm_notif.notification_type == 'comment' %}
+                            {% set interaction_icon = 'fa-comment' %}
+                            {% set interaction_icon_class = 'notification-card__icon--comment' %}
+                            {% set interaction_title = 'تعليق على منشورك' %}
+                        {% elif comm_notif.notification_type == 'reply' %}
+                            {% set interaction_icon = 'fa-reply' %}
+                            {% set interaction_icon_class = 'notification-card__icon--reply' %}
+                            {% set interaction_title = 'رد على تعليقك' %}
+                        {% else %}
+                            {% set interaction_icon = 'fa-bell' %}
+                            {% set interaction_icon_class = '' %}
+                            {% set interaction_title = 'تفاعل جديد على منشورك' %}
+                        {% endif %}
                         <div class="col-12">
-                            <div class="notification-card {{ 'notification-card--unread' if not comm_notif.is_read else '' }}">
+                            <article class="notification-card {{ 'notification-card--unread' if not comm_notif.is_read else '' }}">
                                 {% if not comm_notif.is_read %}
                                 <span class="read-indicator" aria-label="إشعار غير مقروء"></span>
                                 {% endif %}
-                                <div class="result-item-content">
-                                    <h6 class="mb-1">
-                                        {% if comm_notif.notification_type == 'like' %}
-                                        <i class="fas fa-heart me-2 text-danger"></i> إعجاب بمنشورك
-                                        {% elif comm_notif.notification_type == 'comment' %}
-                                        <i class="fas fa-comment me-2 text-primary"></i> تعليق على منشورك
-                                        {% elif comm_notif.notification_type == 'reply' %}
-                                        <i class="fas fa-reply me-2 text-info"></i> رد على تعليقك
-                                        {% endif %}
-                                    </h6>
-                                    <p class="mb-2 text-muted">{{ comm_notif.message }}</p>
-                                    <div class="mt-2" style="font-size: 0.75rem; color: #adb5bd;">
-                                        <i class="fas fa-clock me-1"></i> {{ comm_notif.created_at.strftime('%Y-%m-%d %H:%M') if comm_notif.created_at else 'غير محدد' }}
+                                <span class="notification-card__icon {{ interaction_icon_class }}" aria-hidden="true">
+                                    <i class="fas {{ interaction_icon }}"></i>
+                                </span>
+                                <div class="notification-card__content">
+                                    <h3 class="notification-card__title">{{ interaction_title }}</h3>
+                                    <p class="notification-card__message">{{ comm_notif.message }}</p>
+                                    <div class="notification-card__meta">
+                                        <span><i class="fas fa-clock"></i>{{ comm_notif.created_at.strftime('%Y-%m-%d %H:%M') if comm_notif.created_at else 'غير محدد' }}</span>
                                         {% if comm_notif.from_company %}
-                                        <i class="fas fa-building ms-2 me-1"></i> من: {{ comm_notif.from_company.company_name }}
+                                        <span><i class="fas fa-building"></i>{{ comm_notif.from_company.company_name }}</span>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="result-actions">
-                                    {% if comm_notif.post_id %}
-                                    <a href="{{ url_for('community_bonus.community_bonus') }}#post-{{ comm_notif.post_id }}" class="btn btn-outline-primary btn-sm notification-card__action">
-                                        <i class="fas fa-eye me-1"></i> عرض
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </div>
+                                {% if comm_notif.post_id %}
+                                <a href="{{ url_for('community_bonus.community_bonus') }}#post-{{ comm_notif.post_id }}" class="btn btn-outline-primary btn-sm notification-card__action">
+                                    <i class="fas fa-eye me-1"></i> عرض
+                                </a>
+                                {% endif %}
+                            </article>
                         </div>
                         {% endfor %}
                         {% endif %}
