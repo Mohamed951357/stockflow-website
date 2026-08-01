@@ -1597,6 +1597,45 @@
             opacity: 0;
         }
 
+        /* Keep dashboard cards visually stable when tapped on touch devices. */
+        @media (hover: none) {
+            .feature-card:hover {
+                transform: none;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+                border-color: rgba(0, 0, 0, 0.05);
+            }
+
+            .feature-card:hover .feature-title::after {
+                width: 0;
+            }
+
+            .feature-card:hover .feature-icon,
+            .feature-card:hover .feature-icon i,
+            .btn-feature:hover {
+                transform: none;
+                animation: none;
+            }
+
+            .btn-feature:hover {
+                box-shadow:
+                    0 12px 24px rgba(18, 67, 196, 0.3),
+                    0 6px 12px rgba(10, 45, 160, 0.2),
+                    inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+                background-position: 0 0;
+            }
+
+            .btn-feature:hover::before {
+                left: -100%;
+            }
+
+            .btn-feature:hover::after {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+        }
+
         .btn-feature:active {
             /* تم إلغاء انيميشن الضغط لتجنب الحاجة للضغط مرتين */
         }
@@ -3898,7 +3937,7 @@
 
         <div class="row">
             <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('search_products') }}" class="feature-card text-center clickable-card">
+                <a href="{{ url_for('search_products') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
                     <div class="feature-icon mx-auto">
                         <i class="fas fa-search"></i>
                     </div>
@@ -3911,7 +3950,7 @@
             </div>
 
             <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('my_products') }}" class="feature-card text-center clickable-card">
+                <a href="{{ url_for('my_products') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
                     <div class="feature-icon mx-auto">
                         <i class="fas fa-box-open"></i>
                     </div>
@@ -3924,7 +3963,7 @@
             </div>
 
             <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('company_stock_reports') }}" class="feature-card text-center clickable-card">
+                <a href="{{ url_for('company_stock_reports') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
                     <div class="feature-icon mx-auto">
                         <i class="fas fa-chart-pie"></i>
                     </div>
@@ -3938,7 +3977,7 @@
 
             <div class="col-6 col-md-4 mb-4">
                 <a href="{{ url_for('community_bonus.community_bonus') }}"
-                    class="feature-card text-center clickable-card">
+                    class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
                     <div class="feature-icon mx-auto">
                         <i class="fas fa-user-friends"></i>
                     </div>
@@ -3956,7 +3995,7 @@
             </div>
 
             <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('company_messages') }}" class="feature-card text-center clickable-card">
+                <a href="{{ url_for('company_messages') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
                     <div class="feature-icon mx-auto">
                         <i class="fas fa-comment-dots"></i>
                     </div>
@@ -3974,7 +4013,7 @@
             </div>
 
             <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('notifications') }}" class="feature-card text-center clickable-card">
+                <a href="{{ url_for('notifications') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
                     <div class="feature-icon mx-auto">
                         <i class="fas fa-bell"></i>
                     </div>
@@ -3991,7 +4030,7 @@
             </div>
 
             <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('company_profile') }}" class="feature-card text-center clickable-card">
+                <a href="{{ url_for('company_profile') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
                     <div class="feature-icon mx-auto">
                         <i class="fas fa-sliders-h"></i>
                     </div>
@@ -4004,7 +4043,7 @@
             </div>
 
             <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('appointments') }}" class="feature-card text-center clickable-card">
+                <a href="{{ url_for('appointments') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
                     <div class="feature-icon mx-auto">
                         <i class="fas fa-calendar-check"></i>
                     </div>
@@ -6216,21 +6255,24 @@
         // تأثيرات إضافية للبطاقات
 
         // إضافة تأثير الحركة عند تحريك الماوس على البطاقات
+        const supportsPointerHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
         featureCards.forEach(card => {
-            card.addEventListener('mousemove', function (e) {
-                const rect = this.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const rotateX = (y - centerY) / 10;
-                const rotateY = (centerX - x) / 10;
-                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
-            });
+            if (supportsPointerHover) {
+                card.addEventListener('mousemove', function (e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = (y - centerY) / 10;
+                    const rotateY = (centerX - x) / 10;
+                    this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+                });
 
-            card.addEventListener('mouseleave', function () {
-                this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
-            });
+                card.addEventListener('mouseleave', function () {
+                    this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+                });
+            }
 
             // تأخير ظهور البطاقات بشكل متتالي
             setTimeout(() => {
