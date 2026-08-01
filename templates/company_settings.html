@@ -580,6 +580,7 @@
         }
 
     </style>
+    {% include '_pwa_meta.html' %}
 </head>
 <body>
     <!-- Navigation Bar (نفس نمط صفحات الشركة) -->
@@ -894,6 +895,36 @@
                 var s = document.getElementById('pageSpinner');
                 if (s) { s.classList.remove('active'); }
             }
+        });
+        // تحديث عداد الإشعارات والرسايل في النافبار
+        function updateCounts() {
+            fetch('/api/unread_counts')
+                .then(response => response.json())
+                .then(data => {
+                    const notificationBadge = document.getElementById('notification-count');
+                    if (notificationBadge) {
+                        if (data.unread_notifications_count > 0) {
+                            notificationBadge.textContent = data.unread_notifications_count;
+                            notificationBadge.style.display = 'block';
+                        } else {
+                            notificationBadge.style.display = 'none';
+                        }
+                    }
+                    const communityBadge = document.getElementById('community-count');
+                    if (communityBadge) {
+                        if (data.unread_private_messages_count > 0) {
+                            communityBadge.textContent = data.unread_private_messages_count;
+                            communityBadge.style.display = 'block';
+                        } else {
+                            communityBadge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching unread counts:', error));
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCounts();
+            setInterval(updateCounts, 30000);
         });
     </script>
 </body>

@@ -1359,45 +1359,38 @@
                 alert('حدث خطأ في الاتصال بالخادم. يرجى المحاولة لاحقاً');
             });
         }
+    
+        // تحديث عداد الإشعارات والرسايل في النافبار
+        function updateCounts() {
+            fetch('/api/unread_counts')
+                .then(response => response.json())
+                .then(data => {
+                    const notificationBadge = document.getElementById('notification-count');
+                    if (notificationBadge) {
+                        if (data.unread_notifications_count > 0) {
+                            notificationBadge.textContent = data.unread_notifications_count;
+                            notificationBadge.style.display = 'block';
+                        } else {
+                            notificationBadge.style.display = 'none';
+                        }
+                    }
+                    const communityBadge = document.getElementById('community-count');
+                    if (communityBadge) {
+                        if (data.unread_private_messages_count > 0) {
+                            communityBadge.textContent = data.unread_private_messages_count;
+                            communityBadge.style.display = 'block';
+                        } else {
+                            communityBadge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching unread counts:', error));
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCounts();
+            setInterval(updateCounts, 30000);
+        });
+
     </script>
 </body>
 </html>
-<script>
-    function ensurePageSpinner() {
-        var spinner = document.getElementById('pageSpinner');
-        if (!spinner) {
-            var style = document.createElement('style');
-            style.textContent = ".spinner-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center}.spinner-overlay.active{display:flex;animation:fadeIn 0.3s ease}@keyframes fadeIn{from{opacity:0}to{opacity:1}}.elegant-spinner{position:relative;width:80px;height:80px}.elegant-spinner::before,.elegant-spinner::after{content:'';position:absolute;border-radius:50%}.elegant-spinner::before{width:80px;height:80px;border:4px solid transparent;border-top-color:#1243C4;border-right-color:#0A2DA0;animation:spinOuter 1.2s linear infinite}.elegant-spinner::after{width:50px;height:50px;top:15px;left:15px;border:4px solid transparent;border-bottom-color:#1243C4;border-left-color:#0A2DA0;animation:spinInner 1.2s linear infinite reverse}@keyframes spinOuter{to{transform:rotate(360deg)}}@keyframes spinInner{to{transform:rotate(360deg)}}";
-            document.head.appendChild(style);
-            spinner = document.createElement('div');
-            spinner.className = 'spinner-overlay';
-            spinner.id = 'pageSpinner';
-            spinner.innerHTML = '<div class=\"elegant-spinner\"><div class=\"spinner-dot\"></div></div>';
-            document.body.appendChild(spinner);
-        }
-        return spinner;
-    }
-    window.addEventListener('pageshow', function(){
-        var s = document.getElementById('pageSpinner');
-        if (s) { s.classList.remove('active'); }
-    });
-    window.addEventListener('popstate', function(){
-        var s = document.getElementById('pageSpinner');
-        if (s) { s.classList.remove('active'); }
-    });
-    document.addEventListener('visibilitychange', function(){
-        if (!document.hidden) {
-            var s = document.getElementById('pageSpinner');
-            if (s) { s.classList.remove('active'); }
-        }
-    });
-    document.addEventListener('DOMContentLoaded', function(){
-        var btn = document.getElementById('upgradeAccountBtn');
-        if (btn) {
-            btn.addEventListener('click', function(){
-                var s = ensurePageSpinner();
-                s.classList.add('active');
-            });
-        }
-    });
-</script>
