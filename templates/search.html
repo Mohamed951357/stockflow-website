@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
     <title>بونص فارما - البحث في الأصناف</title>
     <!-- View Transition API Meta Tags -->
     <meta name="view-transition" content="same-origin">
@@ -70,6 +71,43 @@
             top: 0;
             z-index: 1030;
             transition: all 0.3s ease;
+        }
+
+        /* Notification wrapper icons */
+        .navbar-nav-notification-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            margin-right: auto;
+        }
+        .navbar-nav-notification-wrapper .nav-link {
+            position: relative;
+            color: rgba(255,255,255,0.9) !important;
+            padding: 0.4rem 0.55rem !important;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .navbar-nav-notification-wrapper .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff !important;
+        }
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            min-width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+            line-height: 1;
+            border: 1.5px solid #fff;
         }
 
         .search-container {
@@ -313,19 +351,16 @@
     <div id="fallingStars"></div>
     {% endif %}
 
-    {# NEW: Floating Pop-up for WhatsApp Support (Moved from Dashboard) #}
-    <div class="toby-popup-container show icon-only" id="tobyPopup" style="position: fixed; will-change: transform;">
-        <div class="toby-popup-image" onclick="contactSupportWhatsApp()" aria-label="WhatsApp Support"><i
-                class="fab fa-whatsapp"></i></div>
-    </div>
 
-    <style>
+
         .toby-popup-container {
+            display: none !important;
+        }
+        .stockflow-pwa-install, .wa-float, .ios-tip {
+            display: none !important;
+        }
+        .toby-popup-container-disabled {
             position: fixed !important;
-            bottom: 20px !important;
-            right: 20px !important;
-            z-index: 9999 !important;
-            display: flex;
             align-items: center;
             justify-content: center;
             padding: 10px;
@@ -388,11 +423,31 @@
     </script>
 
     <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
+        <div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <a class="navbar-brand" href="/company" onclick="navigateWithTransition('/company', event); return false;">
-                <span class="full-text">بونص فارما - البحث في الأصناف</span>
-                <span class="short-text">بونص فارما</span>
+                {% if current_logo_path %}
+                <img src="{{ current_logo_path }}" alt="Logo" style="height:38px;width:38px;object-fit:contain;border-radius:8px;margin-left:8px;">
+                {% endif %}
+                <span class="full-text">{{ system_subtitle if system_subtitle else 'بونص فارما' }}</span>
+                <span class="short-text"></span>
             </a>
+            {# أيقونات الإشعارات والرسايل #}
+            <div class="navbar-nav-notification-wrapper d-flex">
+                <a class="nav-link" href="{{ url_for('company_profile') }}" title="ملفي الشخصي">
+                    <i class="fas fa-user-circle fa-lg"></i>
+                </a>
+                <a class="nav-link" href="{{ url_for('company_messages') }}" title="المراسلات">
+                    <i class="fas fa-comments fa-lg"></i>
+                    <span class="notification-badge" id="community-count" style="display: none;">0</span>
+                </a>
+                <a class="nav-link" href="{{ url_for('instructions') }}" title="تعليمات وإرشادات">
+                    <i class="fas fa-question-circle fa-lg"></i>
+                </a>
+                <a class="nav-link position-relative" href="{{ url_for('notifications') }}" title="الإشعارات">
+                    <i class="fas fa-bell fa-lg"></i>
+                    <span class="notification-badge" id="notification-count" style="display: none;">0</span>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -400,11 +455,6 @@
         <h1 class="page-title">البحث في الأصناف</h1>
 
         <div class="search-container">
-            <div class="back-button-wrapper">
-                <a href="/company" class="back-btn" onclick="navigateWithTransition('/company', event); return false;" aria-label="العودة للوحة الرئيسية">
-                    العودة للوحة الرئيسية <i class="fas fa-arrow-right ms-2"></i>
-                </a>
-            </div>
             <div class="search-input-group">
                 <input type="text" id="searchInput" class="form-control search-input" placeholder="ابحث عن اسم الصنف..." autocomplete="off">
                 <button id="searchButton" class="search-btn" onclick="performSearch()">
@@ -621,6 +671,37 @@
                     return escapeHtml(String(quantity == null ? '' : quantity));
                 }
             };
+        });
+
+        // تحديث عداد الإشعارات والرسايل في النافبار
+        function updateCounts() {
+            fetch('/api/unread_counts')
+                .then(response => response.json())
+                .then(data => {
+                    const notificationBadge = document.getElementById('notification-count');
+                    if (notificationBadge) {
+                        if (data.unread_notifications_count > 0) {
+                            notificationBadge.textContent = data.unread_notifications_count;
+                            notificationBadge.style.display = 'flex';
+                        } else {
+                            notificationBadge.style.display = 'none';
+                        }
+                    }
+                    const communityBadge = document.getElementById('community-count');
+                    if (communityBadge) {
+                        if (data.unread_private_messages_count > 0) {
+                            communityBadge.textContent = data.unread_private_messages_count;
+                            communityBadge.style.display = 'flex';
+                        } else {
+                            communityBadge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching unread counts:', error));
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCounts();
+            setInterval(updateCounts, 30000);
         });
     </script>
 </body>
