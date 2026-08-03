@@ -11,279 +11,283 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
+                body {
             font-family: 'Cairo', sans-serif;
             background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);
             min-height: 100vh;
             padding-top: 70px;
         }
 
-        .navbar {
-            background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);
-            background-size: 200% 200%;
-            animation: navbarGradient 15s ease infinite;
-            box-shadow:
-                0 10px 40px rgba(0, 0, 0, 0.2),
-                0 5px 20px rgba(18, 67, 196, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1030;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.navbar {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%) !important;
         }
 
-        @keyframes navbarGradient {
-
-            0%,
-            100% {
+        @keyframes gradientBG {
+            0% {
                 background-position: 0% 50%;
             }
 
             50% {
                 background-position: 100% 50%;
             }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-
-
-        .navbar .nav-link {
+        /* Welcome Card Carousel Styles */
+        .welcome-card {
             position: relative;
-            transition: all 0.3s ease;
-            color: #ffffff !important;
+            overflow: hidden;
         }
 
-        .navbar .nav-link::after {
-            content: '';
+        .welcome-card .carousel-item {
+            height: 130px;
+        }
+
+        #welcomeStatsCarousel,
+        #welcomeAdhkarCarousel {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .welcome-progress-bar {
             position: absolute;
             bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: white;
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-            opacity: 0;
-        }
-
-        .navbar .nav-link:hover::after {
-            width: 70%;
-            opacity: 1;
-        }
-
-        .navbar .nav-link:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Notification badge specific styles for clarity */
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            padding: 5px 8px;
-            border-radius: 50%;
-            background-color: #dc3545;
-            /* Red for notifications */
-            color: white;
-            font-size: 0.75em;
-            font-weight: bold;
+            left: 0;
+            width: 0%;
+            height: 6px;
+            background: linear-gradient(to bottom, #d2ff52 0%, #91e842 100%);
+            /* Windows 7 Green Style */
+            transition: width 0.1s linear;
             z-index: 10;
-            /* Ensure it's above other elements */
-            min-width: 20px;
-            /* حجم Badge لا يقل عن كده */
-            text-align: center;
-            line-height: 1;
-            /* عشان الرقم يكون في المنتصف */
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 0;
+            box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+
+        /* Windows 7 Shimmer Effect */
+        .welcome-progress-bar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-image: linear-gradient(-45deg,
+                    rgba(255, 255, 255, 0.2) 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    rgba(255, 255, 255, 0.2) 50%,
+                    rgba(255, 255, 255, 0.2) 75%,
+                    transparent 75%,
+                    transparent);
+            z-index: 1;
+            background-size: 20px 20px;
+            animation: progress-shimmer 2s linear infinite;
+        }
+
+        @keyframes progress-shimmer {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 20px 20px;
+            }
+        }
+
+        .welcome-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 10;
+            margin-top: 5px;
+            margin-bottom: 25px;
+        }
+
+        .welcome-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(18, 67, 196, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+        }
+
+        .welcome-dot.active {
+            width: 24px;
+            border-radius: 4px;
+            background: #1243C4;
+            box-shadow: 0 2px 4px rgba(18, 67, 196, 0.3);
+        }
+
+        .dark-mode .welcome-dot {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .dark-mode .welcome-dot.active {
+            background: #ffffff;
+        }
+
+        .nagy-brand-card {
+            padding: 10px 18px;
+            border-radius: 16px;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            max-width: 420px;
+        }
+
+        .dark-mode .nagy-brand-card {
+            background: transparent;
+            border: none;
+        }
+
+        .nagy-logo-text {
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            font-size: 1.15rem;
+            text-transform: uppercase;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             direction: ltr;
-            /* تأكد أن الأرقام تعرض من اليسار لليمين */
-            font-variant-numeric: tabular-nums;
-            /* ثبات عرض الأرقام */
+            text-align: center;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
         }
 
-        /* تحسين موضع وحجم البادج داخل كروت الميزات فقط حتى لا يتم قصه عند حافة الكارت */
-        .feature-card .notification-badge {
-            top: 8px;
-            right: 12px;
-            font-size: 0.8em;
-            min-width: 22px;
+        .nagy-logo-text .reg-mark {
+            font-size: 0.65rem;
+            vertical-align: top;
+            margin-top: -4px;
+            margin-left: 2px;
         }
 
-        /* تحسينات عامة للـ Navbar */
-        .navbar-brand {
-            font-weight: 600;
-            display: flex;
-            align-items: center;
+        .nagy-verified {
+            color: #22c55e;
+            font-size: 1rem;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
         }
 
-        .navbar-logo {
-            height: 35px;
-            /* Adjust logo size for better fit */
-            width: auto;
-            margin-left: 10px;
+        .nagy-tagline {
+            font-size: 0.9rem;
+            color: #f9fafb;
+            text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+            direction: ltr;
+            text-align: center;
         }
 
-        /* Hide full text for smaller screens */
-        .navbar-brand .full-text {
-            display: inline;
+        .dark-mode .nagy-tagline {
+            color: #f9fafb;
         }
 
-        /* MODIFIED: show/hide full text vs short text (or hide short text completely) */
-        @media (max-width: 767.98px) {
-            .navbar-brand .full-text {
-                display: none;
-                /* Hide full text on small screens */
-            }
-
-            .navbar-brand .short-text {
-                display: none;
-                /* NEW: Hide short text completely on small screens */
-            }
+        .nagy-subtext {
+            font-size: 0.86rem;
+            color: #e5e7eb;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.65);
+            direction: ltr;
+            text-align: center;
         }
 
-        @media (min-width: 768px) {
-            .navbar-brand .short-text {
-                display: none;
-                /* Hide short text on larger screens */
-            }
+        .dark-mode .nagy-subtext {
+            color: #e5e7eb;
+        }
 
-            .navbar-brand .full-text {
-                display: inline;
-                /* Show full text on larger screens */
+        /* Enhanced Carousel Transition */
+        .carousel-item {
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .welcome-card .carousel-inner {
+                padding-bottom: 15px;
             }
         }
 
-        /* NEW CSS for Notification Icon placement and general navbar alignment */
-        .navbar-nav-notification-wrapper {
-            /* ده اللي بيحتوي أيقونة الجرس والبادج */
-            display: flex;
-            align-items: center;
-            /* لدفعه لليمين على الشاشات الكبيرة وجعله بجانب التوجل على الصغيرة */
-            margin-left: auto;
-            /* يدفع العناصر لليمين (لأن الاتجاه RTL) */
-            margin-right: 15px;
-            /* مسافة من الحافة اليمنى */
-            /* NEW: توزيع العناصر بالتساوي على المساحة المتاحة */
-            flex-grow: 1;
-            /* يجعل الـ wrapper يأخذ المساحة المتاحة */
-            justify-content: space-around;
-            /* يوزع العناصر مع مسافات متساوية بينها */
-            max-width: 200px;
-            /* NEW: تحديد أقصى عرض لـ wrapper الأيقونات لضمان تناسق التوزيع */
+        /* Enhanced Particles Background (من login.html) */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.4), transparent),
+                radial-gradient(2px 2px at 60% 70%, rgba(255, 255, 255, 0.4), transparent),
+                radial-gradient(3px 3px at 50% 50%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(2px 2px at 80% 10%, rgba(255, 255, 255, 0.5), transparent),
+                radial-gradient(2px 2px at 10% 60%, rgba(255, 255, 255, 0.4), transparent),
+                radial-gradient(3px 3px at 90% 80%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(2px 2px at 30% 90%, rgba(255, 255, 255, 0.4), transparent);
+            background-size: 200% 200%;
+            animation: particleFloat 30s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        /* على الشاشات الأصغر من 992px (الموبايل) */
-        @media (max-width: 991.98px) {
-            .navbar-nav-notification-wrapper {
-                order: -1;
-                /* يجعله أول عنصر في شريط التنقل على الموبايل */
-                margin-left: auto;
-                /* لدفعه لليمين بجانب زر التوجل */
-                margin-right: 10px;
-                /* مسافة من زر التوجل */
-                padding: 0;
-                /* إزالة أي بادينج قديم */
-                /* NEW: توزيع العناصر على الموبايل لتبدو أفضل */
-                max-width: 150px;
-                /* عرض أصغر للأيقونات على الموبايل */
-                justify-content: space-between;
-                /* توزيع العناصر مع مسافات متساوية بينها */
+        /* Glowing Orbs (من login.html) */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(18, 67, 196, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(10, 45, 160, 0.15) 0%, transparent 50%);
+            animation: orbFloat 25s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes particleFloat {
+
+            0%,
+            100% {
+                background-position: 0% 0%, 100% 100%, 50% 50%, 80% 20%, 20% 80%, 90% 10%, 10% 90%;
+                opacity: 1;
             }
 
-            .navbar-nav-notification-wrapper .nav-link {
-                padding: 0.5rem;
-                /* بادينج مناسب لأيقونة الجرس على الموبايل */
-            }
-
-            .navbar-nav-notification-wrapper .notification-badge {
-                top: 0px;
-                /* تعديل تموضع البادج على الموبايل */
-                right: 0px;
-                font-size: 0.65em;
-                /* تصغير حجم البادج على الموبايل */
-                padding: 3px 6px;
-            }
-
-            /* إخفاء اسم الشركة في شريط التنقل على الموبايل */
-            .navbar-nav-user-info {
-                display: none;
-            }
-
-            /* تنسيق القائمة المنسدلة عند الفتح على الموبايل - هذا هو الجزء الذي يتم تحسينه */
-            .navbar-collapse .navbar-nav {
-                width: 100%;
-                /* جعل القائمة تأخذ عرض الشاشة بالكامل */
-                margin-top: 10px;
-                /* مسافة من أعلى عند الفتح */
-                margin-bottom: 10px;
-                /* مسافة من الأسفل عند الفتح */
-            }
-
-            .navbar-collapse .nav-item {
-                text-align: center;
-                /* توسيط عناصر القائمة */
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                /* خط فاصل بين العناصر */
-            }
-
-            .navbar-collapse .nav-item:last-child {
-                border-bottom: none;
-                /* إزالة الخط الفاصل من آخر عنصر */
-            }
-
-            .navbar-collapse .nav-link {
-                padding: 12px 15px;
-                /* بادينج مناسب لعناصر القائمة */
-                color: rgba(255, 255, 255, 0.95) !important;
-                /* لون النص */
-                font-size: 1.1rem;
-                /* حجم الخط */
-                transition: background-color 0.3s ease;
-            }
-
-            .navbar-collapse .nav-link:hover {
-                background-color: rgba(255, 255, 255, 0.1);
-                /* خلفية خفيفة عند التحويم */
-                border-radius: 5px;
-                /* زوايا مستديرة عند التحويم */
-            }
-
-            /* تنسيق خاص لاسم الشركة/المستخدم داخل القائمة المنسدلة */
-            .navbar-collapse .navbar-text {
-                display: block;
-                /* لجعلها تأخذ سطرًا كاملاً */
-                padding: 12px 15px;
-                color: rgba(255, 255, 255, 0.7);
-                font-weight: 600;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            50% {
+                background-position: 100% 100%, 0% 0%, 70% 30%, 30% 70%, 60% 40%, 40% 60%, 80% 20%;
+                opacity: 0.8;
             }
         }
 
-        @media (min-width: 992px) {
-            .navbar-nav-notification-wrapper {
-                margin-left: 15px;
-                /* مسافة من الروابط الأخرى */
-                margin-right: 0;
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg) scale(1);
+                opacity: 0.8;
             }
 
-            .navbar-nav-notification-wrapper .nav-link {
-                padding: 0.5rem 0.75rem;
+            33% {
+                transform: translateY(-20px) rotate(120deg) scale(1.1);
+                opacity: 1;
             }
 
-            .navbar-nav-notification-wrapper .notification-badge {
-                top: -5px;
-                right: -5px;
-                font-size: 0.75em;
-                padding: 5px 8px;
-            }
-
-            .navbar-nav-user-info {
-                display: flex;
-                /* إظهار اسم الشركة على الديسك توب */
+            66% {
+                transform: translateY(-35px) rotate(240deg) scale(0.9);
+                opacity: 0.9;
             }
         }
 
+        /* Main Content Wrapper */
+        
 
         .settings-container {
             max-width: 800px;
