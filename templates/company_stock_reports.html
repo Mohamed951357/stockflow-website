@@ -657,30 +657,38 @@
 
         .reports-stats {
             display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         .reports-stat-card {
-            flex: 1 1 200px;
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 16px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            padding: 1rem 1.25rem;
-            border: 1px solid rgba(18, 67, 196, 0.12);
+            flex: 1 1 0;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            padding: 0.55rem 0.75rem;
+            border: 1px solid rgba(18,67,196,.1);
+            min-width: 0;
         }
 
         .reports-stat-label {
-            font-size: 0.85rem;
+            font-size: 0.72rem;
             color: #6c757d;
-            margin-bottom: 0.25rem;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .reports-stat-value {
-            font-size: 1.05rem;
+            font-size: 0.88rem;
             font-weight: 700;
             color: var(--text-color-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .report-card {
