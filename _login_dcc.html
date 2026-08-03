@@ -836,22 +836,7 @@ body {
         gsap.to('.blob-1', { y: `-=${diff * 0.25}`, duration: 0.6, ease: 'power2.out', overwrite: 'auto' });
     }, { passive: true });
 
-    // Desktop 3D Card Tilt
-    const card = document.getElementById('loginCard');
-    if (window.innerWidth >= 768 && card) {
-        document.addEventListener('mousemove', e => {
-            const r = card.getBoundingClientRect();
-            const rx = (e.clientY - r.top  - r.height/2) / r.height * 4.5;
-            const ry = (e.clientX - r.left - r.width/2)  / r.width  * -4.5;
-            gsap.to(card, {
-                rotateX: rx, rotateY: ry, scale: 1.008,
-                transformPerspective: 900, duration: 0.4, ease: 'power2.out', overwrite: 'auto'
-            });
-        });
-        document.addEventListener('mouseleave', () => {
-            gsap.to(card, { rotateX: 0, rotateY: 0, scale: 1, duration: 0.6, ease: 'spring', overwrite: 'auto' });
-        });
-    }
+
 
     // Touch Feedback Ripple
     const ripple = document.getElementById('touchRipple');
