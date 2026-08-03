@@ -2,6 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>إعدادات الشركة - بونص فارما</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -31,7 +34,6 @@
             -webkit-backdrop-filter: blur(15px) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
             transition: all 0.3s ease;
-            padding: 0.5rem 1rem;
         }
 
         @keyframes navbarGradient {
@@ -43,11 +45,11 @@
             font-weight: 600;
             display: flex;
             align-items: center;
-            color: #000000 !important;
+            color: #ffffff !important;
         }
 
         .navbar-brand span {
-            color: #000000 !important;
+            color: #ffffff !important;
         }
 
         .navbar-logo {
@@ -58,12 +60,13 @@
 
         .navbar .nav-link,
         .navbar i {
-            color: #000000 !important;
+            color: #ffffff !important;
         }
 
         .navbar .nav-link:hover,
         .navbar i:hover {
             color: #ffffff !important;
+            opacity: 0.9;
         }
 
         .settings-container {
@@ -214,8 +217,8 @@
 
         .navbar .nav-link {
             position: relative;
-            color: #000 !important;
-            transition: color 0.25s ease;
+            transition: all 0.3s ease;
+            color: #fff !important;
         }
 
         .navbar .nav-link::after {
@@ -258,6 +261,12 @@
             position: relative;
             padding: 0.5rem;
             transition: all 0.25s ease;
+        }
+
+        /* منع أي طبقة شفافة فوق الأيقونات */
+        .navbar-nav-notification-wrapper a {
+            position: relative;
+            z-index: 10001;
         }
 
         .navbar-nav-notification-wrapper .nav-link:hover {
@@ -580,109 +589,11 @@
         }
 
     </style>
-    {% include '_pwa_meta.html' %}
 </head>
 <body>
     <!-- Navigation Bar (نفس نمط صفحات الشركة) -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('company_dashboard') }}">
-                {% if current_logo_path %}
-                <img src="{{ current_logo_path }}" alt="Logo" class="navbar-logo">
-                {% else %}
-                <img src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Default Logo" class="navbar-logo">
-                {% endif %}
-                <span class="full-text">{{ system_subtitle }}</span>
-                <span class="short-text"></span>
-            </a>
-
-            <div class="navbar-nav-notification-wrapper">
-                <a class="nav-link" href="{{ url_for('company_profile') }}" title="ملفي الشخصي">
-                    <i class="fas fa-user-circle fa-lg"></i>
-                </a>
-                <a class="nav-link" href="{{ url_for('company_messages') }}" title="المراسلات">
-                    <i class="fas fa-comments fa-lg"></i>
-                    <span class="notification-badge" id="community-count" style="display: none;">0</span>
-                </a>
-                <a class="nav-link" href="{{ url_for('instructions') }}" title="تعليمات وإرشادات">
-                    <i class="fas fa-question-circle fa-lg"></i>
-                </a>
-                <a class="nav-link position-relative" href="{{ url_for('notifications') }}" title="الإشعارات">
-                    <i class="fas fa-bell fa-lg"></i>
-                    <span class="notification-badge" id="notification-count" style="display: none;">0</span>
-                </a>
-            </div>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavCompany" aria-controls="navbarNavCompany" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNavCompany">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item d-lg-none">
-                        <span class="navbar-text">
-                            <i class="fas fa-building me-2"></i>
-                            {{ current_user.company_name if current_user else company.company_name }}
-                        </span>
-                    </li>
-                    <li class="nav-item d-none d-lg-flex align-items-center me-3">
-                        <span class="navbar-text">
-                            <i class="fas fa-building me-2"></i>
-                            {{ current_user.company_name if current_user else company.company_name }}
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('company_dashboard') }}">
-                            <i class="fas fa-home me-2"></i>
-                            الرئيسية
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('my_products') }}">
-                            <i class="fas fa-boxes me-2"></i>
-                            أصنافي
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('search_products') }}">
-                            <i class="fas fa-search me-2"></i>
-                            البحث في الأصناف
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('company_stock_reports') }}">
-                            <i class="fas fa-chart-line me-2"></i>
-                            تقارير الأرصدة
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('appointments') }}">
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            مواعيدي
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('community_bonus.community_bonus') }}">
-                            <i class="fas fa-users me-2"></i>
-                            مجتمع ستوك فلو
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('instructions') }}">
-                            <i class="fas fa-question-circle me-2"></i>
-                            التعليمات
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">
-                            <i class="fas fa-sign-out-alt me-2"></i>
-                            تسجيل الخروج
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    {% set active_page = 'settings' %}
+    {% include '_company_navbar.html' %}
 
     <main class="main-content">
     <div class="container settings-page-container">
@@ -690,6 +601,34 @@
             <h1 class="page-title mb-0"><i class="fas fa-cog me-2"></i> إعدادات الشركة</h1>
         </div>
         <p class="settings-page-intro">تحكم في خصوصية الحساب وخيارات التواصل من مكان واحد.</p>
+        <!-- Company Profile Card - direct expression, no scoping issues -->
+        <div class="settings-container" style="margin-bottom:16px;padding:16px 20px;">
+            <div class="d-flex align-items-center gap-3">
+                <div style="position:relative;flex-shrink:0;">
+                    <img id="settingsProfileImg"
+                         src="{% if current_user.avatar and current_user.avatar.startswith('custom-photo:') %}{{ url_for('static', filename='images/profile_photos/' + current_user.avatar[13:]) }}{% elif current_user.avatar and (current_user.avatar[:4] == 'http' or current_user.avatar[:7] == '/media/') %}{{ current_user.avatar }}{% elif current_user.avatar == 'female-1' %}{{ url_for('static', filename='images/avatars/female-1.jpg') }}{% else %}{{ url_for('static', filename='images/avatars/male-1.jpg') }}{% endif %}"
+                         alt="Avatar"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                         style="width:72px;height:72px;border-radius:16px;object-fit:cover;border:3px solid rgba(255,255,255,0.8);box-shadow:0 10px 20px rgba(15,23,42,0.25);">
+                    <div style="display:none;width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,#1243C4,#0A2DA0);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:28px;box-shadow:0 10px 20px rgba(15,23,42,0.25);">
+                        {{ current_user.company_name[0].upper() if current_user.company_name else 'S' }}
+                    </div>
+                </div>
+                <div>
+                    <div class="fw-bold fs-6">
+                        {% if current_user.is_premium %}<i class="fas fa-check-circle text-primary me-1"></i>{% endif %}
+                        {{ current_user.company_name }}
+                    </div>
+                    <div class="text-muted small">{{ current_user.email }}</div>
+                    {% if current_user.is_premium %}
+                    <span style="background:#f59e0b;color:#111;border-radius:999px;padding:2px 10px;font-size:0.75rem;font-weight:700;">
+                        <i class="fas fa-crown me-1"></i>عضوية مميزة
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
         <div class="settings-container settings-panel mt-0">
             <div class="settings-panel__heading">
                 <span class="settings-panel__heading-icon"><i class="fas fa-sliders-h"></i></span>
@@ -698,25 +637,172 @@
                     <p>تحكم في طريقة تواصُل الشركات الأخرى معك.</p>
                 </div>
             </div>
-            <div class="settings-item">
-                <div class="avatar-section d-flex align-items-center gap-3">
-                    {% set avatar_key = current_user.avatar if current_user.avatar else 'male-1' %}
-                    <div class="avatar-preview">
-                        <img src="{{ url_for('static', filename='images/avatars/' + avatar_key + '.jpg') }}" 
-                            alt="Avatar" 
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                            style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                        <div class="avatar-placeholder rounded-circle" 
-                            style="display: none; width: 100px; height: 100px; background: linear-gradient(135deg, #1243C4, #0A2DA0); color: white; align-items: center; justify-content: center; font-weight: bold; font-size: 32px; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                            {{ company.company_name[0] if company.company_name else 'C' }}
-                        </div>
+            <!-- Avatar Selection: direct POST forms, no JS -->
+            <div class="settings-item flex-column align-items-start">
+                <div class="fw-bold mb-2"><i class="fas fa-user-circle me-2 text-primary"></i>اختيار الافاتار</div>
+                <div class="text-muted small mb-3">اضغط زر "اختيار" تحت الصورة لتغييرها مباشرة.</div>
+
+                {# صورة شخصية مرفوعة — أي قيمة غير الافاتارات الافتراضية #}
+                {% set av = current_user.avatar or '' %}
+                {% set has_custom_photo = av and av not in ['male-1', 'female-1', 'default-male'] and (av.startswith('custom-photo:') or av.startswith('http') or av.startswith('/media/') or '/media/avatars/' in av) %}
+                {% if has_custom_photo %}
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:10px 14px;margin-bottom:14px;">
+                    <img src="{% if av.startswith('custom-photo:') %}{{ url_for('static', filename='images/profile_photos/' + av[13:]) }}{% else %}{{ av }}{% endif %}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid #22c55e;" onerror="this.style.display='none'">
+                    <div style="flex:1;min-width:140px;">
+                        <div class="fw-bold" style="color:#15803d;"><i class="fas fa-check-circle me-1"></i>صورتك الحالية</div>
+                        <div class="text-muted small">يمكنك تغييرها برفع صورة جديدة أو حذفها.</div>
                     </div>
-                    <div>
-                        <div class="fw-bold">اختيار الأفاتار</div>
-                        <div class="text-muted small">يمكنك تغيير الأفاتار من صفحة الملف الشخصي.</div>
-                        <a href="{{ url_for('company_profile') }}" class="btn-change-avatar"><i class="fas fa-user-edit"></i> تغيير الأفاتار</a>
+                    <button type="button" onclick="deleteAvatar()" class="btn btn-danger btn-sm fw-bold" style="border-radius:10px;padding:8px 16px;white-space:nowrap;">
+                        <i class="fas fa-trash-alt me-1"></i>حذف الصورة
+                    </button>
+                </div>
+                {% endif %}
+                {% set active_av = current_user.avatar if current_user.avatar in ['male-1','female-1'] else 'male-1' %}
+
+                {% if not has_custom_photo %}
+                <div class="d-flex gap-4 flex-wrap">
+                    <div style="text-align:center;">
+                        <img src="{{ url_for('static', filename='images/avatars/male-1.jpg') }}"
+                             style="width:88px;height:88px;border-radius:50%;object-fit:cover;
+                                    border:4px solid {% if active_av == 'male-1' %}#1243C4{% else %}#e2e8f0{% endif %};
+                                    display:block;margin:0 auto 8px;">
+                        <div class="small fw-bold mb-2">
+                            رجل{% if active_av == 'male-1' %}&nbsp;<i class="fas fa-check-circle text-primary"></i>{% endif %}
+                        </div>
+                        {% if active_av != 'male-1' %}
+                        <button type="button" onclick="setPresetAvatar('male-1')" class="btn btn-primary btn-sm fw-bold">اختيار</button>
+                        {% else %}
+                        <span class="badge bg-primary px-3 py-2">محدد</span>
+                        {% endif %}
+                    </div>
+
+                    <div style="text-align:center;">
+                        <img src="{{ url_for('static', filename='images/avatars/female-1.jpg') }}"
+                             style="width:88px;height:88px;border-radius:50%;object-fit:cover;
+                                    border:4px solid {% if active_av == 'female-1' %}#1243C4{% else %}#e2e8f0{% endif %};
+                                    display:block;margin:0 auto 8px;">
+                        <div class="small fw-bold mb-2">
+                            انثى{% if active_av == 'female-1' %}&nbsp;<i class="fas fa-check-circle text-primary"></i>{% endif %}
+                        </div>
+                        {% if active_av != 'female-1' %}
+                        <button type="button" onclick="setPresetAvatar('female-1')" class="btn btn-primary btn-sm fw-bold">اختيار</button>
+                        {% else %}
+                        <span class="badge bg-primary px-3 py-2">محدد</span>
+                        {% endif %}
                     </div>
                 </div>
+                {% else %}
+                <div class="text-muted small mb-3" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;">
+                    <i class="fas fa-info-circle me-1 text-warning"></i>لتغيير الأفاتار، احذف الصورة الشخصية أولاً.
+                </div>
+                {% endif %}
+
+                    <!-- Upload custom photo from website -->
+                    <div style="margin-top:20px;padding:16px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:14px;text-align:center;">
+                        <div class="fw-bold mb-1" style="color:#1e293b;"><i class="fas fa-camera me-2 text-primary"></i>رفع صورة شخصية</div>
+                        <div class="text-muted small mb-3">ارفع صورتك الشخصية مباشرة من الموقع (JPG/PNG - حتى 5MB)</div>
+                        <form id="avatarUploadForm" enctype="multipart/form-data">
+                            <label for="avatarFileInput" style="cursor:pointer;display:inline-block;background:#1243C4;color:#fff;border-radius:10px;padding:8px 20px;font-weight:700;font-size:0.9rem;">
+                                <i class="fas fa-upload me-2"></i>اختر صورة
+                            </label>
+                            <input type="file" id="avatarFileInput" name="avatar_file" accept="image/*" style="display:none;">
+                            <div id="avatarPreviewBox" style="display:none;margin:12px auto 0;text-align:center;">
+                                <img id="avatarPreviewImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #1243C4;margin-bottom:8px;">
+                                <br>
+                                <button type="button" onclick="uploadAvatar()" style="background:#10b981;color:#fff;border:none;border-radius:10px;padding:8px 22px;font-weight:700;cursor:pointer;font-size:0.9rem;">
+                                    <i class="fas fa-check me-1"></i>رفع الصورة
+                                </button>
+                            </div>
+                        </form>
+                        {% if has_custom_photo %}
+                        <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;">
+                            <button type="button" onclick="deleteAvatar()" class="btn btn-outline-danger fw-bold" style="border-radius:10px;padding:8px 20px;">
+                                <i class="fas fa-trash-alt me-2"></i>حذف الصورة الشخصية
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <script>
+                    document.getElementById('avatarFileInput').addEventListener('change', function() {
+                        const file = this.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            document.getElementById('avatarPreviewImg').src = e.target.result;
+                            document.getElementById('avatarPreviewBox').style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                    function uploadAvatar() {
+                        const fileInput = document.getElementById('avatarFileInput');
+                        if (!fileInput.files[0]) return;
+                        const fd = new FormData();
+                        fd.append('avatar_file', fileInput.files[0]);
+                        fetch('/upload_avatar', { method: 'POST', body: fd, credentials: 'same-origin' })
+                        .then(async r => {
+                            const data = await r.json().catch(() => null);
+                            if (!data) {
+                                throw new Error('استجابة غير متوقعة من الخادم');
+                            }
+                            return data;
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                const t = document.createElement('div');
+                                t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;';
+                                t.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                                document.body.appendChild(t);
+                                setTimeout(() => location.reload(), 1800);
+                            } else {
+                                alert(data.message || 'تعذر رفع الصورة');
+                            }
+                        }).catch(e => alert(e.message || 'حدث خطأ أثناء رفع الصورة'));
+                    }
+                    function deleteAvatar() {
+                        if (!confirm('هل أنت متأكد من حذف الصورة الشخصية؟')) return;
+                        fetch('/delete_avatar', { method: 'POST', credentials: 'same-origin' })
+                        .then(async r => {
+                            const data = await r.json().catch(() => null);
+                            if (!data) throw new Error('استجابة غير متوقعة من الخادم');
+                            return data;
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                const t = document.createElement('div');
+                                t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;';
+                                t.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                                document.body.appendChild(t);
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                alert(data.message || 'تعذر حذف الصورة');
+                            }
+                        }).catch(e => alert(e.message || 'حدث خطأ أثناء حذف الصورة'));
+                    }
+                    function setPresetAvatar(avatarKey) {
+                        fetch('/set_avatar', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ avatar: avatarKey }),
+                            credentials: 'same-origin'
+                        })
+                        .then(async r => {
+                            const data = await r.json().catch(() => null);
+                            if (!data) throw new Error('استجابة غير متوقعة من الخادم');
+                            return data;
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                const t = document.createElement('div');
+                                t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;';
+                                t.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                                document.body.appendChild(t);
+                                setTimeout(() => location.reload(), 1200);
+                            } else {
+                                alert(data.message || 'تعذر تغيير الأفاتار');
+                            }
+                        }).catch(e => alert(e.message || 'حدث خطأ أثناء تغيير الأفاتار'));
+                    }
+                    </script>
             </div>
 
             <form method="post">
@@ -896,36 +982,7 @@
                 if (s) { s.classList.remove('active'); }
             }
         });
-        // تحديث عداد الإشعارات والرسايل في النافبار
-        function updateCounts() {
-            fetch('/api/unread_counts')
-                .then(response => response.json())
-                .then(data => {
-                    const notificationBadge = document.getElementById('notification-count');
-                    if (notificationBadge) {
-                        if (data.unread_notifications_count > 0) {
-                            notificationBadge.textContent = data.unread_notifications_count;
-                            notificationBadge.style.display = 'block';
-                        } else {
-                            notificationBadge.style.display = 'none';
-                        }
-                    }
-                    const communityBadge = document.getElementById('community-count');
-                    if (communityBadge) {
-                        if (data.unread_private_messages_count > 0) {
-                            communityBadge.textContent = data.unread_private_messages_count;
-                            communityBadge.style.display = 'block';
-                        } else {
-                            communityBadge.style.display = 'none';
-                        }
-                    }
-                })
-                .catch(error => console.error('Error fetching unread counts:', error));
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCounts();
-            setInterval(updateCounts, 30000);
-        });
     </script>
+
 </body>
 </html>
