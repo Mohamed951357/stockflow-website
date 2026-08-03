@@ -3967,40 +3967,8 @@
     </div>
     </div> <!-- End dashboard-content -->
 
-    <!-- تأثيرات الجليتر -->
-    {% if ramadan_glitter_enabled %}
-    <script>
-        // Glitter Effect
-        function createGlitter() {
-            const glitter = document.createElement('div');
-            glitter.classList.add('glitter');
-            glitter.style.left = Math.random() * 100 + 'vw';
-            glitter.style.animationDuration = Math.random() * 3 + 2 + 's';
-            glitter.style.opacity = Math.random();
-            glitter.innerHTML = '✨';
-            glitter.style.position = 'fixed';
-            glitter.style.top = '-10px';
-            glitter.style.fontSize = Math.random() * 20 + 10 + 'px';
-            glitter.style.color = 'gold';
-            glitter.style.zIndex = '9998';
-            glitter.style.pointerEvents = 'none';
 
-            // Animation for falling
-            glitter.animate([
-                { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
-                { transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, opacity: 0 }
-            ], {
-                duration: Math.random() * 3000 + 2000,
-                easing: 'linear',
-                iterations: 1
-            }).onfinish = () => glitter.remove();
 
-            document.body.appendChild(glitter);
-        }
-
-        setInterval(createGlitter, 200); // Create glitter every 200ms
-    </script>
-    {% endif %}
 
     <!-- Launch Countdown Overlay -->
     <style>
