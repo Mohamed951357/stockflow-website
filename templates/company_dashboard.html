@@ -36,6 +36,26 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ramadan_theme.css') }}">
     {% endif %}
     <style>
+
+        /* Completely disable falling glitter, stars, and background particles for Plus/all users on Dashboard */
+        .fairy-lights, #fallingStars, #glitter-canvas, .glitter-container, .star, .carousel-fairy-lights {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        body::before {
+            display: none !important;
+            background: none !important;
+            animation: none !important;
+        }
+
+        body::after {
+            display: none !important;
+            background: none !important;
+        }
+
         /* --- Mobile Responsiveness Bounds Fix --- */
         html, body {
             overflow-x: hidden !important;
@@ -5424,6 +5444,7 @@
     {% if ramadan_theme_enabled %}
     <script>
         function createStars() {
+            return; // Disabled falling glitter
             const container = document.getElementById('fallingStars');
             if (!container) return;
             const starCount = 3;
@@ -5575,6 +5596,7 @@
             }
 
             function animateGlitter() {
+            return; // Disabled falling glitter
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < particles.length; i++) {
                     particles[i].update();
@@ -5584,6 +5606,7 @@
             }
 
             function startGlitter() {
+            return; // Disabled falling glitter
                 if (canvas) {
                     resizeCanvas();
                     initGlitter();
