@@ -268,7 +268,7 @@ body {
 /* ══════════════════════════════════════════════════════════
    REMEMBER ROW
 ══════════════════════════════════════════════════════════ */
-.rem-row { display: flex; align-items: center; gap: 8px; margin-bottom: 0.85rem; justify-content: flex-end; }
+.rem-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; }
 .rem-chk { width: 18px; height: 18px; accent-color: var(--blue); cursor: pointer; border-radius: 4px; flex-shrink: 0; }
 .rem-lbl { font-size: .87rem; font-weight: 600; color: var(--muted); cursor: pointer; user-select: none; }
 
@@ -566,10 +566,13 @@ body {
                 </div>
             </div>
 
-            <!-- REMEMBER -->
+            <!-- REMEMBER & FORGOT -->
             <div class="rem-row">
-                <label class="rem-lbl" for="rem">تذكرني</label>
-                <input class="rem-chk" id="rem" type="checkbox" checked>
+                <a href="https://wa.me/201554077727?text=نسيت اسم المستخدم أو كلمة السر" target="_blank" class="forgot" id="forgotLink">هل نسيت كلمة المرور؟</a>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label class="rem-lbl" for="rem">تذكرني</label>
+                    <input class="rem-chk" id="rem" type="checkbox" checked>
+                </div>
             </div>
 
             <!-- BUTTONS -->
@@ -763,7 +766,7 @@ body {
       .from('.blob-2', { x: 60, y: 40, opacity: 0, duration: 1.8 }, 0.2)
       .from('#logoZone', { y: -40, opacity: 0, scale: 0.88, duration: 0.9 }, 0.3)
       .from('#loginCard', { y: 48, opacity: 0, scale: 0.94, duration: 0.85 }, 0.6)
-      .from(['.fgroup', '.rem-row', '#loginBtn', '.orline',
+      .from(['.fgroup', '.rem-row', '#forgotLink', '#loginBtn', '.orline',
              '#googleButtonContainer', '.ubtn-wa', '.signup', '.dl-section'], {
           y: 18, opacity: 0, stagger: 0.06, duration: 0.55
       }, 0.85);
