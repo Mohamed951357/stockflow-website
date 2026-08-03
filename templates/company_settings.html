@@ -19,55 +19,271 @@
         }
 
         .navbar {
-            background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%) !important;
-            background-size: 200% 200% !important;
-            animation: navbarGradient 15s ease infinite !important;
+            background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);
+            background-size: 200% 200%;
+            animation: navbarGradient 15s ease infinite;
             box-shadow:
                 0 10px 40px rgba(0, 0, 0, 0.2),
                 0 5px 20px rgba(18, 67, 196, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
             position: fixed;
-            width: 100%;
             top: 0;
+            width: 100%;
             z-index: 1030;
-            backdrop-filter: blur(15px) !important;
-            -webkit-backdrop-filter: blur(15px) !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-            transition: all 0.3s ease;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         @keyframes navbarGradient {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
 
+
+
+        .navbar .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+            color: #ffffff !important;
+        }
+
+        .navbar .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            opacity: 0;
+        }
+
+        .navbar .nav-link:hover::after {
+            width: 70%;
+            opacity: 1;
+        }
+
+        .navbar .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Notification badge specific styles for clarity */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 5px 8px;
+            border-radius: 50%;
+            background-color: #dc3545;
+            /* Red for notifications */
+            color: white;
+            font-size: 0.75em;
+            font-weight: bold;
+            z-index: 10;
+            /* Ensure it's above other elements */
+            min-width: 20px;
+            /* حجم Badge لا يقل عن كده */
+            text-align: center;
+            line-height: 1;
+            /* عشان الرقم يكون في المنتصف */
+            direction: ltr;
+            /* تأكد أن الأرقام تعرض من اليسار لليمين */
+            font-variant-numeric: tabular-nums;
+            /* ثبات عرض الأرقام */
+        }
+
+        /* تحسين موضع وحجم البادج داخل كروت الميزات فقط حتى لا يتم قصه عند حافة الكارت */
+        .feature-card .notification-badge {
+            top: 8px;
+            right: 12px;
+            font-size: 0.8em;
+            min-width: 22px;
+        }
+
+        /* تحسينات عامة للـ Navbar */
         .navbar-brand {
             font-weight: 600;
             display: flex;
             align-items: center;
-            color: #ffffff !important;
-        }
-
-        .navbar-brand span {
-            color: #ffffff !important;
         }
 
         .navbar-logo {
             height: 35px;
+            /* Adjust logo size for better fit */
             width: auto;
             margin-left: 10px;
         }
 
-        .navbar .nav-link,
-        .navbar i {
-            color: #ffffff !important;
+        /* Hide full text for smaller screens */
+        .navbar-brand .full-text {
+            display: inline;
         }
 
-        .navbar .nav-link:hover,
-        .navbar i:hover {
-            color: #ffffff !important;
-            opacity: 0.9;
+        /* MODIFIED: show/hide full text vs short text (or hide short text completely) */
+        @media (max-width: 767.98px) {
+            .navbar-brand .full-text {
+                display: none;
+                /* Hide full text on small screens */
+            }
+
+            .navbar-brand .short-text {
+                display: none;
+                /* NEW: Hide short text completely on small screens */
+            }
         }
+
+        @media (min-width: 768px) {
+            .navbar-brand .short-text {
+                display: none;
+                /* Hide short text on larger screens */
+            }
+
+            .navbar-brand .full-text {
+                display: inline;
+                /* Show full text on larger screens */
+            }
+        }
+
+        /* NEW CSS for Notification Icon placement and general navbar alignment */
+        .navbar-nav-notification-wrapper {
+            /* ده اللي بيحتوي أيقونة الجرس والبادج */
+            display: flex;
+            align-items: center;
+            /* لدفعه لليمين على الشاشات الكبيرة وجعله بجانب التوجل على الصغيرة */
+            margin-left: auto;
+            /* يدفع العناصر لليمين (لأن الاتجاه RTL) */
+            margin-right: 15px;
+            /* مسافة من الحافة اليمنى */
+            /* NEW: توزيع العناصر بالتساوي على المساحة المتاحة */
+            flex-grow: 1;
+            /* يجعل الـ wrapper يأخذ المساحة المتاحة */
+            justify-content: space-around;
+            /* يوزع العناصر مع مسافات متساوية بينها */
+            max-width: 200px;
+            /* NEW: تحديد أقصى عرض لـ wrapper الأيقونات لضمان تناسق التوزيع */
+        }
+
+        /* على الشاشات الأصغر من 992px (الموبايل) */
+        @media (max-width: 991.98px) {
+            .navbar-nav-notification-wrapper {
+                order: -1;
+                /* يجعله أول عنصر في شريط التنقل على الموبايل */
+                margin-left: auto;
+                /* لدفعه لليمين بجانب زر التوجل */
+                margin-right: 10px;
+                /* مسافة من زر التوجل */
+                padding: 0;
+                /* إزالة أي بادينج قديم */
+                /* NEW: توزيع العناصر على الموبايل لتبدو أفضل */
+                max-width: 150px;
+                /* عرض أصغر للأيقونات على الموبايل */
+                justify-content: space-between;
+                /* توزيع العناصر مع مسافات متساوية بينها */
+            }
+
+            .navbar-nav-notification-wrapper .nav-link {
+                padding: 0.5rem;
+                /* بادينج مناسب لأيقونة الجرس على الموبايل */
+            }
+
+            .navbar-nav-notification-wrapper .notification-badge {
+                top: 0px;
+                /* تعديل تموضع البادج على الموبايل */
+                right: 0px;
+                font-size: 0.65em;
+                /* تصغير حجم البادج على الموبايل */
+                padding: 3px 6px;
+            }
+
+            /* إخفاء اسم الشركة في شريط التنقل على الموبايل */
+            .navbar-nav-user-info {
+                display: none;
+            }
+
+            /* تنسيق القائمة المنسدلة عند الفتح على الموبايل - هذا هو الجزء الذي يتم تحسينه */
+            .navbar-collapse .navbar-nav {
+                width: 100%;
+                /* جعل القائمة تأخذ عرض الشاشة بالكامل */
+                margin-top: 10px;
+                /* مسافة من أعلى عند الفتح */
+                margin-bottom: 10px;
+                /* مسافة من الأسفل عند الفتح */
+            }
+
+            .navbar-collapse .nav-item {
+                text-align: center;
+                /* توسيط عناصر القائمة */
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                /* خط فاصل بين العناصر */
+            }
+
+            .navbar-collapse .nav-item:last-child {
+                border-bottom: none;
+                /* إزالة الخط الفاصل من آخر عنصر */
+            }
+
+            .navbar-collapse .nav-link {
+                padding: 12px 15px;
+                /* بادينج مناسب لعناصر القائمة */
+                color: rgba(255, 255, 255, 0.95) !important;
+                /* لون النص */
+                font-size: 1.1rem;
+                /* حجم الخط */
+                transition: background-color 0.3s ease;
+            }
+
+            .navbar-collapse .nav-link:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+                /* خلفية خفيفة عند التحويم */
+                border-radius: 5px;
+                /* زوايا مستديرة عند التحويم */
+            }
+
+            /* تنسيق خاص لاسم الشركة/المستخدم داخل القائمة المنسدلة */
+            .navbar-collapse .navbar-text {
+                display: block;
+                /* لجعلها تأخذ سطرًا كاملاً */
+                padding: 12px 15px;
+                color: rgba(255, 255, 255, 0.7);
+                font-weight: 600;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        @media (min-width: 992px) {
+            .navbar-nav-notification-wrapper {
+                margin-left: 15px;
+                /* مسافة من الروابط الأخرى */
+                margin-right: 0;
+            }
+
+            .navbar-nav-notification-wrapper .nav-link {
+                padding: 0.5rem 0.75rem;
+            }
+
+            .navbar-nav-notification-wrapper .notification-badge {
+                top: -5px;
+                right: -5px;
+                font-size: 0.75em;
+                padding: 5px 8px;
+            }
+
+            .navbar-nav-user-info {
+                display: flex;
+                /* إظهار اسم الشركة على الديسك توب */
+            }
+        }
+
 
         .settings-container {
             max-width: 800px;
@@ -206,339 +422,7 @@
             width: 100%;
         }
 
-        .navbar {
-            padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
-        }
-
-        .navbar .navbar-brand,
-        .navbar .navbar-brand span {
-            color: #fff !important;
-        }
-
-        .navbar .nav-link {
-            position: relative;
-            transition: all 0.3s ease;
-            color: #fff !important;
-        }
-
-        .navbar .nav-link::after {
-            content: '';
-            position: absolute;
-            right: 50%;
-            bottom: 0;
-            width: 0;
-            height: 2px;
-            background: #fff;
-            opacity: 0;
-            transform: translateX(50%);
-            transition: all 0.25s ease;
-        }
-
-        .navbar .nav-link:hover::after {
-            width: 70%;
-            opacity: 1;
-        }
-
-        .navbar .navbar-text {
-            color: rgba(255, 255, 255, 0.74) !important;
-        }
-
-        .navbar i {
-            color: inherit !important;
-        }
-
-        .navbar-nav-notification-wrapper {
-            display: flex;
-            align-items: center;
-            margin-left: auto;
-            gap: 10px;
-            max-width: 200px;
-            flex-grow: 1;
-            justify-content: space-around;
-        }
-
-        .navbar-nav-notification-wrapper .nav-link {
-            position: relative;
-            padding: 0.5rem;
-            transition: all 0.25s ease;
-        }
-
-        /* منع أي طبقة شفافة فوق الأيقونات */
-        .navbar-nav-notification-wrapper a {
-            position: relative;
-            z-index: 10001;
-        }
-
-        .navbar-nav-notification-wrapper .nav-link:hover {
-            transform: translateY(-2px) scale(1.06);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border: 2px solid #fff;
-            border-radius: 999px;
-            background: #ef4444;
-            color: #fff;
-            font-size: 0.7rem;
-            font-weight: 700;
-            line-height: 14px;
-            text-align: center;
-        }
-
-        .page-header {
-            display: flex !important;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            margin: 0 0 0.75rem !important;
-        }
-
-        .settings-page-header {
-            margin-bottom: 0.35rem !important;
-        }
-
-        .page-title {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.65rem;
-            color: var(--settings-heading);
-            font-size: 1.45rem;
-            font-weight: 700;
-        }
-
-        .page-title i {
-            color: #1243c4;
-        }
-
-        .settings-page-intro {
-            margin: 0 0 1.35rem;
-            color: var(--settings-muted);
-            font-size: 0.95rem;
-        }
-
-        .settings-container.settings-panel {
-            max-width: none;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            border: 1px solid var(--settings-border);
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.94);
-            box-shadow: 0 12px 30px rgba(37, 70, 135, 0.08);
-        }
-
-        .settings-panel > small {
-            display: block;
-            margin: 0 !important;
-            padding: 1.2rem 1.25rem 0.95rem;
-            border-bottom: 1px solid #e7edf8;
-            color: var(--settings-muted) !important;
-            font-size: 0.92rem;
-        }
-
-        .settings-panel__heading {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 1.2rem 1.25rem 1rem;
-            border-bottom: 1px solid #e7edf8;
-            background: linear-gradient(90deg, #fbfdff 0%, #ffffff 72%);
-        }
-
-        .settings-panel__heading-icon {
-            display: inline-flex;
-            width: 38px;
-            height: 38px;
-            flex: 0 0 38px;
-            align-items: center;
-            justify-content: center;
-            border-radius: 11px;
-            background: #edf3ff;
-            color: #1243c4;
-        }
-
-        .settings-panel__heading h2 {
-            margin: 0 0 0.15rem;
-            color: #263e68;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .settings-panel__heading p {
-            margin: 0;
-            color: var(--settings-muted);
-            font-size: 0.88rem;
-            line-height: 1.6;
-        }
-
-        .settings-panel .settings-item {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.25rem;
-            min-height: 96px;
-            margin: 0 !important;
-            padding: 1.25rem;
-            border: 0;
-            background: #fff;
-            transition: background-color 0.2s ease;
-        }
-
-        .settings-panel .settings-item + .settings-item,
-        .settings-panel form + .settings-item,
-        .settings-panel .settings-item + form {
-            border-top: 1px solid #e7edf8;
-        }
-
-        .settings-panel .settings-item:hover {
-            background: #fbfdff;
-        }
-
-        .settings-panel .settings-item > div:first-child {
-            min-width: 0;
-        }
-
-        .settings-panel .settings-item strong,
-        .settings-panel .settings-item .fw-bold {
-            color: #263e68;
-            font-size: 0.98rem;
-            font-weight: 700;
-        }
-
-        .settings-panel .settings-item .text-muted {
-            color: var(--settings-muted) !important;
-            line-height: 1.7;
-        }
-
-        .settings-panel .avatar-section {
-            padding: 0;
-        }
-
-        .settings-panel .avatar-preview {
-            width: 76px;
-            height: 76px;
-            border: 3px solid #fff;
-            border-radius: 18px;
-            box-shadow: 0 8px 20px rgba(35, 69, 132, 0.16);
-        }
-
-        .settings-panel .avatar-preview img {
-            width: 100% !important;
-            height: 100% !important;
-            border: 0 !important;
-            border-radius: 15px !important;
-            box-shadow: none !important;
-        }
-
-        .settings-panel .avatar-placeholder {
-            width: 100% !important;
-            height: 100% !important;
-            border: 0 !important;
-            border-radius: 15px !important;
-            box-shadow: none !important;
-        }
-
-        .btn-change-avatar,
-        .btn-save {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.45rem;
-            border-radius: 10px;
-            font-weight: 700;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .btn-change-avatar {
-            margin-top: 0.65rem;
-            padding: 0.5rem 0.85rem;
-            background: #edf3ff;
-            color: #1243c4;
-            box-shadow: none;
-        }
-
-        .btn-save {
-            padding: 0.65rem 1.1rem;
-            background: linear-gradient(135deg, #1243c4 0%, #0a2da0 100%);
-            box-shadow: 0 8px 18px rgba(18, 67, 196, 0.22);
-        }
-
-        .btn-change-avatar:hover,
-        .btn-save:hover {
-            transform: translateY(-1px);
-        }
-
-        .settings-panel form {
-            margin: 0;
-        }
-
-        .settings-panel form .settings-item {
-            border-top: 1px solid #e7edf8;
-        }
-
-        .settings-panel form .mt-3 {
-            display: flex;
-            justify-content: flex-start;
-            margin: 0 !important;
-            padding: 0 1.25rem 1.25rem;
-            background: #fff;
-        }
-
-        .form-switch .form-check-input {
-            width: 3.25rem;
-            height: 1.7rem;
-            margin: 0;
-            cursor: pointer;
-            background: #d7e1f2;
-            border-color: #c1d0e7;
-            box-shadow: none;
-        }
-
-        .form-switch .form-check-input::before {
-            top: 0.1rem;
-            left: 0.12rem;
-            width: 1.25rem;
-            height: 1.25rem;
-            box-shadow: 0 2px 6px rgba(29, 53, 95, 0.2);
-        }
-
-        .form-switch .form-check-input:checked {
-            background: #1243c4;
-            border-color: #1243c4;
-            box-shadow: 0 0 0 4px rgba(18, 67, 196, 0.1);
-        }
-
-        .form-switch .form-check-input:checked::before {
-            transform: translateX(1.55rem);
-        }
-
-        .settings-panel .btn-warning {
-            border: 0;
-            border-radius: 10px;
-            background: #fbbf24;
-            color: #5b4300;
-            box-shadow: none;
-        }
-
-        .settings-panel .btn-outline-danger {
-            border-radius: 10px !important;
-            font-weight: 700 !important;
-        }
-
-        @media (max-width: 767.98px) {
-            .main-content {
-                min-height: calc(100dvh - 56px);
-                padding: 0.75rem 0 1.25rem;
-                border-radius: 24px 24px 0 0;
-            }
-
-            .settings-page-container {
+        .settings-page-container {
                 padding-right: 0.75rem;
                 padding-left: 0.75rem;
             }
