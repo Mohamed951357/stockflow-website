@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    {% include '_pwa_meta.html' %}
     <title>بونص فارما - البحث في الأصناف - نظام حجز المواعيد</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
@@ -494,7 +495,8 @@
             margin-bottom: 2rem;
             border: 2px solid rgba(255, 255, 255, 0.3) !important;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            position: relative !important;
+            z-index: 1050 !important;
         }
 
         .back-button-wrapper {
@@ -834,11 +836,23 @@
         }
 
         /* تحسين تصميم مودال إضافة إلى أصنافي */
+        #addProductModal.modal.show {
+            z-index: 1060 !important;
+        }
+
+        body:has(#addProductModal.show) .modal-backdrop {
+            z-index: 1055 !important;
+        }
+
         #addProductModal .modal-dialog {
             max-width: 480px;
+            position: relative;
         }
 
         #addProductModal .modal-content {
+            position: relative;
+            z-index: 1;
+            pointer-events: auto;
             border-radius: 20px;
             overflow: hidden;
             border: none;
@@ -1009,7 +1023,7 @@
 
             /* === إزالة كل الـ padding الزائد من Bootstrap === */
             body {
-                padding-top: 56px !important;
+                padding-top: var(--company-navbar-height, 70px) !important;
             }
 
             .navbar {
@@ -1024,14 +1038,14 @@
                 width: 100% !important;
                 padding-left: 6px !important;
                 padding-right: 6px !important;
-                margin-top: 6px !important;
+                margin-top: 0 !important;
             }
 
             .main-content {
                 padding: 0.5rem 6px !important;
-                margin-top: 6px !important;
-                border-radius: 18px 18px 0 0 !important;
-                min-height: calc(100vh - 56px) !important;
+                margin-top: 0 !important;
+                border-radius: 24px 24px 0 0 !important;
+                min-height: calc(100dvh - var(--company-navbar-height, 70px)) !important;
                 box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08) !important;
             }
 
@@ -1179,6 +1193,8 @@
             /* === تحسين منطقة النتائج === */
             #resultsContainer {
                 margin-top: 0 !important;
+                position: relative !important;
+                z-index: 1 !important;
             }
 
             .results-container {
@@ -1188,6 +1204,8 @@
                 border-width: 1px !important;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06),
                     0 2px 6px rgba(18, 67, 196, 0.1) !important;
+                position: relative !important;
+                z-index: 1 !important;
             }
 
             .results-container h4 {
@@ -1587,6 +1605,227 @@
                 align-self: flex-end;
             }
         }
+
+        .ios-tip {
+            display: none !important;
+        }
+        .stockflow-pwa-install, .wa-float, .toby-popup-container {
+            display: none !important;
+        }
+        .ios-tip-disabled {
+            transform: translate(-50%, 22px);
+            opacity: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .96);
+            border: 1px solid rgba(255, 255, 255, .78);
+            box-shadow: 0 18px 42px rgba(4, 12, 40, .28);
+            backdrop-filter: blur(14px);
+            transition: opacity .25s ease, transform .25s ease;
+        }
+
+        .ios-tip.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+            pointer-events: auto;
+        }
+
+        .ios-tip-icon {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            background: var(--primary-gradient);
+            box-shadow: 0 10px 22px rgba(18, 67, 196, .26);
+            font-size: 1.05rem;
+        }
+
+        .ios-tip-copy {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .ios-tip-copy strong {
+            display: block;
+            color: #111827;
+            font-size: .9rem;
+            font-weight: 900;
+            line-height: 1.35;
+        }
+
+        .ios-tip-copy span {
+            display: block;
+            color: #6B7280;
+            font-size: .76rem;
+            font-weight: 700;
+            line-height: 1.55;
+            margin-top: 1px;
+        }
+
+        .ios-tip-action {
+            min-height: 36px;
+            flex: 0 0 auto;
+            border: 0;
+            border-radius: 12px;
+            padding: 0 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            background: #1243C4;
+            text-decoration: none;
+            font-family: 'Cairo', sans-serif;
+            font-size: .78rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .ios-tip-close {
+            width: 30px;
+            height: 30px;
+            flex: 0 0 30px;
+            border: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6B7280;
+            background: rgba(17, 24, 39, .06);
+            cursor: pointer;
+        }
+
+        @media (max-width: 420px) {
+            .ios-tip {
+                align-items: flex-start;
+                gap: 10px;
+                padding: 11px;
+            }
+
+            .ios-tip-action {
+                padding: 0 10px;
+            }
+        }
+
+        /* Keep the search page aligned with the company dashboard.  The old
+           rounded, offset content area made this page look as if it started
+           beneath a different navbar. */
+        :root {
+            --company-navbar-height: 70px;
+        }
+
+        body {
+            padding-top: var(--company-navbar-height) !important;
+            scroll-padding-top: var(--company-navbar-height);
+            min-height: 100dvh !important;
+        }
+
+        .main-content,
+        .main-content.container,
+        .main-content.container.mt-4 {
+            min-height: calc(100dvh - var(--company-navbar-height)) !important;
+            margin-top: 0 !important;
+            flex: 1 0 auto;
+            padding: 2rem 0 !important;
+            background: linear-gradient(180deg, #edf3ff 0%, #e6edfc 100%) !important;
+            border-radius: 32px 32px 0 0 !important;
+        }
+
+        .search-page-container {
+            width: 100%;
+        }
+
+        @media (max-width: 767.98px) {
+            .main-content {
+                padding: 0.75rem 0 !important;
+                border-radius: 24px 24px 0 0 !important;
+            }
+
+            .search-page-container {
+                padding-right: 0.75rem !important;
+                padding-left: 0.75rem !important;
+            }
+        }
+
+        /* Same navbar behaviour, spacing, and colours as the dashboard. */
+        .navbar {
+            padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
+        }
+
+        .navbar .navbar-brand,
+        .navbar .navbar-brand span {
+            color: #fff !important;
+        }
+
+        .navbar .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+            color: #000 !important;
+        }
+
+        .navbar .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            opacity: 0;
+            transform: translateX(-50%);
+            transition: all 0.3s ease;
+        }
+
+        .navbar .nav-link:hover::after {
+            width: 70%;
+            opacity: 1;
+        }
+
+        .navbar .navbar-text {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .navbar i {
+            color: inherit !important;
+        }
+
+        .navbar-nav-notification-wrapper {
+            max-width: 200px;
+            flex-grow: 1;
+            justify-content: space-around;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-nav-notification-wrapper {
+                max-width: 150px;
+                justify-content: space-between;
+            }
+
+            .navbar-nav-notification-wrapper .nav-link {
+                padding: 0.5rem !important;
+            }
+
+            .navbar-collapse .navbar-text {
+                display: block;
+                padding: 12px 15px;
+                color: rgba(255, 255, 255, 0.7) !important;
+                font-weight: 600;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        @media (min-width: 992px) {
+            .navbar-nav-notification-wrapper .nav-link {
+                padding: 0.5rem 0.75rem !important;
+            }
+        }
     </style>
     <style>
         body {
@@ -1596,87 +1835,95 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('company_dashboard') }}">
-                {% if current_logo_path %}
-                <img src="{{ current_logo_path }}" alt="Logo" class="navbar-logo">
-                {% endif %}
-                <span class="full-text">{{ system_subtitle }}</span>
-                <span class="short-text d-none"></span>{# MODIFIED: Ensure short-text is hidden on small screens #}
-            </a>
+    <!-- Modal for Activation Code -->
+    <div class="modal fade" id="activatePremiumModal" tabindex="-1" aria-labelledby="activatePremiumModalLabel" aria-hidden="true" style="z-index: 999999;">
+        <div class="modal-dialog modal-dialog-centered shadow-lg" style="z-index: 1000000;">
+            <div class="modal-content border-0" style="border-radius: 20px; background: #ffffff;">
+                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-primary" id="activatePremiumModalLabel">تفعيل الاشتراك المميز</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="activatePremiumForm" onsubmit="activatePremiumViaAjax(event)">
+                    <div class="modal-body text-center p-4">
+                        <div class="mb-4">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle shadow-sm" style="width: 80px; height: 80px;">
+                                <i class="fas fa-ticket-alt fs-1"></i>
+                            </div>
+                        </div>
+                        <p class="text-dark fw-medium mb-3" id="searchLimitPremiumMessage">لقد استهلكت جميع محاولات البحث المتاحة لهذا الشهر. أدخل كود التفعيل للاستمرار.</p>
+                        <p class="text-muted small mb-4">اكتب كود الدعوة الذي حصلت عليه من توبي لتفعيل STOCKFLOW PLUS.</p>
 
-            {# NEW: Navbar icons container for Profile, Community, Instructions, Notifications #}
-            <div class="navbar-nav-notification-wrapper">
-                <a class="nav-link" href="{{ url_for('company_profile') }}" title="ملفي الشخصي">
-                    <i class="fas fa-user-circle fa-lg"></i>
-                </a>
-                <a class="nav-link" href="{{ url_for('company_messages') }}" title="المراسلات">
-                    <i class="fas fa-comments fa-lg"></i>
-                    <span class="notification-badge" id="private-messages-count"
-                        style="{% if unread_private_messages_count == 0 %}display: none;{% endif %}">{{
-                        unread_private_messages_count }}</span>
-                </a>
-                <a class="nav-link" href="{{ url_for('instructions') }}" title="تعليمات وإرشادات">
-                    <i class="fas fa-question-circle fa-lg"></i>
-                </a>
-                <a class="nav-link position-relative" href="{{ url_for('notifications') }}" title="الإشعارات">
-                    <i class="fas fa-bell fa-lg"></i>
-                    <span class="notification-badge" id="notification-count"
-                        style="{% if unread_notifications_count == 0 %}display: none;{% endif %}">{{
-                        unread_notifications_count }}</span>
-                </a>
+                        <div class="input-group mb-4 shadow-sm border rounded-pill overflow-hidden bg-white">
+                            <span class="input-group-text border-0 bg-white text-primary ps-4">
+                                <i class="fas fa-key"></i>
+                            </span>
+                            <input type="text" name="invite_code" class="form-control border-0 py-3 fs-6 bg-white" placeholder="أدخل كود التفعيل هنا..." required style="box-shadow: none !important;">
+                        </div>
+
+                        <div class="d-grid gap-3 mb-2">
+                            <button type="submit" class="btn btn-primary py-3 fw-bold rounded-pill shadow-sm transition-all hover-scale">
+                                <i class="fas fa-check-circle me-2"></i> تفعيل الآن
+                            </button>
+                            <button type="button" class="btn btn-light py-2 text-muted rounded-pill fw-medium" data-bs-dismiss="modal">إلغاء</button>
+                        </div>
+                    </div>
+                </form>
             </div>
+        </div>
+    </div>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavCompany"
-                aria-controls="navbarNavCompany" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+    <style>
+        .hover-scale:hover { transform: scale(1.02); }
+        .transition-all { transition: all 0.3s ease; }
+        body:has(#activatePremiumModal.show) .modal-backdrop {
+            z-index: 999998 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+    </style>
 
-            <div class="collapse navbar-collapse" id="navbarNavCompany">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    {# User Info on Mobile Menu - Hidden on desktop #}
-                    <li class="nav-item d-lg-none">
-                        <span class="navbar-text">
-                            <i class="fas fa-building me-2"></i>
-                            {{ current_user.company_name }}
-                        </span>
-                    </li>
-                    {# User Info on Desktop Navbar - Hidden on mobile #}
-                    <li class="nav-item d-none d-lg-flex align-items-center me-3">
-                        <span class="navbar-text">
-                            <i class="fas fa-building me-2"></i>
-                            {{ current_user.company_name }}
-                        </span>
-                    </li>
+    <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>إضافة إلى أصنافي</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">اسم الصنف</label>
+                        <input type="text" class="form-control" id="productName" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productQuantity" class="form-label">الكمية</label>
+                        <input type="text" class="form-control" id="productQuantity"
+                            placeholder="مثال: 10 علب / 5 كرتونة" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productPrice" class="form-label">السعر</label>
+                        <input type="text" class="form-control" id="productPrice"
+                            placeholder="مثال: 150 جنيه / غير محدد" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productNotes" class="form-label">ملاحظات (اختياري)</label>
+                        <textarea class="form-control" id="productNotes" rows="3"
+                            placeholder="ملاحظات للمندوب أو الإدارة"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success" onclick="saveProduct()">حفظ الصنف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% set active_page = 'search' %}
+    {% include '_company_navbar.html' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('company_dashboard') }}">
-                            <i class="fas fa-home me-2"></i>
-                            الرئيسية
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('my_products') }}">
-                            <i class="fas fa-boxes me-2"></i>
-                            أصنافي
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="{{ url_for('search_products') }}">
-                            <i class="fas fa-search me-2"></i>
-                            البحث في الأصناف
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('company_stock_reports') }}">
-                            <i class="fas fa-chart-line me-2"></i>
-                            تقارير الأرصدة
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('appointments') }}">
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            مواعيدي
+                        <a class="nav-link" href="{{ url_for('instructions') }}">
+                            <i class="fas fa-question-circle me-2"></i>
+                            &#x627;&#x644;&#x62a;&#x639;&#x644;&#x64a;&#x645;&#x627;&#x62a;
                         </a>
                     </li>
                     <li class="nav-item">
@@ -1690,7 +1937,8 @@
         </div>
     </nav>
 
-    <div class="main-content container mt-4">
+    <div class="main-content">
+        <div class="container search-page-container">
         {# Removed the "بحث عن أصناف شركتكم فقط" alert as requested #}
 
         <!-- Warning for English input - shown dynamically with JavaScript -->
@@ -1706,9 +1954,6 @@
                         <i class="fas fa-search me-2"></i>
                         البحث في الأصناف
                     </h2>
-                    <a href="{{ url_for('company_dashboard') }}" class="back-btn" id="searchBackBtn">
-                        العودة للوحة الرئيسية <i class="fas fa-arrow-right ms-2"></i>
-                    </a>
                 </div>
 
                 <style>
@@ -1864,19 +2109,19 @@
                     }
                 </style>
 
-                <div class="search-container">
-                    <div class="row position-relative">
-                        <div class="col-md-8">
-                            <div class="search-input-wrapper">
+                <div class="search-container" style="position: relative !important; z-index: 99990 !important; overflow: visible !important;">
+                    <div class="row position-relative" style="position: relative !important; z-index: 99991 !important; overflow: visible !important;">
+                        <div class="col-md-8" style="position: relative !important; z-index: 99992 !important;">
+                            <div class="search-input-wrapper" style="position: relative !important; z-index: 99993 !important;">
                                 <input type="text" id="searchInput" class="form-control search-input"
                                     placeholder="اكتب اسم الصنف هنا..." autocomplete="off" lang="ar" dir="rtl"
                                     inputmode="text">
                                 <button type="button" class="clear-search" onclick="clearSearch()" title="مسح البحث">
                                     <i class="fas fa-times"></i>
                                 </button>
-                            </div>
-                            <div id="autocompleteList" class="list-group position-absolute w-100"
-                                style="z-index: 10000; display: none; max-height: 260px; overflow: auto; background-color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px;">
+                                <div id="autocompleteList" class="list-group position-absolute w-100"
+                                    style="z-index: 999999 !important; display: none; max-height: 280px; overflow-y: auto; background-color: #ffffff !important; box-shadow: 0 14px 40px rgba(0,0,0,0.35), 0 4px 14px rgba(18, 67, 196, 0.25) !important; border: 1.5px solid #cbd5e1 !important; border-radius: 12px; top: 100%; right: 0; left: 0; margin-top: 6px;">
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4 mt-3 mt-md-0"> {# Added margin for small screens #}
@@ -1934,41 +2179,6 @@
             </div>
         </div>
     </div>
-
-    <div class="modal fade" id="addProductModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>إضافة إلى أصنافي</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="productName" class="form-label">اسم الصنف</label>
-                        <input type="text" class="form-control" id="productName" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productQuantity" class="form-label">الكمية</label>
-                        <input type="text" class="form-control" id="productQuantity"
-                            placeholder="مثال: 10 علب / 5 كرتونة" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productPrice" class="form-label">السعر</label>
-                        <input type="text" class="form-control" id="productPrice"
-                            placeholder="مثال: 150 جنيه / غير محدد" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productNotes" class="form-label">ملاحظات (اختياري)</label>
-                        <textarea class="form-control" id="productNotes" rows="3"
-                            placeholder="ملاحظات للمندوب أو الإدارة"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-success" onclick="saveProduct()">حفظ الصنف</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     {# NEW: Floating Pop-up for Toby - Removed #}
@@ -2094,8 +2304,6 @@
             return spinner;
         }
         window.addEventListener('pageshow', function () { var s = document.getElementById('pageSpinner'); if (s) { s.classList.remove('active'); } });
-        (function () { var backBtn = document.getElementById('searchBackBtn'); if (backBtn) { backBtn.addEventListener('click', function (e) { e.preventDefault(); var s = ensurePageSpinner(); s.classList.add('active'); var href = this.getAttribute('href'); setTimeout(function () { window.location.href = href; }, 150); }, { passive: false }); } })();
-
         window.addEventListener('popstate', function () {
             var s = document.getElementById('pageSpinner');
             if (s) { s.classList.remove('active'); }
@@ -2320,6 +2528,26 @@
             }
         }
 
+        function showSearchLimitActivationModal(errorMessage) {
+            const modalElement = document.getElementById('activatePremiumModal');
+            const messageElement = document.getElementById('searchLimitPremiumMessage');
+            if (messageElement && errorMessage) {
+                messageElement.textContent = errorMessage.replace(/^خطأ:\s*/, '');
+            }
+
+            if (modalElement && window.bootstrap && bootstrap.Modal) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                modal.show();
+                setTimeout(() => {
+                    const input = modalElement.querySelector('input[name="invite_code"]');
+                    if (input) input.focus();
+                }, 250);
+                return;
+            }
+
+            alert('خطأ: ' + (errorMessage || 'يرجى تفعيل الاشتراك المميز باستخدام كود الدعوة للاستمرار.'));
+        }
+
         function performSearch() {
             const searchTerm = document.getElementById('searchInput').value.trim();
 
@@ -2353,6 +2581,11 @@
                     document.getElementById('loadingContainer').style.display = 'none';
 
                     if (data.error) {
+                        const errorMessage = String(data.error || '');
+                        if (data.limit_reached || statusCode === 403 || errorMessage.includes('استهلكت جميع محاولات البحث')) {
+                            showSearchLimitActivationModal(errorMessage);
+                            return;
+                        }
                         alert('خطأ: ' + data.error);
                         return;
                     }
@@ -2362,6 +2595,63 @@
                 .catch(error => {
                     console.error('Error during search:', error);
                     alert('حدث خطأ أثناء البحث: ' + error.message);
+                });
+        }
+
+        function activatePremiumViaAjax(e) {
+            e.preventDefault();
+            const form = e.target;
+            const input = form.querySelector('input[name="invite_code"]');
+            const code = input.value.trim();
+            if (!code) return;
+
+            const btn = form.querySelector('button[type="submit"]');
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري التفعيل...';
+            btn.disabled = true;
+
+            fetch("{{ url_for('verify_invite_code') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ invite_code: code })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    btn.innerHTML = originalBtnHtml;
+                    btn.disabled = false;
+
+                    if (data.success) {
+                        const modalElement = document.getElementById('activatePremiumModal');
+                        const modal = modalElement && window.bootstrap ? bootstrap.Modal.getInstance(modalElement) : null;
+                        if (modal) modal.hide();
+
+                        if (typeof showToast === 'function') {
+                            showToast(data.message || 'تم تفعيل الاشتراك المميز بنجاح.', 'success');
+                        } else {
+                            alert(data.message || 'تم تفعيل الاشتراك المميز بنجاح.');
+                        }
+
+                        setTimeout(() => window.location.reload(), 900);
+                        return;
+                    }
+
+                    if (typeof showToast === 'function') {
+                        showToast(data.message || 'خطأ في التفعيل.', 'error');
+                    } else {
+                        alert(data.message || 'خطأ في التفعيل.');
+                    }
+                })
+                .catch(err => {
+                    btn.innerHTML = originalBtnHtml;
+                    btn.disabled = false;
+                    if (typeof showToast === 'function') {
+                        showToast('حدث خطأ في الاتصال بالخادم.', 'error');
+                    } else {
+                        alert('حدث خطأ في الاتصال بالخادم.');
+                    }
+                    console.error(err);
                 });
         }
 
@@ -2473,9 +2763,49 @@
             document.getElementById('productPrice').value = price;
             document.getElementById('productNotes').value = '';
 
-            var addProductModal = new bootstrap.Modal(document.getElementById('addProductModal'));
+            const modalElement = document.getElementById('addProductModal');
+            if (!modalElement || !window.bootstrap) {
+                return;
+            }
+
+            const addProductModal = bootstrap.Modal.getOrCreateInstance(modalElement);
             addProductModal.show();
         }
+
+        (function initAddProductModalCleanup() {
+            const modalElement = document.getElementById('addProductModal');
+            if (!modalElement) {
+                return;
+            }
+
+            modalElement.addEventListener('shown.bs.modal', function () {
+                modalElement.style.zIndex = '1060';
+
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(function (backdrop, index) {
+                    if (backdrops.length > 1 && index < backdrops.length - 1) {
+                        backdrop.remove();
+                        return;
+                    }
+                    backdrop.style.zIndex = '1055';
+                });
+            });
+
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                setTimeout(function () {
+                    if (document.querySelector('.modal.show')) {
+                        return;
+                    }
+
+                    document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+                        backdrop.remove();
+                    });
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+                }, 0);
+            });
+        })();
 
         function requestProductReport(productNameEncoded) {
             const productName = decodeURIComponent(productNameEncoded || '').trim();
@@ -2545,8 +2875,13 @@
                     return response.json().then(data => ({ data, statusCode }));
                 })
                 .then(({ data, statusCode }) => {
-                    var addProductModal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
-                    addProductModal.hide();
+                    const modalElement = document.getElementById('addProductModal');
+                    const addProductModal = modalElement && window.bootstrap
+                        ? bootstrap.Modal.getInstance(modalElement)
+                        : null;
+                    if (addProductModal) {
+                        addProductModal.hide();
+                    }
                     if (data.success) {
                         // عرض رسالة نجاح مع معلومات الحدود
                         showToast(data.message, 'success');
@@ -3400,6 +3735,22 @@
                 });
             }
         });
+
+        (function () {
+            const tip = document.getElementById('iosInstallTip');
+            const close = document.getElementById('iosInstallTipClose');
+            const ua = window.navigator.userAgent || '';
+            const isIPhone = /iPhone|iPod/.test(ua);
+            const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
+            if (tip && isIPhone && !isStandalone) {
+                window.setTimeout(() => tip.classList.add('show'), 650);
+            }
+
+            if (close && tip) {
+                close.addEventListener('click', () => tip.classList.remove('show'));
+            }
+        })();
     </script>
 </body>
 

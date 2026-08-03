@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
@@ -495,7 +495,8 @@
             margin-bottom: 2rem;
             border: 2px solid rgba(255, 255, 255, 0.3) !important;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            position: relative !important;
+            z-index: 1050 !important;
         }
 
         .back-button-wrapper {
@@ -1022,7 +1023,7 @@
 
             /* === إزالة كل الـ padding الزائد من Bootstrap === */
             body {
-                padding-top: 56px !important;
+                padding-top: var(--company-navbar-height, 70px) !important;
             }
 
             .navbar {
@@ -1037,14 +1038,14 @@
                 width: 100% !important;
                 padding-left: 6px !important;
                 padding-right: 6px !important;
-                margin-top: 6px !important;
+                margin-top: 0 !important;
             }
 
             .main-content {
                 padding: 0.5rem 6px !important;
-                margin-top: 6px !important;
-                border-radius: 18px 18px 0 0 !important;
-                min-height: calc(100vh - 56px) !important;
+                margin-top: 0 !important;
+                border-radius: 24px 24px 0 0 !important;
+                min-height: calc(100dvh - var(--company-navbar-height, 70px)) !important;
                 box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08) !important;
             }
 
@@ -1192,6 +1193,8 @@
             /* === تحسين منطقة النتائج === */
             #resultsContainer {
                 margin-top: 0 !important;
+                position: relative !important;
+                z-index: 1 !important;
             }
 
             .results-container {
@@ -1201,6 +1204,8 @@
                 border-width: 1px !important;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06),
                     0 2px 6px rgba(18, 67, 196, 0.1) !important;
+                position: relative !important;
+                z-index: 1 !important;
             }
 
             .results-container h4 {
@@ -1602,11 +1607,12 @@
         }
 
         .ios-tip {
-            position: fixed;
-            left: 50%;
-            bottom: max(16px, calc(env(safe-area-inset-bottom) + 14px));
-            z-index: 10050;
-            width: min(calc(100vw - 24px), 430px);
+            display: none !important;
+        }
+        .stockflow-pwa-install, .wa-float, .toby-popup-container {
+            display: none !important;
+        }
+        .ios-tip-disabled {
             transform: translate(-50%, 22px);
             opacity: 0;
             pointer-events: none;
@@ -1707,6 +1713,119 @@
                 padding: 0 10px;
             }
         }
+
+        /* Keep the search page aligned with the company dashboard.  The old
+           rounded, offset content area made this page look as if it started
+           beneath a different navbar. */
+        :root {
+            --company-navbar-height: 70px;
+        }
+
+        body {
+            padding-top: var(--company-navbar-height) !important;
+            scroll-padding-top: var(--company-navbar-height);
+            min-height: 100dvh !important;
+        }
+
+        .main-content,
+        .main-content.container,
+        .main-content.container.mt-4 {
+            min-height: calc(100dvh - var(--company-navbar-height)) !important;
+            margin-top: 0 !important;
+            flex: 1 0 auto;
+            padding: 2rem 0 !important;
+            background: linear-gradient(180deg, #edf3ff 0%, #e6edfc 100%) !important;
+            border-radius: 32px 32px 0 0 !important;
+        }
+
+        .search-page-container {
+            width: 100%;
+        }
+
+        @media (max-width: 767.98px) {
+            .main-content {
+                padding: 0.75rem 0 !important;
+                border-radius: 24px 24px 0 0 !important;
+            }
+
+            .search-page-container {
+                padding-right: 0.75rem !important;
+                padding-left: 0.75rem !important;
+            }
+        }
+
+        /* Same navbar behaviour, spacing, and colours as the dashboard. */
+        .navbar {
+            padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
+        }
+
+        .navbar .navbar-brand,
+        .navbar .navbar-brand span {
+            color: #fff !important;
+        }
+
+        .navbar .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+            color: #000 !important;
+        }
+
+        .navbar .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            opacity: 0;
+            transform: translateX(-50%);
+            transition: all 0.3s ease;
+        }
+
+        .navbar .nav-link:hover::after {
+            width: 70%;
+            opacity: 1;
+        }
+
+        .navbar .navbar-text {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .navbar i {
+            color: inherit !important;
+        }
+
+        .navbar-nav-notification-wrapper {
+            max-width: 200px;
+            flex-grow: 1;
+            justify-content: space-around;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-nav-notification-wrapper {
+                max-width: 150px;
+                justify-content: space-between;
+            }
+
+            .navbar-nav-notification-wrapper .nav-link {
+                padding: 0.5rem !important;
+            }
+
+            .navbar-collapse .navbar-text {
+                display: block;
+                padding: 12px 15px;
+                color: rgba(255, 255, 255, 0.7) !important;
+                font-weight: 600;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        @media (min-width: 992px) {
+            .navbar-nav-notification-wrapper .nav-link {
+                padding: 0.5rem 0.75rem !important;
+            }
+        }
     </style>
     <style>
         body {
@@ -1799,99 +1918,12 @@
         </div>
     </div>
 
-    <div class="ios-tip" id="iosInstallTip" aria-live="polite">
-        <div class="ios-tip-icon"><i class="fab fa-apple"></i></div>
-        <div class="ios-tip-copy">
-            <strong>ضيف StockFlow كاختصار على شاشة الآيفون</strong>
-            <span>افتحه بسرعة من غير ما تدور على الرابط كل مرة.</span>
-        </div>
-        <a class="ios-tip-action" href="{{ url_for('ios_install_guide') }}">الشرح</a>
-        <button class="ios-tip-close" type="button" id="iosInstallTipClose" aria-label="إغلاق">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('company_dashboard') }}">
-                {% if current_logo_path %}
-                <img src="{{ current_logo_path }}" alt="Logo" class="navbar-logo">
-                {% endif %}
-                <span class="full-text">{{ system_subtitle }}</span>
-                <span class="short-text d-none"></span>{# MODIFIED: Ensure short-text is hidden on small screens #}
-            </a>
-
-            {# NEW: Navbar icons container for Profile, Community, Instructions, Notifications #}
-            <div class="navbar-nav-notification-wrapper">
-                <a class="nav-link" href="{{ url_for('company_profile') }}" title="ملفي الشخصي">
-                    <i class="fas fa-user-circle fa-lg"></i>
-                </a>
-                <a class="nav-link" href="{{ url_for('company_messages') }}" title="المراسلات">
-                    <i class="fas fa-comments fa-lg"></i>
-                    <span class="notification-badge" id="private-messages-count"
-                        style="{% if unread_private_messages_count == 0 %}display: none;{% endif %}">{{
-                        unread_private_messages_count }}</span>
-                </a>
-                <a class="nav-link" href="{{ url_for('instructions') }}" title="تعليمات وإرشادات">
-                    <i class="fas fa-question-circle fa-lg"></i>
-                </a>
-                <a class="nav-link position-relative" href="{{ url_for('notifications') }}" title="الإشعارات">
-                    <i class="fas fa-bell fa-lg"></i>
-                    <span class="notification-badge" id="notification-count"
-                        style="{% if unread_notifications_count == 0 %}display: none;{% endif %}">{{
-                        unread_notifications_count }}</span>
-                </a>
-            </div>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavCompany"
-                aria-controls="navbarNavCompany" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNavCompany">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    {# User Info on Mobile Menu - Hidden on desktop #}
-                    <li class="nav-item d-lg-none">
-                        <span class="navbar-text">
-                            <i class="fas fa-building me-2"></i>
-                            {{ current_user.company_name }}
-                        </span>
-                    </li>
-                    {# User Info on Desktop Navbar - Hidden on mobile #}
-                    <li class="nav-item d-none d-lg-flex align-items-center me-3">
-                        <span class="navbar-text">
-                            <i class="fas fa-building me-2"></i>
-                            {{ current_user.company_name }}
-                        </span>
-                    </li>
+    {% set active_page = 'search' %}
+    {% include '_company_navbar.html' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('company_dashboard') }}">
-                            <i class="fas fa-home me-2"></i>
-                            الرئيسية
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('my_products') }}">
-                            <i class="fas fa-boxes me-2"></i>
-                            أصنافي
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="{{ url_for('search_products') }}">
-                            <i class="fas fa-search me-2"></i>
-                            البحث في الأصناف
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('company_stock_reports') }}">
-                            <i class="fas fa-chart-line me-2"></i>
-                            تقارير الأرصدة
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('appointments') }}">
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            مواعيدي
+                        <a class="nav-link" href="{{ url_for('instructions') }}">
+                            <i class="fas fa-question-circle me-2"></i>
+                            &#x627;&#x644;&#x62a;&#x639;&#x644;&#x64a;&#x645;&#x627;&#x62a;
                         </a>
                     </li>
                     <li class="nav-item">
@@ -1905,7 +1937,8 @@
         </div>
     </nav>
 
-    <div class="main-content container mt-4">
+    <div class="main-content">
+        <div class="container search-page-container">
         {# Removed the "بحث عن أصناف شركتكم فقط" alert as requested #}
 
         <!-- Warning for English input - shown dynamically with JavaScript -->
@@ -1921,9 +1954,6 @@
                         <i class="fas fa-search me-2"></i>
                         البحث في الأصناف
                     </h2>
-                    <a href="{{ url_for('company_dashboard') }}" class="back-btn" id="searchBackBtn">
-                        العودة للوحة الرئيسية <i class="fas fa-arrow-right ms-2"></i>
-                    </a>
                 </div>
 
                 <style>
@@ -2079,19 +2109,19 @@
                     }
                 </style>
 
-                <div class="search-container">
-                    <div class="row position-relative">
-                        <div class="col-md-8">
-                            <div class="search-input-wrapper">
+                <div class="search-container" style="position: relative !important; z-index: 99990 !important; overflow: visible !important;">
+                    <div class="row position-relative" style="position: relative !important; z-index: 99991 !important; overflow: visible !important;">
+                        <div class="col-md-8" style="position: relative !important; z-index: 99992 !important;">
+                            <div class="search-input-wrapper" style="position: relative !important; z-index: 99993 !important;">
                                 <input type="text" id="searchInput" class="form-control search-input"
                                     placeholder="اكتب اسم الصنف هنا..." autocomplete="off" lang="ar" dir="rtl"
                                     inputmode="text">
                                 <button type="button" class="clear-search" onclick="clearSearch()" title="مسح البحث">
                                     <i class="fas fa-times"></i>
                                 </button>
-                            </div>
-                            <div id="autocompleteList" class="list-group position-absolute w-100"
-                                style="z-index: 10000; display: none; max-height: 260px; overflow: auto; background-color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px;">
+                                <div id="autocompleteList" class="list-group position-absolute w-100"
+                                    style="z-index: 999999 !important; display: none; max-height: 280px; overflow-y: auto; background-color: #ffffff !important; box-shadow: 0 14px 40px rgba(0,0,0,0.35), 0 4px 14px rgba(18, 67, 196, 0.25) !important; border: 1.5px solid #cbd5e1 !important; border-radius: 12px; top: 100%; right: 0; left: 0; margin-top: 6px;">
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4 mt-3 mt-md-0"> {# Added margin for small screens #}
@@ -2148,6 +2178,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     {# NEW: Floating Pop-up for Toby - Removed #}
@@ -2273,8 +2304,6 @@
             return spinner;
         }
         window.addEventListener('pageshow', function () { var s = document.getElementById('pageSpinner'); if (s) { s.classList.remove('active'); } });
-        (function () { var backBtn = document.getElementById('searchBackBtn'); if (backBtn) { backBtn.addEventListener('click', function (e) { e.preventDefault(); var s = ensurePageSpinner(); s.classList.add('active'); var href = this.getAttribute('href'); setTimeout(function () { window.location.href = href; }, 150); }, { passive: false }); } })();
-
         window.addEventListener('popstate', function () {
             var s = document.getElementById('pageSpinner');
             if (s) { s.classList.remove('active'); }
