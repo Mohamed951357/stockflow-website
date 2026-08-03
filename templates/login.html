@@ -278,40 +278,46 @@ body {
 .btn-gap { display: flex; flex-direction: column; gap: 12px; }
 
 .ubtn {
-    width: 100%; height: 48px;
+    width: 100%; height: 50px;
     display: flex; align-items: center; justify-content: center; gap: 9px;
     border-radius: var(--r-pill); border: none;
     font-family: 'Cairo', sans-serif; font-size: 1rem; font-weight: 700;
     cursor: pointer; position: relative; overflow: hidden;
-    transition: all .32s var(--ease);
+    transition: transform .32s var(--ease), box-shadow .32s var(--ease);
     text-decoration: none; letter-spacing: .2px;
+    opacity: 1 !important;        /* CRITICAL: always visible, overrides GSAP */
+    visibility: visible !important;
 }
 .ubtn::after {
     content: ''; position: absolute; top: 0; left: -110%; width: 100%; height: 100%;
-    background: linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
     transition: left .5s ease;
 }
 .ubtn:hover::after { left: 110%; }
 .ubtn:hover { transform: translateY(-2px); }
 .ubtn:active { transform: translateY(0) scale(.99); }
 
-/* LOGIN BUTTON — HIGH CONTRAST SOLID BLUE GRADIENT */
-.ubtn-login, #loginBtn {
-    background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 8px 25px rgba(18,67,196,.45), inset 0 1px 0 rgba(255,255,255,.2) !important;
-    font-size: 1.1rem !important; font-weight: 800 !important;
-    border: none !important;
+/* ─── زر تسجيل الدخول: أزرق ملكي غامق واضح ─── */
+#loginBtn, .ubtn-login {
+    background: #1243C4;
+    background: linear-gradient(160deg, #1A55E3 0%, #0A2DA0 100%);
+    color: #FFFFFF;
+    font-size: 1.12rem;
+    font-weight: 900;
+    letter-spacing: .4px;
+    box-shadow: 0 8px 24px rgba(18,67,196,.5), inset 0 1px 0 rgba(255,255,255,.18);
+    opacity: 1 !important;
+    visibility: visible !important;
 }
-.ubtn-login:hover, #loginBtn:hover {
-    background: linear-gradient(135deg, #0A2DA0 0%, #061B69 100%) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 12px 32px rgba(18,67,196,.6) !important;
+#loginBtn:hover, .ubtn-login:hover {
+    background: linear-gradient(160deg, #0A2DA0 0%, #061B69 100%);
+    color: #FFFFFF;
+    box-shadow: 0 14px 36px rgba(18,67,196,.65);
 }
 
 @keyframes pulse {
-    0%,100%{box-shadow:0 8px 25px rgba(18,67,196,.45),inset 0 1px 0 rgba(255,255,255,.2)}
-    50%{box-shadow:0 8px 25px rgba(18,67,196,.45),inset 0 1px 0 rgba(255,255,255,.2),0 0 0 8px rgba(18,67,196,.15)}
+    0%,100%{box-shadow:0 8px 24px rgba(18,67,196,.5),inset 0 1px 0 rgba(255,255,255,.18)}
+    50%{box-shadow:0 8px 24px rgba(18,67,196,.5),inset 0 1px 0 rgba(255,255,255,.18),0 0 0 10px rgba(18,67,196,.12)}
 }
 .ubtn-login.idle-pulse { animation: pulse 3.5s ease-in-out 2s infinite; }
 
@@ -326,49 +332,54 @@ body {
 /* Google Sign-in */
 .google-login-wrapper {
     display: flex; justify-content: center; align-items: center;
-    width: 100%; margin-top: 5px; margin-bottom: 12px !important;
+    width: 100%; margin-top: 2px; margin-bottom: 4px;
     direction: ltr; min-height: 48px;
 }
 
-/* WhatsApp Support Button */
+/* ─── زر واتساب: أخضر واضح ─── */
 .ubtn-wa {
-    background: #25D366 !important;
-    color: #FFFFFF !important;
-    border: none !important;
-    font-size: .95rem !important;
-    font-weight: 700 !important;
-    box-shadow: 0 6px 20px rgba(37,211,102,.35) !important;
+    background: #25D366;
+    color: #FFFFFF;
+    border: none;
+    font-size: .95rem;
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(37,211,102,.35);
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 .ubtn-wa:hover {
-    background: #1EBE5D !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 10px 28px rgba(37,211,102,.5) !important;
+    background: #1EBE5D;
+    color: #FFFFFF;
+    box-shadow: 0 10px 26px rgba(37,211,102,.5);
 }
 
-/* FORGOT PASSWORD BUTTON / LINK — PROMINENT DISTINCT STYLING */
-.forgot, #forgotLink {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 7px !important;
-    width: 100% !important;
-    height: 44px !important;
-    background: #EFF4FF !important;
-    color: #1243C4 !important;
-    border: 1.5px solid #3B72FF !important;
-    border-radius: var(--r-pill) !important;
-    font-size: .92rem !important;
-    font-weight: 700 !important;
-    text-decoration: none !important;
-    cursor: pointer !important;
-    transition: all .25s ease !important;
-    margin: 4px 0 8px !important;
+/* ─── زر نسيت كلمة السر: أزرق فاتح واضح ─── */
+#forgotLink, .forgot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    height: 46px;
+    background: #ECF2FF;
+    color: #1243C4;
+    border: 2px solid #1243C4;
+    border-radius: var(--r-pill);
+    font-family: 'Cairo', sans-serif;
+    font-size: .95rem;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .25s ease, color .25s ease, box-shadow .25s ease;
+    margin: 0;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
-.forgot:hover, #forgotLink:hover {
-    background: #1243C4 !important;
-    color: #FFFFFF !important;
-    border-color: #1243C4 !important;
-    box-shadow: 0 6px 20px rgba(18,67,196,.3) !important;
+#forgotLink:hover, .forgot:hover {
+    background: #1243C4;
+    color: #FFFFFF;
+    border-color: #1243C4;
+    box-shadow: 0 6px 20px rgba(18,67,196,.35);
 }
 
 .orline {
@@ -795,15 +806,24 @@ body {
 
     const tl = gsap.timeline({ defaults: { ease: "spring" } });
 
-    // Entrance animation
+    // Entrance animation — NOTE: loginBtn & forgotLink excluded from opacity animation
+    // so they are ALWAYS visible (CSS guarantees opacity:1 on them)
     tl.from('.blob-1', { x: -60, y: -40, opacity: 0, duration: 1.8 }, 0)
       .from('.blob-2', { x: 60, y: 40, opacity: 0, duration: 1.8 }, 0.2)
       .from('#logoZone', { y: -40, opacity: 0, scale: 0.88, duration: 0.9 }, 0.3)
       .from('#loginCard', { y: 48, opacity: 0, scale: 0.94, duration: 0.85 }, 0.6)
-      .from(['.fgroup', '.rem-row', '#loginBtn', '#forgotLink', '.orline',
+      .from(['.fgroup', '.rem-row', '.orline',
              '#googleButtonContainer', '.ubtn-wa', '.signup', '.dl-section'], {
           y: 18, opacity: 0, stagger: 0.06, duration: 0.55
       }, 0.85);
+
+    // Failsafe: force buttons visible after 1s regardless of GSAP state
+    setTimeout(function() {
+        var loginBtn = document.getElementById('loginBtn');
+        var forgotLink = document.getElementById('forgotLink');
+        if (loginBtn)  { loginBtn.style.opacity  = '1'; loginBtn.style.visibility  = 'visible'; }
+        if (forgotLink){ forgotLink.style.opacity = '1'; forgotLink.style.visibility = 'visible'; }
+    }, 1000);
 
     // Continuous ambient waves motion
     gsap.to('.blob-1', { x: '+=40', y: '+=30', duration: 11, ease: 'sine.inOut', yoyo: true, repeat: -1 });
