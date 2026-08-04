@@ -727,10 +727,11 @@ def register_views(app):
 
         return permission in final_permissions
 
-    # Helper: robust unread notifications count per company
+    # Helper: robust unread notifications count per company (including community notifications)
     def get_unread_notifications_count(company_id: int) -> int:
+        sys_count = 0
         try:
-            return Notification.query.filter(
+            sys_count = Notification.query.filter(
                 db.or_(
                     Notification.target_type == 'all',
                     db.and_(Notification.target_type == 'specific', Notification.target_id == company_id)
@@ -742,17 +743,31 @@ def register_views(app):
                 ).exists()
             ).count()
         except OperationalError:
-            # Table NotificationRead not created yet; fall back to legacy flag
-            return Notification.query.filter(
-                db.or_(
-                    Notification.target_type == 'all',
-                    db.and_(Notification.target_type == 'specific', Notification.target_id == company_id)
-                ),
-                Notification.is_active == True,
-                Notification.is_read == False
+            try:
+                sys_count = Notification.query.filter(
+                    db.or_(
+                        Notification.target_type == 'all',
+                        db.and_(Notification.target_type == 'specific', Notification.target_id == company_id)
+                    ),
+                    Notification.is_active == True,
+                    Notification.is_read == False
+                ).count()
+            except Exception:
+                sys_count = 0
+        except Exception:
+            sys_count = 0
+
+        comm_count = 0
+        try:
+            from models import CommunityNotification
+            comm_count = CommunityNotification.query.filter_by(
+                company_id=company_id,
+                is_read=False
             ).count()
         except Exception:
-            return 0
+            comm_count = 0
+
+        return sys_count + comm_count
 
     @app.route('/manage_admins')
     @login_required
@@ -1221,9 +1236,9 @@ def register_views(app):
                         session.permanent = True
                         
                         # تسجيل دخول المستخدم مع خيار التذكر
-                        # نستخدم remember_me مع مدة 60 يوماً
+                        # نستخدم remember_me مع مدة 30 يوماً
                         # تأكد من تعيين remember=True عند تفعيل خاصية تذكرني
-                        login_user(user, remember=remember_me, duration=timedelta(days=60) if remember_me else None)
+                        login_user(user, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
                         
                         try:
                             user.last_login = datetime.utcnow()
@@ -1263,7 +1278,7 @@ def register_views(app):
                     session.permanent = True
 
                     # تسجيل دخول الشركة مع خيار التذكر
-                    login_user(test_company, remember=remember_me, duration=timedelta(days=60) if remember_me else None)
+                    login_user(test_company, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
 
                     try:
                         test_company.last_login = datetime.utcnow()
@@ -1349,7 +1364,7 @@ def register_views(app):
                         session.permanent = True
 
                         # تسجيل دخول المستخدم مع خيار التذكر
-                        login_user(user, remember=remember_me, duration=timedelta(days=60) if remember_me else None)
+                        login_user(user, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
 
                         # تحديث last_login
                         try:
@@ -1514,7 +1529,7 @@ def register_views(app):
             session['company_test_mode'] = False
             session.permanent = True
             
-            login_user(company, remember=True, duration=timedelta(days=60))
+            login_user(company, remember=True, duration=timedelta(days=30))
             
             try:
                 company.last_login = datetime.utcnow()
@@ -2853,18 +2868,8 @@ def register_views(app):
 
         booked_appointments_count = Appointment.query.filter_by(company_id=company_id).count()
 
-        # عدد الإشعارات غير المقروءة لهذه الشركة (باستخدام NotificationRead)
-        unread_notifications_count = Notification.query.filter(
-            db.or_(
-                Notification.target_type == 'all',
-                db.and_(Notification.target_type == 'specific', Notification.target_id == company_id)
-            ),
-            Notification.is_active == True,
-            ~db.session.query(NotificationRead.id).filter(
-                NotificationRead.notification_id == Notification.id,
-                NotificationRead.company_id == company_id
-            ).exists()
-        ).count()
+        # عدد الإشعارات غير المقروءة لهذه الشركة (يشمل إشعارات النظام وإشعارات المجتمع)
+        unread_notifications_count = get_unread_notifications_count(company_id)
 
         super_admin = Admin.query.filter_by(role='super').first()
         unread_community_messages_count = 0
@@ -2981,7 +2986,7 @@ def register_views(app):
         ramadan_countdown_enabled = (ramadan_setting and ramadan_setting.setting_value and ramadan_setting.setting_value.lower().strip() == 'true')
         
         glitter_setting = SystemSetting.query.filter_by(setting_key='ramadan_glitter_enabled').first()
-        ramadan_glitter_enabled = (glitter_setting and glitter_setting.setting_value and glitter_setting.setting_value.lower().strip() == 'true')
+        ramadan_glitter_enabled = False
         
         launch_setting = SystemSetting.query.filter_by(setting_key='launch_countdown_enabled').first()
         launch_countdown_enabled = (launch_setting and launch_setting.setting_value and launch_setting.setting_value.lower().strip() == 'true')
@@ -2990,20 +2995,21 @@ def register_views(app):
         launch_target_date = target_date_setting.setting_value if target_date_setting and target_date_setting.setting_value else '2026-04-27T00:00'
 
         show_confetti = False
+
+        # جلب أحدث منشور في المجتمع لعرضه في الصفحة الرئيسية
+        latest_community_post = None
         try:
-            if getattr(current_user, 'is_premium', False) and getattr(current_user, 'premium_activation_date', None):
-                activation_iso = current_user.premium_activation_date.isoformat()
-                prev = session.get('premium_confetti_shown_at')
-                if activation_iso and prev != activation_iso:
-                    show_confetti = True
-                    session['premium_confetti_shown_at'] = activation_iso
-            else:
-                session.pop('premium_confetti_shown_at', None)
-        except Exception:
-            show_confetti = False
+            from community_bonus_routes import _serialize_post
+            raw_latest = CommunityPost.query.filter_by(is_active=True).order_by(CommunityPost.created_at.desc()).first()
+            if raw_latest:
+                latest_community_post = _serialize_post(raw_latest, current_company_id=current_user.id)
+        except Exception as e:
+            app.logger.warning('Error fetching latest_community_post: %s', e)
+            latest_community_post = None
 
         return render_template('company_dashboard.html',
                                company=current_user, # تأكد أن هذا السطر يبدأ بنفس المسافات البادئة الصحيحة التي تسبقه
+                               latest_community_post=latest_community_post,
                                unread_private_messages_count=unread_private_messages_count,
                                unread_notifications_count=unread_notifications_count,
                                unread_community_messages_count=unread_community_messages_count,
@@ -4501,59 +4507,40 @@ def register_views(app):
     @app.route('/api/messages/upload-image', methods=['POST'])
     @login_required
     def upload_private_message_image():
-        """Proxy private-message image uploads so third-party API keys never reach the browser."""
+        """Save private-message image uploads locally on the server."""
         if session.get('user_type') not in {'admin', 'company'}:
-            return jsonify({'success': False, 'message': 'غير مصرح لك بالوصول'}), 403
-
-        api_key = (current_app.config.get('IMGBB_API_KEY') or '').strip()
-        if not api_key:
-            current_app.logger.error("IMGBB_API_KEY is not configured for private-message image uploads")
-            return jsonify({'success': False, 'message': 'خدمة رفع الصور غير مفعلة حالياً'}), 503
+            return jsonify({'success': False, 'message': 'غير مسموح للمستخدم بهذا الإجراء'}), 403
 
         image_file = request.files.get('image') or request.files.get('file')
         if not image_file or not image_file.filename:
-            return jsonify({'success': False, 'message': 'لم يتم اختيار صورة'}), 400
+            return jsonify({'success': False, 'message': 'لا توجد صورة مرفقة'}), 400
 
         max_bytes = current_app.config.get('MESSAGE_IMAGE_UPLOAD_MAX_BYTES', 8 * 1024 * 1024)
         if request.content_length and request.content_length > max_bytes:
-            return jsonify({'success': False, 'message': 'حجم الصورة أكبر من المسموح'}), 413
+            return jsonify({'success': False, 'message': 'الملف كبير جداً'}), 413
 
         if not _is_allowed_safe_image_upload(image_file):
-            return jsonify({'success': False, 'message': 'نوع الصورة غير مسموح'}), 400
-
-        safe_filename = secure_filename(image_file.filename)
-        expiration_seconds = str(current_app.config.get('IMGBB_IMAGE_EXPIRATION_SECONDS', 30 * 24 * 60 * 60))
+            return jsonify({'success': False, 'message': 'نوع الملف غير مسموح'}), 400
 
         try:
-            response = requests.post(
-                'https://api.imgbb.com/1/upload',
-                data={
-                    'key': api_key,
-                    'expiration': expiration_seconds,
-                },
-                files={
-                    'image': (safe_filename, image_file.stream, image_file.mimetype or 'application/octet-stream'),
-                },
-                timeout=(5, 30),
-            )
-            payload = response.json()
-        except requests.RequestException:
-            current_app.logger.exception("ImgBB request failed during private-message image upload")
-            return jsonify({'success': False, 'message': 'فشل الاتصال بخدمة رفع الصور'}), 502
-        except ValueError:
-            current_app.logger.exception("ImgBB returned a non-JSON response during private-message image upload")
-            return jsonify({'success': False, 'message': 'تعذر قراءة رد خدمة رفع الصور'}), 502
-
-        image_url = (payload.get('data') or {}).get('url') or (payload.get('data') or {}).get('display_url')
-        if not response.ok or not payload.get('success') or not image_url:
-            current_app.logger.warning(
-                "ImgBB upload failed with status %s and response %s",
-                response.status_code,
-                {key: payload.get(key) for key in ('status_code', 'error', 'success')},
-            )
-            return jsonify({'success': False, 'message': 'فشل رفع الصورة'}), 502
-
-        return jsonify({'success': True, 'url': image_url})
+            filename = secure_filename(image_file.filename)
+            unique_filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{filename}"
+            
+            # Save to UPLOAD_FOLDER/messages
+            uploads_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'messages')
+            if not os.path.exists(uploads_dir):
+                os.makedirs(uploads_dir)
+                
+            file_path = os.path.join(uploads_dir, unique_filename)
+            image_file.save(file_path)
+            
+            # URL path that will be requested by client
+            image_url = f"/uploads/messages/{unique_filename}"
+            return jsonify({'success': True, 'url': image_url})
+            
+        except Exception as e:
+            current_app.logger.exception("Local upload failed during private-message image upload")
+            return jsonify({'success': False, 'message': 'حدث خطأ أثناء حفظ الصورة على السيرفر'}), 500
 
     @app.route('/api/chat/upload', methods=['POST'])
     @login_required
@@ -4778,6 +4765,113 @@ def register_views(app):
 
                 return redirect(url_for('admin_private_messages'))
 
+            # بوت التعارف — رسالة ترحيب تظهر للمستقبل فقط
+            if action == 'send_ghost_intro':
+                sender_id = request.form.get('ghost_sender_id')
+                receiver_id = request.form.get('ghost_receiver_id')
+                ghost_message = (request.form.get('ghost_message') or '').strip()
+
+                if not sender_id or not receiver_id:
+                    flash('يجب اختيار الشركة المرسلة والمستقبلة.', 'error')
+                    return redirect(url_for('admin_private_messages'))
+
+                try:
+                    from messaging_warmup_bot import send_ghost_intro
+                    from api_mobile import send_push_notification
+
+                    ok, detail = send_ghost_intro(
+                        int(sender_id),
+                        int(receiver_id),
+                        ghost_message or None,
+                        push_notifier=send_push_notification,
+                    )
+                    flash(detail, 'success' if ok else 'error')
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'خطأ في إرسال رسالة التعارف: {e}', exc_info=True)
+                    flash('حدث خطأ أثناء إرسال رسالة التعارف.', 'error')
+
+                return redirect(url_for('admin_private_messages'))
+
+            # تشغيل دفعة تلقائية من رسائل التعارف
+            if action == 'run_warmup_batch':
+                batch_size_raw = (request.form.get('warmup_batch_size') or '').strip()
+                batch_size = int(batch_size_raw) if batch_size_raw.isdigit() else None
+
+                try:
+                    from messaging_warmup_bot import run_warmup_batch
+                    from api_mobile import send_push_notification
+
+                    result = run_warmup_batch(batch_size, push_notifier=send_push_notification)
+                    sent_count = result.get('sent_count', 0)
+                    skipped_count = result.get('skipped_count', 0)
+                    requested = result.get('requested_pairs', batch_size or 0)
+                    sent_pairs = result.get('sent', [])
+                    pairs_summary = ' | '.join(
+                        f"{item['sender']} → {item['receiver']}" for item in sent_pairs[:8]
+                    )
+                    if len(sent_pairs) > 8:
+                        pairs_summary += f' | ... (+{len(sent_pairs) - 8})'
+
+                    flash(
+                        f'طُلب {requested} زوج — تم إرسال {sent_count} رسالة تعارف راندم.'
+                        + (f' ({pairs_summary})' if pairs_summary else '')
+                        + (f' (تم تخطي {skipped_count})' if skipped_count else ''),
+                        'success' if sent_count else 'info',
+                    )
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'خطأ في تشغيل دفعة التعارف: {e}', exc_info=True)
+                    flash('حدث خطأ أثناء تشغيل دفعة التعارف.', 'error')
+
+                return redirect(url_for('admin_private_messages'))
+
+            # حذف كل رسائل الراندم/التعارف السابقة
+            if action == 'delete_warmup_messages':
+                try:
+                    from messaging_warmup_bot import delete_all_warmup_messages
+
+                    result = delete_all_warmup_messages()
+                    deleted_count = result.get('deleted_count', 0)
+                    flash(
+                        f'تم حذف {deleted_count} رسالة راندم.' if deleted_count else 'لا توجد رسائل راندم للحذف.',
+                        'success' if deleted_count else 'info',
+                    )
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'خطأ في حذف رسائل الراندم: {e}', exc_info=True)
+                    flash('حدث خطأ أثناء حذف رسائل الراندم.', 'error')
+
+                return redirect(url_for('admin_private_messages'))
+
+            # تفعيل/تعطيل بوت التعارف التلقائي
+            if action == 'toggle_warmup_enabled':
+                enabled = request.form.get('warmup_enabled') == 'on'
+                batch_size_raw = (request.form.get('warmup_batch_size') or '3').strip()
+                batch_size = max(1, min(int(batch_size_raw), 25)) if batch_size_raw.isdigit() else 3
+
+                try:
+                    for key, value in (
+                        ('messaging_warmup_enabled', 'true' if enabled else 'false'),
+                        ('messaging_warmup_batch_size', str(batch_size)),
+                    ):
+                        row = SystemSetting.query.filter_by(setting_key=key).first()
+                        if row:
+                            row.setting_value = value
+                        else:
+                            db.session.add(SystemSetting(setting_key=key, setting_value=value))
+                    db.session.commit()
+                    flash(
+                        f'{"تم تفعيل" if enabled else "تم تعطيل"} بوت التعارف التلقائي (حجم الدفعة: {batch_size}).',
+                        'success',
+                    )
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'خطأ في حفظ إعدادات التعارف: {e}', exc_info=True)
+                    flash('حدث خطأ أثناء حفظ إعدادات التعارف.', 'error')
+
+                return redirect(url_for('admin_private_messages'))
+
             # حظر/إلغاء حظر شركة من المراسلات
             if action == 'toggle_messaging_block':
                 company_id = request.form.get('company_id')
@@ -4810,8 +4904,56 @@ def register_views(app):
 
                 return redirect(url_for('admin_private_messages'))
 
+            # حذف رسالة فردية بالكامل من الطرفين (كأنها لم تُرسل)
+            if action == 'delete_message':
+                message_id = request.form.get('message_id')
+                if not message_id:
+                    flash('يجب اختيار الرسالة المراد حذفها.', 'error')
+                    return redirect(url_for('admin_private_messages'))
+
+                try:
+                    msg = PrivateMessage.query.get(int(message_id))
+                    if not msg:
+                        flash('الرسالة غير موجودة أو تم حذفها بالفعل.', 'error')
+                        return redirect(url_for('admin_private_messages'))
+
+                    db.session.delete(msg)
+                    db.session.commit()
+                    flash('تم حذف الرسالة نهائياً من الطرفين بنجاح.', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'خطأ في حذف الرسالة: {e}', exc_info=True)
+                    flash('حدث خطأ أثناء محاولة حذف الرسالة.', 'error')
+
+                return redirect(url_for('admin_private_messages'))
+
         # عرض سجل الرسائل (مع تجميع الرسائل المتطابقة في صف واحد)
-        all_messages = PrivateMessage.query.order_by(PrivateMessage.sent_at.desc()).all()
+        start_date_str = request.args.get('start_date', '').strip()
+        end_date_str = request.args.get('end_date', '').strip()
+
+        query = PrivateMessage.query
+
+        if start_date_str:
+            try:
+                from datetime import time
+                start_dt = datetime.strptime(start_date_str, '%Y-%m-%d')
+                start_dt_cairo = CAIRO_TIMEZONE.localize(datetime.combine(start_dt, time.min))
+                start_dt_utc = start_dt_cairo.astimezone(pytz.UTC).replace(tzinfo=None)
+                query = query.filter(PrivateMessage.sent_at >= start_dt_utc)
+            except ValueError:
+                pass
+
+        if end_date_str:
+            try:
+                from datetime import time
+                end_dt = datetime.strptime(end_date_str, '%Y-%m-%d')
+                end_dt_cairo = CAIRO_TIMEZONE.localize(datetime.combine(end_dt, time.max))
+                end_dt_utc = end_dt_cairo.astimezone(pytz.UTC).replace(tzinfo=None)
+                query = query.filter(PrivateMessage.sent_at <= end_dt_utc)
+            except ValueError:
+                pass
+
+        all_messages = query.order_by(PrivateMessage.sent_at.desc()).all()
 
         # تجهيز وقت الإرسال بتوقيت القاهرة لكل رسالة
         for message in all_messages:
@@ -4857,12 +4999,33 @@ def register_views(app):
         # ترتيب المجموعات حسب أحدث تاريخ إرسال
         grouped_messages.sort(key=lambda m: m.sent_at or datetime.min, reverse=True)
 
+        # تقسيم الصفحات (Pagination)
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+        total_grouped = len(grouped_messages)
+        total_pages = (total_grouped + per_page - 1) // per_page if total_grouped > 0 else 1
+        page = max(1, min(page, total_pages))
+
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_messages = grouped_messages[start_idx:end_idx]
+
         companies_for_select = Company.query.order_by(Company.company_name.asc()).all()
+
+        from messaging_warmup_bot import get_warmup_messages_count, is_warmup_enabled, get_warmup_batch_size
 
         return render_template(
             'admin_private_messages.html',
-            messages=grouped_messages,
-            companies=companies_for_select
+            messages=paginated_messages,
+            companies=companies_for_select,
+            warmup_enabled=is_warmup_enabled(),
+            warmup_batch_size=get_warmup_batch_size(),
+            warmup_messages_count=get_warmup_messages_count(),
+            page=page,
+            total_pages=total_pages,
+            start_date=start_date_str,
+            end_date=end_date_str,
+            total_messages_count=total_grouped
         )
 
 
@@ -8567,6 +8730,100 @@ def register_views(app):
     
     # ==================== End Blocked Products Management ====================
     
+    
+    # =========================================================
+    # رفع صورة شخصية من الموقع
+    # =========================================================
+    def _remove_company_avatar_file(avatar_value):
+        old_avatar = (avatar_value or '').strip()
+        if not old_avatar:
+            return
+        if old_avatar.startswith('custom-photo:'):
+            old_fn = old_avatar[len('custom-photo:'):]
+            old_path = os.path.join(current_app.root_path, 'static', 'images', 'profile_photos', old_fn)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError:
+                    pass
+            return
+        if '/media/avatars/' in old_avatar:
+            old_path = os.path.join(current_app.root_path, old_avatar.lstrip('/'))
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError:
+                    pass
+
+    def _is_custom_company_avatar(avatar_value):
+        av = (avatar_value or '').strip()
+        return av.startswith('custom-photo:') or av.startswith('http') or '/media/avatars/' in av
+
+    def _normalize_preset_avatar(avatar_value):
+        av = (avatar_value or '').strip()
+        if av in ('', 'default-male'):
+            return 'male-1'
+        if av in ('male-1', 'female-1'):
+            return av
+        return None
+
+    @app.route('/set_avatar', methods=['POST'])
+    @login_required
+    def set_avatar():
+        if session.get('user_type') != 'company':
+            return jsonify({'success': False, 'message': 'غير مصرح'}), 403
+        if _is_custom_company_avatar(current_user.avatar):
+            return jsonify({'success': False, 'message': 'احذف الصورة الشخصية أولاً لتغيير الأفاتار'}), 400
+        payload = request.get_json(silent=True) or {}
+        new_avatar = (request.form.get('avatar') or payload.get('avatar') or '').strip()
+        if new_avatar not in ('male-1', 'female-1'):
+            return jsonify({'success': False, 'message': 'أفاتار غير صالح'}), 400
+        try:
+            current_user.avatar = new_avatar
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'تم تغيير الأفاتار بنجاح', 'avatar': new_avatar})
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception('set_avatar failed')
+            return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'}), 500
+
+    @app.route('/upload_avatar', methods=['POST'])
+    @login_required
+    def upload_avatar():
+        if session.get('user_type') != 'company':
+            return jsonify({'success': False, 'message': 'غير مصرح'}), 403
+        file = request.files.get('avatar_file') or request.files.get('photo')
+        if not file or file.filename == '':
+            return jsonify({'success': False, 'message': 'لم يتم اختيار ملف'}), 400
+        allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
+        ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+        if ext not in allowed_extensions:
+            return jsonify({'success': False, 'message': 'نوع الملف غير مسموح'}), 400
+        file.seek(0, 2)
+        size = file.tell()
+        file.seek(0)
+        if size > 5 * 1024 * 1024:
+            return jsonify({'success': False, 'message': 'حجم الملف يتجاوز 5 ميغابايت'}), 400
+        try:
+            import uuid
+            avatars_dir = os.path.join(current_app.root_path, 'media', 'avatars')
+            os.makedirs(avatars_dir, exist_ok=True)
+            filename = f"{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+            filepath = os.path.join(avatars_dir, filename)
+            file.save(filepath)
+            _remove_company_avatar_file(current_user.avatar)
+            avatar_url = f'/media/avatars/{filename}'
+            current_user.avatar = avatar_url
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'تم رفع الصورة بنجاح', 'avatar_url': avatar_url})
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception('upload_avatar failed')
+            return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'}), 500
+
+    # =========================================================
+    # صفحة إعدادات الشركة
+    # =========================================================
     @app.route('/company_settings', methods=['GET', 'POST'])
     @login_required
     def company_settings():
@@ -8575,36 +8832,90 @@ def register_views(app):
             flash('غير مصرح لك بالوصول', 'error')
             return redirect(url_for('logout'))
 
-        # Handle messaging preference
         if request.method == 'POST':
             try:
                 allow_flag = 'allow_messages_from_companies' in request.form
                 if hasattr(current_user, 'receive_messages_enabled'):
                     current_user.receive_messages_enabled = allow_flag
-                    db.session.commit()
-                    flash('تم حفظ إعدادات الشركة بنجاح.', 'success')
-                else:
-                    flash('إعداد استقبال الرسائل غير متاح لحسابك حالياً.', 'error')
+                new_avatar = request.form.get('avatar', '').strip()
+                if new_avatar in ['male-1', 'female-1']:
+                    if _is_custom_company_avatar(current_user.avatar):
+                        flash('احذف الصورة الشخصية أولاً لتغيير الأفاتار.', 'warning')
+                    else:
+                        current_user.avatar = new_avatar
+                db.session.commit()
+                flash('تم حفظ إعدادات الشركة بنجاح.', 'success')
             except Exception as e:
                 db.session.rollback()
                 flash(f'حدث خطأ أثناء حفظ الإعدادات: {str(e)}', 'error')
 
-        # قيمة الإعداد الحالية لعرضها في القالب
         allow_messages_from_companies = getattr(current_user, 'receive_messages_enabled', True)
 
-        # Get system subtitle and logo (مشابه لما في لوحة الشركة)
         system_subtitle_setting = SystemSetting.query.filter_by(setting_key='system_subtitle').first()
         system_subtitle = system_subtitle_setting.setting_value if system_subtitle_setting else 'نظام حجز المواعيد وإدارة الأرصدة المتكامل'
 
         current_logo_setting = SystemSetting.query.filter_by(setting_key='current_logo').first()
         current_logo_path = url_for('static', filename=f'logos/{current_logo_setting.setting_value}') if current_logo_setting and current_logo_setting.setting_value else None
 
-        return render_template('company_settings.html',
+        # حساب عدد الإشعارات غير المقروءة
+        unread_notifications_count = get_unread_notifications_count(current_user.id)
+        
+        # حساب عدد الرسائل الخاصة غير المقروءة
+        unread_private_messages_count = PrivateMessage.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False,
+            is_deleted_by_receiver=False
+        ).count()
+        
+        # حساب عدد رسائل المجتمع غير المقروءة
+        unread_community_messages_count = CommunityMessage.query.filter_by(
+            is_read_by_company=False,
+            sender_type='admin'
+        ).count()
+
+        response = make_response(render_template('company_settings.html',
                                company=current_user,
                                allow_messages_from_companies=allow_messages_from_companies,
                                system_subtitle=system_subtitle,
-                               current_logo_path=current_logo_path)
-    
+                               current_logo_path=current_logo_path,
+                               unread_private_messages_count=unread_private_messages_count,
+                               unread_notifications_count=unread_notifications_count,
+                               unread_community_messages_count=unread_community_messages_count))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+
+
+    @app.route('/upload_profile_photo', methods=['POST'])
+    @login_required
+    def upload_profile_photo():
+        """رفع صورة شخصية للشركة (نفس منطق upload_avatar — للتوافق مع الواجهة القديمة)."""
+        return upload_avatar()
+
+    @app.route('/delete_avatar', methods=['POST'])
+    @login_required
+    def delete_avatar():
+        if session.get('user_type') != 'company':
+            return jsonify({'success': False, 'message': 'غير مصرح'}), 403
+        if not _is_custom_company_avatar(current_user.avatar):
+            return jsonify({'success': False, 'message': 'لا توجد صورة شخصية لحذفها'}), 400
+        try:
+            _remove_company_avatar_file(current_user.avatar)
+            current_user.avatar = 'male-1'
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'تم حذف الصورة الشخصية بنجاح', 'avatar': 'male-1'})
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception('delete_avatar failed')
+            return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'}), 500
+
+    @app.route('/delete_profile_photo', methods=['POST'])
+    @login_required
+    def delete_profile_photo():
+        """حذف الصورة الشخصية (للتوافق مع الواجهة القديمة)."""
+        return delete_avatar()
+
     # تم نقل book_appointment إلى warehouse_routes.py لدعم تعدد المخازن
 
     @app.route('/company_stock_reports', methods=['GET'])
@@ -8630,6 +8941,22 @@ def register_views(app):
         premium_message_setting = SystemSetting.query.filter_by(setting_key='premium_message').first()
         premium_message = premium_message_setting.setting_value if premium_message_setting else 'هذه الميزة متاحة فقط للمشتركين في STOCKFLOW PLUS.'
 
+        # حساب عدد الإشعارات غير المقروءة
+        unread_notifications_count = get_unread_notifications_count(current_user.id)
+        
+        # حساب عدد الرسائل الخاصة غير المقروءة
+        unread_private_messages_count = PrivateMessage.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False,
+            is_deleted_by_receiver=False
+        ).count()
+        
+        # حساب عدد رسائل المجتمع غير المقروءة
+        unread_community_messages_count = CommunityMessage.query.filter_by(
+            is_read_by_company=False,
+            sender_type='admin'
+        ).count()
+
         if premium_features_enabled and not current_user.is_premium:
             flash(premium_message, 'error')
             return render_template('company_stock_reports.html',
@@ -8638,7 +8965,10 @@ def register_views(app):
                                    premium_message=premium_message,
                                    reports_data={},
                                    start_date=date.today().strftime('%Y-%m-%d'),
-                                   end_date=date.today().strftime('%Y-%m-%d'))
+                                   end_date=date.today().strftime('%Y-%m-%d'),
+                                   unread_private_messages_count=unread_private_messages_count,
+                                   unread_notifications_count=unread_notifications_count,
+                                   unread_community_messages_count=unread_community_messages_count)
 
         end_date_arg = request.args.get('end_date', '').strip()
         start_date_arg = request.args.get('start_date', '').strip()
@@ -8808,13 +9138,32 @@ def register_views(app):
                 'message': None
             }
 
+        # حساب عدد الإشعارات غير المقروءة
+        unread_notifications_count = get_unread_notifications_count(current_user.id)
+        
+        # حساب عدد الرسائل الخاصة غير المقروءة
+        unread_private_messages_count = PrivateMessage.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False,
+            is_deleted_by_receiver=False
+        ).count()
+        
+        # حساب عدد رسائل المجتمع غير المقروءة
+        unread_community_messages_count = CommunityMessage.query.filter_by(
+            is_read_by_company=False,
+            sender_type='admin'
+        ).count()
+
         return render_template('company_stock_reports.html',
                                company=current_user,
                                reports_data=reports_data,
                                start_date=start_date.strftime('%Y-%m-%d'),
                                end_date=end_date.strftime('%Y-%m-%d'),
                                premium_features_enabled=premium_features_enabled,
-                               premium_message=premium_message)
+                               premium_message=premium_message,
+                               unread_private_messages_count=unread_private_messages_count,
+                               unread_notifications_count=unread_notifications_count,
+                               unread_community_messages_count=unread_community_messages_count)
 
     @app.route('/search')
     @login_required
@@ -8838,7 +9187,29 @@ def register_views(app):
         system_subtitle_setting = SystemSetting.query.filter_by(setting_key='system_subtitle').first()
         system_subtitle = system_subtitle_setting.setting_value if system_subtitle_setting else 'نظام حجز المواعيد وإدارة الأرصدة المتكامل'
 
-        return render_template('search_products.html', system_subtitle=system_subtitle)
+        # حساب عدد الإشعارات غير المقروءة
+        unread_notifications_count = get_unread_notifications_count(current_user.id)
+        
+        # حساب عدد الرسائل الخاصة غير المقروءة
+        unread_private_messages_count = PrivateMessage.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False,
+            is_deleted_by_receiver=False
+        ).count()
+        
+        # حساب عدد رسائل المجتمع غير المقروءة
+        unread_community_messages_count = CommunityMessage.query.filter_by(
+            is_read_by_company=False,
+            sender_type='admin'
+        ).count()
+
+        app.logger.info(f"DEBUG search_products: notifications={unread_notifications_count}, private_messages={unread_private_messages_count}, community_messages={unread_community_messages_count}")
+
+        return render_template('search_products.html', 
+                               system_subtitle=system_subtitle,
+                               unread_private_messages_count=unread_private_messages_count,
+                               unread_notifications_count=unread_notifications_count,
+                               unread_community_messages_count=unread_community_messages_count)
 
     # تم نقل api_search إلى warehouse_routes.py لدعم تعدد المخازن
     @app.route('/api/autocomplete', methods=['GET'])
@@ -9061,6 +9432,21 @@ def register_views(app):
         premium_message_setting = SystemSetting.query.filter_by(setting_key='premium_message').first()
         premium_message = premium_message_setting.setting_value if premium_message_setting else 'هذه الميزة متاحة فقط للمشتركين في STOCKFLOW PLUS.'
 
+        # حساب عدد الإشعارات غير المقروءة
+        unread_notifications_count = get_unread_notifications_count(current_user.id)
+        
+        # حساب عدد الرسائل الخاصة غير المقروءة
+        unread_private_messages_count = PrivateMessage.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False,
+            is_deleted_by_receiver=False
+        ).count()
+        
+        # حساب عدد رسائل المجتمع غير المقروءة
+        unread_community_messages_count = CommunityMessage.query.filter_by(
+            is_read_by_company=False,
+            sender_type='admin'
+        ).count()
 
         if premium_features_enabled and not current_user.is_premium:
             flash(premium_message, 'error')
@@ -9068,7 +9454,10 @@ def register_views(app):
                                    company=current_user,
                                    favorite_products=[],
                                    premium_features_enabled=premium_features_enabled,
-                                   premium_message=premium_message)
+                                   premium_message=premium_message,
+                                   unread_private_messages_count=unread_private_messages_count,
+                                   unread_notifications_count=unread_notifications_count,
+                                   unread_community_messages_count=unread_community_messages_count)
 
 
         favorite_products = FavoriteProduct.query.filter_by(company_id=current_user.id).order_by(FavoriteProduct.added_at.desc()).all()
@@ -9101,11 +9490,30 @@ def register_views(app):
             
             filtered_favorites.append(fp)
             
+        # حساب عدد الإشعارات غير المقروءة
+        unread_notifications_count = get_unread_notifications_count(current_user.id)
+        
+        # حساب عدد الرسائل الخاصة غير المقروءة
+        unread_private_messages_count = PrivateMessage.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False,
+            is_deleted_by_receiver=False
+        ).count()
+        
+        # حساب عدد رسائل المجتمع غير المقروءة
+        unread_community_messages_count = CommunityMessage.query.filter_by(
+            is_read_by_company=False,
+            sender_type='admin'
+        ).count()
+
         return render_template('my_products.html',
                                favorite_products=filtered_favorites,
                                company=current_user,
                                premium_features_enabled=premium_features_enabled,
-                               premium_message=premium_message)
+                               premium_message=premium_message,
+                               unread_private_messages_count=unread_private_messages_count,
+                               unread_notifications_count=unread_notifications_count,
+                               unread_community_messages_count=unread_community_messages_count)
 
     @app.route('/add_to_my_products', methods=['POST'])
     @login_required
@@ -9250,10 +9658,26 @@ def register_views(app):
 
 
         unread_notifications_count = get_unread_notifications_count(current_user.id)
+        
+        # حساب عدد الرسائل الخاصة غير المقروءة
+        unread_private_messages_count = PrivateMessage.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False,
+            is_deleted_by_receiver=False
+        ).count()
+        
+        # حساب عدد رسائل المجتمع غير المقروءة
+        unread_community_messages_count = CommunityMessage.query.filter_by(
+            is_read_by_company=False,
+            sender_type='admin'
+        ).count()
+
         return render_template('appointments.html',
                                appointments=company_appointments,
                                unread_notifications_count=unread_notifications_count,
-                               appointments_enabled=appointments_enabled) # NEW: Pass the variable
+                               unread_private_messages_count=unread_private_messages_count,
+                               unread_community_messages_count=unread_community_messages_count,
+                               appointments_enabled=appointments_enabled)
 
     @app.route('/api/unread_notifications_count')
     @login_required
@@ -9269,9 +9693,16 @@ def register_views(app):
     def api_unread_counts():
         unread_notifications_count = 0
         unread_community_messages_count = 0
+        unread_private_messages_count = 0
 
         if session.get('user_type') == 'company':
             unread_notifications_count = get_unread_notifications_count(current_user.id)
+
+            unread_private_messages_count = PrivateMessage.query.filter_by(
+                receiver_id=current_user.id,
+                is_read=False,
+                is_deleted_by_receiver=False
+            ).count()
 
             super_admin_user = Admin.query.filter_by(role='super').first()
             if super_admin_user:
@@ -9298,8 +9729,9 @@ def register_views(app):
             ).count()
 
         return jsonify({
-            'unread_notifications_count': unread_notifications_count + community_notifications_count,
+            'unread_notifications_count': unread_notifications_count,
             'unread_community_messages_count': unread_community_messages_count,
+            'unread_private_messages_count': unread_private_messages_count,
             'community_notifications_count': community_notifications_count
         })
 
@@ -10348,7 +10780,7 @@ def register_views(app):
                 new_name = request.form.get('company_name', '').strip()
                 new_phone = request.form.get('phone', '').strip()
                 new_email = request.form.get('email', '').strip()
-                new_avatar = request.form.get('avatar', 'male-1').strip()
+                new_avatar = request.form.get('avatar', '').strip()
                 allow_messages = 'allow_company_messages' in request.form
                 invite_code = request.form.get('invite_code', '').strip()
 
@@ -10363,7 +10795,10 @@ def register_views(app):
                     current_user.company_name = new_name
                     current_user.phone = new_phone
                     current_user.email = new_email
-                    current_user.avatar = new_avatar
+                    if not _is_custom_company_avatar(current_user.avatar):
+                        preset_avatar = _normalize_preset_avatar(new_avatar)
+                        if preset_avatar:
+                            current_user.avatar = preset_avatar
                     current_user.receive_messages_enabled = allow_messages
                     
                     # التحقق من كود الدعوة لتفعيل البريميوم

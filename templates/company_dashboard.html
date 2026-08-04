@@ -37,8 +37,8 @@
     {% endif %}
     <style>
 
-        /* Completely disable falling glitter, stars, and background particles for Plus/all users on Dashboard */
-        .fairy-lights, #fallingStars, #glitter-canvas, .glitter-container, .star, .carousel-fairy-lights {
+        /* Completely disable falling glitter, stars, confetti, and background particles for Plus/all users on Dashboard */
+        #premium-confetti, .fairy-lights, #fallingStars, #glitter-canvas, .glitter-container, .star, .carousel-fairy-lights, canvas[id*="confetti"], canvas[id*="glitter"] {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
@@ -6198,7 +6198,7 @@
 {% if show_confetti %}
 <script>
     (function () {
-        var should = true;
+        var should = false;
         if (!should) return;
         var canvas = document.createElement('canvas');
         canvas.id = 'premium-confetti';
