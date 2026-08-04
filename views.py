@@ -8755,6 +8755,18 @@ def register_views(app):
                 except OSError:
                     pass
 
+    def _remove_company_cover_file(cover_value):
+        old_cover = (cover_value or '').strip()
+        if not old_cover:
+            return
+        if old_cover.startswith('/static/') or old_cover.startswith('/media/') or old_cover.startswith('/uploads/'):
+            old_path = os.path.join(current_app.root_path, old_cover.lstrip('/'))
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError:
+                    pass
+
     def _is_custom_company_avatar(avatar_value):
         av = (avatar_value or '').strip()
         return av.startswith('custom-photo:') or av.startswith('http') or '/media/avatars/' in av
@@ -8915,6 +8927,59 @@ def register_views(app):
     def delete_profile_photo():
         """حذف الصورة الشخصية (للتوافق مع الواجهة القديمة)."""
         return delete_avatar()
+
+    @app.route('/upload_cover_photo', methods=['POST'])
+    @login_required
+    def upload_cover_photo():
+        """رفع صورة الغلاف الخاصة بالشركة."""
+        if session.get('user_type') != 'company':
+            return jsonify({'success': False, 'message': 'غير مصرح'}), 403
+        file = request.files.get('cover_file') or request.files.get('cover_photo') or request.files.get('file')
+        if not file or file.filename == '':
+            return jsonify({'success': False, 'message': 'يرجى اختيار ملف الصورة'}), 400
+        allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
+        ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+        if ext not in allowed_extensions:
+            return jsonify({'success': False, 'message': 'نوع الملف غير مسموح (يجب اختيار JPG, PNG, WEBP)'}), 400
+        file.seek(0, 2)
+        size = file.tell()
+        file.seek(0)
+        if size > 10 * 1024 * 1024:
+            return jsonify({'success': False, 'message': 'حجم الصورة يتجاوز 10 ميجابايت'}), 400
+        try:
+            import uuid
+            covers_dir = os.path.join(current_app.root_path, 'static', 'images', 'cover_photos')
+            os.makedirs(covers_dir, exist_ok=True)
+            filename = f"cover_{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+            filepath = os.path.join(covers_dir, filename)
+            file.save(filepath)
+            _remove_company_cover_file(current_user.cover_photo_url)
+            cover_url = f'/static/images/cover_photos/{filename}'
+            current_user.cover_photo_url = cover_url
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'تم رفع صورة الغلاف بنجاح', 'cover_url': cover_url})
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception('upload_cover_photo failed')
+            return jsonify({'success': False, 'message': f'حدث خطأ أثناء الرفع: {str(e)}'}), 500
+
+    @app.route('/delete_cover_photo', methods=['POST'])
+    @login_required
+    def delete_cover_photo():
+        """حذف صورة الغلاف للشركة."""
+        if session.get('user_type') != 'company':
+            return jsonify({'success': False, 'message': 'غير مصرح'}), 403
+        if not getattr(current_user, 'cover_photo_url', None):
+            return jsonify({'success': False, 'message': 'لا توجد صورة غلاف لحذفها'}), 400
+        try:
+            _remove_company_cover_file(current_user.cover_photo_url)
+            current_user.cover_photo_url = None
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'تم حذف صورة الغلاف بنجاح'})
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception('delete_cover_photo failed')
+            return jsonify({'success': False, 'message': f'حدث خطأ أثناء الحذف: {str(e)}'}), 500
 
     # تم نقل book_appointment إلى warehouse_routes.py لدعم تعدد المخازن
 

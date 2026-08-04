@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    {% include \'_pwa_meta.html\' %}
     <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -690,7 +691,113 @@
                             }
                         }).catch(e => alert(e.message || 'حدث خطأ أثناء تغيير الأفاتار'));
                     }
-                    </script>
+            </div>
+
+            <!-- Cover Photo Upload Section -->
+            <div class="settings-item flex-column align-items-start border-top pt-4 mt-3" style="width:100%;">
+                <div class="fw-bold mb-2" style="font-size:1.05rem;color:#1e293b;"><i class="fas fa-image me-2 text-primary"></i>صورة الغلاف (Cover Photo)</div>
+                <div class="text-muted small mb-3">تظهر صورة الغلاف في أعلى بروفايل شركتك في مجتمع StockFlow (الأبعاد الموصى بها: 1200×400 بكسل - صيغ JPG/PNG/WEBP حتى 10MB).</div>
+
+                {% set cover_url = current_user.cover_photo_url or '' %}
+                {% if cover_url %}
+                <div style="width:100%;max-width:600px;margin-bottom:16px;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,0.15);border:2px solid #cbd5e1;position:relative;">
+                    <img id="currentCoverImg" src="{{ cover_url }}" style="width:100%;height:150px;object-fit:cover;display:block;" onerror="this.src='/static/images/about/320_responsive.png'">
+                    <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);color:#fff;padding:4px 12px;border-radius:8px;font-size:0.8rem;font-weight:700;">
+                        <i class="fas fa-check-circle me-1 text-success"></i>صورة الغلاف الحالية
+                    </div>
+                </div>
+                {% else %}
+                <div style="width:100%;max-width:600px;height:120px;margin-bottom:16px;border-radius:14px;background:linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:0.95rem;font-weight:600;border:2px dashed rgba(255,255,255,0.4);">
+                    <i class="fas fa-image me-2 fa-lg"></i>لم يتم رفع صورة غلاف بعد (يتم عرض الغلاف الافتراضي)
+                </div>
+                {% endif %}
+
+                <!-- Cover upload box -->
+                <div style="width:100%;max-width:600px;padding:18px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:16px;text-align:center;">
+                    <div class="fw-bold mb-1" style="color:#1e293b;"><i class="fas fa-cloud-upload-alt me-2 text-primary"></i>رفع / تغيير صورة الغلاف</div>
+                    <div class="text-muted small mb-3">اختر صورة غلاف لشركتك من جهازك وقم بتأكيد الرفع</div>
+                    <form id="coverUploadForm" enctype="multipart/form-data">
+                        <label for="coverFileInput" style="cursor:pointer;display:inline-block;background:#1243C4;color:#fff;border-radius:12px;padding:9px 24px;font-weight:700;font-size:0.92rem;box-shadow:0 4px 14px rgba(18,67,196,0.3);transition:all 0.2s;">
+                            <i class="fas fa-folder-open me-2"></i>اختر صورة الغلاف
+                        </label>
+                        <input type="file" id="coverFileInput" name="cover_file" accept="image/*" style="display:none;">
+                        
+                        <div id="coverPreviewBox" style="display:none;margin:16px auto 0;text-align:center;">
+                            <div style="width:100%;max-height:160px;overflow:hidden;border-radius:12px;border:3px solid #1243C4;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                                <img id="coverPreviewImg" style="width:100%;height:140px;object-fit:cover;display:block;">
+                            </div>
+                            <button type="button" onclick="uploadCoverPhoto()" style="background:#10b981;color:#fff;border:none;border-radius:12px;padding:10px 28px;font-weight:700;cursor:pointer;font-size:0.92rem;box-shadow:0 4px 14px rgba(16,185,129,0.35);">
+                                <i class="fas fa-check me-1"></i>تأكيد ورفع الغلاف
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if cover_url %}
+                    <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;">
+                        <button type="button" onclick="deleteCoverPhoto()" class="btn btn-outline-danger fw-bold btn-sm" style="border-radius:10px;padding:7px 20px;">
+                            <i class="fas fa-trash-alt me-1"></i>حذف صورة الغلاف
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <script>
+                document.getElementById('coverFileInput').addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        document.getElementById('coverPreviewImg').src = e.target.result;
+                        document.getElementById('coverPreviewBox').style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                function uploadCoverPhoto() {
+                    const fileInput = document.getElementById('coverFileInput');
+                    if (!fileInput.files[0]) return;
+                    const fd = new FormData();
+                    fd.append('cover_file', fileInput.files[0]);
+                    fetch('/upload_cover_photo', { method: 'POST', body: fd, credentials: 'same-origin' })
+                    .then(async r => {
+                        const data = await r.json().catch(() => null);
+                        if (!data) throw new Error('استجابة غير متوقعة من الخادم');
+                        return data;
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            const t = document.createElement('div');
+                            t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;box-shadow:0 10px 25px rgba(0,0,0,0.2);';
+                            t.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                            document.body.appendChild(t);
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            alert(data.message || 'تعذر رفع صورة الغلاف');
+                        }
+                    }).catch(e => alert(e.message || 'حدث خطأ أثناء رفع صورة الغلاف'));
+                }
+
+                function deleteCoverPhoto() {
+                    if (!confirm('هل أنت متأكد من حذف صورة الغلاف؟')) return;
+                    fetch('/delete_cover_photo', { method: 'POST', credentials: 'same-origin' })
+                    .then(async r => {
+                        const data = await r.json().catch(() => null);
+                        if (!data) throw new Error('استجابة غير متوقعة من الخادم');
+                        return data;
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            const t = document.createElement('div');
+                            t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;box-shadow:0 10px 25px rgba(0,0,0,0.2);';
+                            t.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                            document.body.appendChild(t);
+                            setTimeout(() => location.reload(), 1200);
+                        } else {
+                            alert(data.message || 'تعذر حذف صورة الغلاف');
+                        }
+                    }).catch(e => alert(e.message || 'حدث خطأ أثناء حذف صورة الغلاف'));
+                }
+                </script>
             </div>
 
             <form method="post">
