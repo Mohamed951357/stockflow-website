@@ -1304,111 +1304,8 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid"> {# Changed from .container to .container-fluid for consistency #}
-            <a class="navbar-brand" href="{{ url_for('company_dashboard') }}">
-                {# UNIFIED LOGO PATH #}
-                {% if current_logo_path %}
-                <img src="{{ current_logo_path }}" alt="Logo" class="navbar-logo">
-                {% else %}
-                <img src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Default Logo"
-                    class="navbar-logo">
-                {% endif %}
-                <span class="full-text">{{ system_subtitle }}</span> {# Added full text back #}
-                <span class="short-text d-none"></span>{# MODIFIED: Removed "النظام" to make it empty and d-none #}
-            </a>
-
-            {# NEW: Navbar icons container for Profile, Community, Instructions, Notifications #}
-            <div class="navbar-nav-notification-wrapper">
-                <a class="nav-link" href="{{ url_for('company_profile') }}" title="ملفي الشخصي">
-                    <i class="fas fa-user-circle fa-lg"></i>
-                </a>
-                <a class="nav-link" href="{{ url_for('company_messages') }}" title="المراسلات">
-                    <i class="fas fa-comments fa-lg"></i>
-                    <span class="notification-badge" id="community-count" style="display: none;">0</span>
-                </a>
-                <a class="nav-link" href="{{ url_for('instructions') }}" title="تعليمات وإرشادات">
-                    <i class="fas fa-question-circle fa-lg"></i>
-                </a>
-                <a class="nav-link position-relative" href="{{ url_for('notifications') }}" title="الإشعارات">
-                    <i class="fas fa-bell fa-lg"></i>
-                    <span class="notification-badge" id="notification-count" style="display: none;">0</span>
-                </a>
-            </div>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavCompany"
-                aria-controls="navbarNavCompany" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNavCompany">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> {# Added mb-2 mb-lg-0 for consistency #}
-                    {# User Info on Mobile Menu - Hidden on desktop #}
-                    <li class="nav-item d-lg-none">
-                        <span class="navbar-text">
-                            <i class="fas fa-building me-2"></i>
-                            {{ current_user.company_name }}
-                        </span>
-                    </li>
-                    {# User Info on Desktop Navbar - Hidden on mobile #}
-                    <li class="nav-item d-none d-lg-flex align-items-center me-3">
-                        <span class="navbar-text">
-                            <i class="fas fa-building me-2"></i>
-                            {{ current_user.company_name }}
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('company_dashboard') }}">
-                            <i class="fas fa-home me-2"></i>
-                            الرئيسية
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('my_products') }}">
-                            <i class="fas fa-boxes me-2"></i>
-                            أصنافي
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('search_products') }}">
-                            <i class="fas fa-search me-2"></i>
-                            البحث في الأصناف
-                        </a>
-                    </li>
-                    <li class="nav-item"> {# NEW: Link for Stock Reports #}
-                        <a class="nav-link" href="{{ url_for('company_stock_reports') }}">
-                            <i class="fas fa-chart-line me-2"></i>
-                            تقارير الأرصدة
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('appointments') }}">
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            مواعيدي
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('community_bonus.community_bonus') }}">
-                            <i class="fas fa-users me-2"></i>
-                            مجتمع ستوك فلو
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('instructions') }}">
-                            <i class="fas fa-question-circle me-2"></i>
-                            التعليمات
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">
-                            <i class="fas fa-sign-out-alt me-2"></i>
-                            تسجيل الخروج
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    {% set active_page = 'notifications' %}
+    {% include '_company_navbar.html' %}
 
     <div class="main-content">
         <div class="container notifications-page-container">
@@ -1558,13 +1455,13 @@
                                     <p class="notification-card__message">{{ comm_notif.message }}</p>
                                     <div class="notification-card__meta">
                                         <span><i class="fas fa-clock"></i>{{ comm_notif.created_at.strftime('%Y-%m-%d %H:%M') if comm_notif.created_at else 'غير محدد' }}</span>
-                                        {% if comm_notif.from_company %}
+                                        {% if comm_notif.from_company and 'مستخدم مجهول' not in comm_notif.message and 'مستخدِم مجهول' not in comm_notif.message and 'مجهول' not in comm_notif.message %}
                                         <span><i class="fas fa-building"></i>{{ comm_notif.from_company.company_name }}</span>
                                         {% endif %}
                                     </div>
                                 </div>
                                 {% if comm_notif.post_id %}
-                                <a href="{{ url_for('community_bonus.community_bonus') }}#post-{{ comm_notif.post_id }}" class="btn btn-outline-primary btn-sm notification-card__action">
+                                <a href="{{ url_for('community_bonus.post_detail', post_id=comm_notif.post_id) }}" class="btn btn-outline-primary btn-sm notification-card__action">
                                     <i class="fas fa-eye me-1"></i> عرض
                                 </a>
                                 {% endif %}
@@ -1642,8 +1539,8 @@
 
                     const communityBadge = document.getElementById('community-count');
                     if (communityBadge) {
-                        if (data.unread_community_messages_count > 0) {
-                            communityBadge.textContent = data.unread_community_messages_count;
+                        if (data.unread_private_messages_count > 0) {
+                            communityBadge.textContent = data.unread_private_messages_count;
                             communityBadge.style.display = 'block';
                         } else {
                             communityBadge.style.display = 'none';

@@ -1,0 +1,170 @@
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('company_dashboard') }}">
+            {% if current_logo_path %}
+            <img src="{{ current_logo_path }}" alt="Logo" class="navbar-logo">
+            {% else %}
+            <img src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Logo" class="navbar-logo">
+            {% endif %}
+            <span class="full-text">{{ system_subtitle if system_subtitle else 'نظام إدارة الأرصدة والمواعيد' }}</span>
+            <span class="short-text"></span>
+        </a>
+
+        {# Navbar icons container for Profile, Community, Instructions, Notifications #}
+        <div class="navbar-nav-notification-wrapper d-flex">
+            {# Profile Icon #}
+            <a class="nav-link" href="{{ url_for('company_profile') }}" title="ملفي الشخصي">
+                <i class="fas fa-user-circle fa-lg"></i>
+            </a>
+            {# Community Messages Icon #}
+            <a class="nav-link position-relative" href="{{ url_for('company_messages') }}" title="المراسلات">
+                <i class="fas fa-comments fa-lg"></i>
+                {% set unread_msgs = (unread_private_messages_count or 0) + (unread_community_messages_count or 0) %}
+                <span class="notification-badge community-count-badge {% if unread_msgs <= 0 %}d-none{% endif %}"
+                    id="private-messages-count">
+                    {{ unread_msgs }}
+                </span>
+            </a>
+            {# Instruction Icon #}
+            <a class="nav-link" href="{{ url_for('instructions') }}" title="تعليمات وإرشادات">
+                <i class="fas fa-question-circle fa-lg"></i>
+            </a>
+            {# Notification Bell Icon #}
+            <a class="nav-link position-relative" href="{{ url_for('notifications') }}" title="الإشعارات" onclick="window.location.href=this.href; return true;">
+                <i class="fas fa-bell fa-lg"></i>
+                {% set unread_notifs = unread_notifications_count or 0 %}
+                <span class="notification-badge main-notification-badge {% if unread_notifs <= 0 %}d-none{% endif %}"
+                    id="notification-count-desktop">
+                    {{ unread_notifs }}
+                </span>
+            </a>
+        </div>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavCompany"
+            aria-controls="navbarNavCompany" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNavCompany">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                {% set company_obj = current_user if (current_user and current_user.company_name) else (company if (company and company.company_name) else None) %}
+                <li class="nav-item d-lg-none">
+                    <span class="navbar-text">
+                        <i class="fas fa-building me-2"></i>
+                        {{ company_obj.company_name if company_obj else '' }}
+                    </span>
+                </li>
+                <li class="nav-item d-none d-lg-flex align-items-center me-3">
+                    <span class="navbar-text">
+                        <i class="fas fa-building me-2"></i>
+                        {{ company_obj.company_name if company_obj else '' }}
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="{{ url_for('company_dashboard') }}">
+                        <i class="fas fa-home me-2"></i>
+                        الرئيسية
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'my_products' %}active{% endif %}" href="{{ url_for('my_products') }}">
+                        <i class="fas fa-boxes me-2"></i>
+                        أصنافي
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'search' %}active{% endif %}" href="{{ url_for('search_products') }}">
+                        <i class="fas fa-search me-2"></i>
+                        البحث في الأصناف
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'reports' %}active{% endif %}" href="{{ url_for('company_stock_reports') }}">
+                        <i class="fas fa-chart-line me-2"></i>
+                        تقارير الأرصدة
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'appointments' %}active{% endif %}" href="{{ url_for('appointments') }}">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        مواعيدي
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'community' %}active{% endif %}" href="{{ url_for('community_bonus.community_bonus') }}">
+                        <i class="fas fa-users me-2"></i>
+                        مجتمع ستوك فلو
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'instructions' %}active{% endif %}" href="{{ url_for('instructions') }}">
+                        <i class="fas fa-question-circle me-2"></i>
+                        التعليمات
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'settings' %}active{% endif %}" href="{{ url_for('company_settings') }}">
+                        <i class="fas fa-cog me-2"></i>
+                        الإعدادات
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        تسجيل الخروج
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function() {
+    function syncNavbarBadges() {
+        fetch('/api/unread_counts')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (!data) return;
+                var notifCount = (data.unread_notifications_count || 0) + (data.community_notifications_count || 0);
+                var msgCount = (data.unread_private_messages_count || 0) + (data.unread_community_messages_count || 0);
+
+                ['notification-count-desktop', 'notification-count', 'notification-count-feature'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = notifCount;
+                        if (notifCount > 0) {
+                            el.classList.remove('d-none');
+                            el.style.display = 'inline-block';
+                        } else {
+                            el.classList.add('d-none');
+                            el.style.display = 'none';
+                        }
+                    }
+                });
+
+                ['private-messages-count', 'community-count', 'community-badge'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = msgCount;
+                        if (msgCount > 0) {
+                            el.classList.remove('d-none');
+                            el.style.display = 'inline-block';
+                        } else {
+                            el.classList.add('d-none');
+                            el.style.display = 'none';
+                        }
+                    }
+                });
+            })
+            .catch(function(err) {});
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncNavbarBadges);
+    } else {
+        syncNavbarBadges();
+    }
+    setInterval(syncNavbarBadges, 15000);
+})();
+</script>

@@ -25,9 +25,9 @@
 .android-warning-card {
     background: white;
     width: 90%;
-    max-width: 450px;
+    max-width: 420px;
     border-radius: 30px;
-    padding: 35px 25px;
+    padding: 35px 25px 30px;
     text-align: center;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     transform: scale(0.8) translateY(50px);
@@ -52,17 +52,45 @@
     background: linear-gradient(90deg, #1243C4, #0A2DA0);
 }
 
+/* زرار الإغلاق X */
+.android-close-btn {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+    line-height: 1;
+    padding: 0;
+}
+
+.android-close-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    transform: scale(1.1);
+}
+
 .android-icon-wrapper {
-    width: 90px;
-    height: 90px;
+    width: 85px;
+    height: 85px;
     background: #f0fdf4;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 0 auto 25px;
+    margin: 10px auto 20px;
     color: #3DDC84; /* Android Green */
-    font-size: 45px;
+    font-size: 42px;
     animation: pulse-android 2s infinite;
 }
 
@@ -73,38 +101,47 @@
 }
 
 .android-warning-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
     color: #1a202c;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     line-height: 1.4;
 }
 
 .android-warning-text {
-    font-size: 17px;
+    font-size: 16px;
     color: #4a5568;
-    line-height: 1.7;
-    margin-bottom: 30px;
+    line-height: 1.8;
+    margin-bottom: 25px;
 }
 
+/* زرار تحميل من جوجل بلاي */
 .android-warning-btn {
     background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);
     color: white;
     border: none;
-    padding: 14px 45px;
+    padding: 14px 30px;
     border-radius: 50px;
-    font-size: 19px;
+    font-size: 18px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 10px 15px -3px rgba(18, 67, 196, 0.4);
     width: 100%;
     outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    font-family: 'Cairo', 'Tajawal', sans-serif;
 }
 
 .android-warning-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 20px 25px -5px rgba(18, 67, 196, 0.5);
+    color: white;
+    text-decoration: none;
 }
 
 .android-warning-btn:active {

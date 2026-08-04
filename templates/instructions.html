@@ -305,6 +305,7 @@
         }
 
     </style>
+    {% include '_pwa_meta.html' %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark">
@@ -560,8 +561,8 @@
 
                     const communityBadge = document.getElementById('community-count');
                     if (communityBadge) {
-                        if (data.unread_community_messages_count > 0) {
-                            communityBadge.textContent = data.unread_community_messages_count;
+                        if (data.unread_private_messages_count > 0) {
+                            communityBadge.textContent = data.unread_private_messages_count;
                             communityBadge.style.display = 'block';
                         } else {
                             communityBadge.style.display = 'none';

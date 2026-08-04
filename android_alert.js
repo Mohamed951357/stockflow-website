@@ -3,6 +3,9 @@
 (function() {
     console.log("StockFlow: Android Alert Script Loaded");
 
+    // رابط التطبيق على جوجل بلاي - عدّله بالرابط الفعلي
+    const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.stockflow.app";
+
     function isAndroid() {
         const ua = navigator.userAgent.toLowerCase();
         const isAndroidUA = /android/i.test(ua);
@@ -22,19 +25,10 @@
         return isAndroidUA || isAndroidPlatform || isTestMode;
     }
 
-    function hasSeenWarning() {
-        const dismissed = sessionStorage.getItem('stockflow_android_notice_dismissed') === 'true';
-        console.log("StockFlow Debug: Warning dismissed?", dismissed);
-        return dismissed;
-    }
-
-    function setWarningSeen() {
-        sessionStorage.setItem('stockflow_android_notice_dismissed', 'true');
-        console.log("StockFlow: Warning marked as seen for this session");
-    }
-
     function createWarningModal() {
-        if (document.getElementById('androidWarningOverlay')) return;
+        // إزالة أي modal موجود مسبقاً قبل إنشاء واحد جديد
+        const existing = document.getElementById('androidWarningOverlay');
+        if (existing) existing.remove();
 
         console.log("StockFlow: Creating Warning Modal...");
 
@@ -44,28 +38,28 @@
 
         overlay.innerHTML = `
             <div class="android-warning-card">
+                <button class="android-close-btn" id="androidCloseBtn" aria-label="إغلاق">&#10005;</button>
                 <div class="android-icon-wrapper">
                     <i class="fab fa-android"></i>
                 </div>
                 <h2 class="android-warning-title">تنبيه لمستخدمي الأندرويد 📱</h2>
                 <p class="android-warning-text">
-                    نود إعلامكم بأن الموقع سيتوقف عن العمل قريباً على أجهزة أندرويد . النظام سيكون متاحاً حصرياً من خلال تطبيق 
-                    <span class="stockflow-brand">ستوك فلو</span> (Stock Flow) 
-                    المخصص لأجهزة الأندرويد لضمان تجربة أسرع وأكثر استقراراً.
+                    الموقع سيتوقف قريباً على الأندرويد.<br>
+                    حمّل تطبيق <span class="stockflow-brand">ستوك فلو</span> للاستمرار بتجربة أفضل.
                 </p>
-                <button class="android-warning-btn" id="androidWarningBtn">موافق، استمرار</button>
+                <a class="android-warning-btn" id="androidPlayStoreBtn" href="${PLAY_STORE_URL}" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-google-play"></i> تحميل من جوجل بلاي
+                </a>
             </div>
         `;
 
         document.body.appendChild(overlay);
 
-        const btn = document.getElementById('androidWarningBtn');
-        btn.addEventListener('click', function() {
+        // زرار الإغلاق (X) - يخفي الرسالة فقط مؤقتاً
+        const closeBtn = document.getElementById('androidCloseBtn');
+        closeBtn.addEventListener('click', function() {
             overlay.classList.remove('show');
-            setTimeout(() => {
-                overlay.remove();
-                setWarningSeen();
-            }, 500);
+            setTimeout(() => overlay.remove(), 500);
         });
 
         setTimeout(() => {
@@ -77,22 +71,18 @@
     function init() {
         console.log("StockFlow: Initializing Android Check...");
         if (isAndroid()) {
-            if (!hasSeenWarning()) {
-                if (!document.querySelector('link[href*="font-awesome"]') && !document.querySelector('link[href*="all.min.css"]')) {
-                    console.log("StockFlow: Injecting FontAwesome...");
-                    const fa = document.createElement('link');
-                    fa.rel = 'stylesheet';
-                    fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css';
-                    document.head.appendChild(fa);
-                }
-                
-                if (document.body) {
-                    createWarningModal();
-                } else {
-                    document.addEventListener('DOMContentLoaded', createWarningModal);
-                }
+            if (!document.querySelector('link[href*="font-awesome"]') && !document.querySelector('link[href*="all.min.css"]')) {
+                console.log("StockFlow: Injecting FontAwesome...");
+                const fa = document.createElement('link');
+                fa.rel = 'stylesheet';
+                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css';
+                document.head.appendChild(fa);
+            }
+
+            if (document.body) {
+                createWarningModal();
             } else {
-                console.log("StockFlow: Alert already dismissed for this session.");
+                document.addEventListener('DOMContentLoaded', createWarningModal);
             }
         } else {
             console.log("StockFlow: Not an Android device (and not in test mode).");

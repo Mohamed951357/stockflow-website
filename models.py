@@ -183,6 +183,7 @@ class PrivateMessage(db.Model):
     read_at = db.Column(db.DateTime, nullable=True)
     is_deleted_by_sender = db.Column(db.Boolean, default=False)
     is_deleted_by_receiver = db.Column(db.Boolean, default=False)
+    hidden_from_sender = db.Column(db.Boolean, default=False)  # رسائل التعارف التلقائية — المرسل لا يراها
     
     # العلاقات
     sender = db.relationship('Company', foreign_keys=[sender_id], backref='sent_messages')

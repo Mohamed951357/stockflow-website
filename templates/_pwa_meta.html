@@ -1,4 +1,4 @@
-<meta name="theme-color" content="#1243C4">
+<meta name="theme-color" content="#ffffff">
 <meta name="application-name" content="StockFlow">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -9,10 +9,98 @@
 <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/pwa-192-safe.png') }}">
 <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='icons/pwa-512-safe.png') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pwa_install.css') }}?v=20260609">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/android_alert.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cookie_consent.css') }}?v=20260805">
 <script src="{{ url_for('static', filename='js/pwa_install.js') }}?v=20260609" defer></script>
+<script src="{{ url_for('static', filename='js/android_alert.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/cookie_consent.js') }}?v=20260805" defer></script>
 {% if current_user.is_authenticated and session.get('user_type') == 'company' %}
+<script src="{{ url_for('static', filename='js/navbar_badges.js') }}?v=20260801" defer></script>
 <script>
     (function () {
+        // ── HTML5 NOTIFICATION AND SOUND SUPPORT ──
+        function playNotificationSound() {
+            try {
+                var AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                var ctx = new AudioContext();
+                var now = ctx.currentTime;
+                
+                var osc1 = ctx.createOscillator();
+                var gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, now);
+                gain1.gain.setValueAtTime(0, now);
+                gain1.gain.linearRampToValueAtTime(0.12, now + 0.05);
+                gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.35);
+                
+                var osc2 = ctx.createOscillator();
+                var gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880.00, now + 0.12);
+                gain2.gain.setValueAtTime(0, now + 0.12);
+                gain2.gain.linearRampToValueAtTime(0.12, now + 0.17);
+                gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(now + 0.12);
+                osc2.stop(now + 0.52);
+            } catch (e) {
+                console.error("Audio failed:", e);
+            }
+        }
+        window.playNotificationSound = playNotificationSound;
+
+        window.triggerNotification = function(title, body) {
+            playNotificationSound();
+            if (window.Notification && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: '/static/icons/pwa-192-safe.png'
+                });
+            }
+        };
+
+        if (window.Notification && Notification.permission === 'default') {
+            document.addEventListener('click', function requestPerm() {
+                Notification.requestPermission();
+                document.removeEventListener('click', requestPerm);
+            }, { once: true });
+        }
+
+        var lastNotificationCount = null;
+        function checkUnreadCounts() {
+            fetch('/api/unread_counts')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && typeof data.unread_notifications_count === 'number') {
+                        var newCount = data.unread_notifications_count;
+                        fetch('/community_bonus/get_notification_count')
+                            .then(function(cr) { return cr.json(); })
+                            .then(function(cdata) {
+                                var commCount = (cdata && typeof cdata.count === 'number') ? cdata.count : 0;
+                                var totalCount = newCount + commCount;
+                                
+                                if (lastNotificationCount !== null && totalCount > lastNotificationCount) {
+                                    window.triggerNotification('STOCK FLOW', 'لديك إشعارات جديدة غير مقروءة في حسابك.');
+                                }
+                                lastNotificationCount = totalCount;
+                            }).catch(function() {
+                                if (lastNotificationCount !== null && newCount > lastNotificationCount) {
+                                    window.triggerNotification('STOCK FLOW', 'لديك إشعارات جديدة غير مقروءة في حسابك.');
+                                }
+                                lastNotificationCount = newCount;
+                            });
+                    }
+                }).catch(function() {});
+        }
+        setTimeout(checkUnreadCounts, 3000);
+        setInterval(checkUnreadCounts, 15000);
+
         function reportClientContext() {
             var standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
             var displayMode = standalone ? 'standalone' : 'browser';

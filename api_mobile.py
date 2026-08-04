@@ -8,6 +8,7 @@ import pytz
 import json
 import math
 import re
+from urllib.parse import quote, urlencode
 from html import escape
 import requests # NEW: ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ¥ط·آ·ط¢آ±ط·آ·ط¢آ³ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ¥ط·آ·ط¢آ´ط·آ·ط¢آ¹ط·آ·ط¢آ§ط·آ·ط¢آ±ط·آ·ط¢آ§ط·آ·ط¹آ¾ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸ط¸آ¾ط·آ¸ط«â€ ط·آ·ط¢آ±ط·آ¸ط¸آ¹ط·آ·ط¢آ©
 
@@ -41,6 +42,7 @@ from models import (
     ProductReminder, Survey, SurveyQuestion, SurveyResponse, SurveyAnswer, BlockedProduct, SearchLog, AdImage,
     CompanySurveyStatus, AdStory, ProductReportRequest, CompanyFollow, MessageBlock
 )
+from messaging_warmup_bot import message_visible_to_user
 
 api_mobile_bp = Blueprint('api_mobile', __name__, url_prefix='/api/mobile')
 
@@ -464,7 +466,7 @@ def login():
         if user.is_active:
             session['user_type'] = 'company'
             session.permanent = True
-            login_user(user, remember=remember_me, duration=timedelta(days=60) if remember_me else None)
+            login_user(user, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
             try:
                 user.last_login = datetime.utcnow()
                 update_company_client_context(user, source_hint='android_app', commit=False, force=True)
@@ -837,7 +839,7 @@ def google_signin():
                 return jsonify({'success': False, 'message': 'ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ­ط·آ·ط¢آ³ط·آ·ط¢آ§ط·آ·ط¢آ¨ ط·آ·ط·â€؛ط·آ¸ط¸آ¹ط·آ·ط¢آ± ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ´ط·آ·ط¢آ·. ط·آ¸ط¸آ¹ط·آ·ط¢آ±ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬آ° ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¹آ¾ط·آ¸ط«â€ ط·آ·ط¢آ§ط·آ·ط¢آµط·آ¸أ¢â‚¬â€چ ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ¹ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ¥ط·آ·ط¢آ¯ط·آ·ط¢آ§ط·آ·ط¢آ±ط·آ·ط¢آ©.'}), 403
                 
             session['user_type'] = 'company'
-            login_user(user, remember=True, duration=timedelta(days=60))
+            login_user(user, remember=True, duration=timedelta(days=30))
             session.permanent = True
             
             try:
@@ -1925,6 +1927,20 @@ def get_posts():
         except Exception:
             pass
 
+        # Always return a fresh versioned proxy URL.  Older posts stored an
+        # untyped URL that Android could cache after receiving a login page.
+        # Rebuilding it also gives the proxy the correct MIME type even when
+        # Telegram's generated file path has no useful extension.
+        _file_ids = _file_ids if isinstance(_file_ids, list) else []
+        _m_types = _m_types if isinstance(_m_types, list) else []
+        _m_previews = [
+            _build_proxy_url(file_id, _m_types[index] if index < len(_m_types) else None)
+            for index, file_id in enumerate(_file_ids)
+            if file_id
+        ]
+        _audio_file_id = getattr(p, 'audio_file_id', None)
+        _audio_url = _build_proxy_url(_audio_file_id, 'audio') if _audio_file_id else getattr(p, 'audio_url', None)
+
         # Safe access للشركة في حالة انها اتحذفت
         _co = p.company
         _co_name = getattr(_co, 'company_name', 'شركة محذوفة') if _co else 'شركة محذوفة'
@@ -1954,8 +1970,8 @@ def get_posts():
             'media_file_ids': _file_ids,
             'media_types': _m_types,
             'media_preview_urls': _m_previews,
-            'audio_file_id': getattr(p, 'audio_file_id', None),
-            'audio_url': getattr(p, 'audio_url', None),
+            'audio_file_id': _audio_file_id,
+            'audio_url': _audio_url,
             'top_reactions': top_reactions_dict.get(p.id, []),
             'my_reaction_type': my_likes_dict.get(p.id, 'heart')
         })
@@ -2040,9 +2056,13 @@ def create_post():
         'last_comment': None,
         'media_file_ids': media_file_ids,
         'media_types': media_types,
-        'media_preview_urls': media_preview_urls,
+        'media_preview_urls': [
+            _build_proxy_url(file_id, media_types[index] if index < len(media_types) else None)
+            for index, file_id in enumerate(media_file_ids)
+            if file_id
+        ],
         'audio_file_id': audio_file_id or None,
-        'audio_url': audio_url or None,
+        'audio_url': _build_proxy_url(audio_file_id, 'audio') if audio_file_id else (audio_url or None),
     }
     response_data = _normalize_anonymous_entity(response_data)
 
@@ -2377,13 +2397,19 @@ def get_conversations():
     # Similar to app.py get_conversations but for API
     messages = db.session.query(PrivateMessage).filter(
         or_(
-            and_(PrivateMessage.sender_id == current_user.id, PrivateMessage.is_deleted_by_sender == False),
-            and_(PrivateMessage.receiver_id == current_user.id, PrivateMessage.is_deleted_by_receiver == False)
+            and_(
+                PrivateMessage.sender_id == current_user.id,
+                PrivateMessage.is_deleted_by_sender == False,
+                PrivateMessage.hidden_from_sender == False,
+            ),
+            and_(PrivateMessage.receiver_id == current_user.id, PrivateMessage.is_deleted_by_receiver == False),
         )
     ).order_by(PrivateMessage.sent_at.desc()).all()
     
     convos = {}
     for m in messages:
+        if not message_visible_to_user(m, current_user.id):
+            continue
         other_id = m.receiver_id if m.sender_id == current_user.id else m.sender_id
         is_anon = (m.subject or '').startswith('[ANON]')
         
@@ -2393,11 +2419,18 @@ def get_conversations():
         if convo_key not in convos:
             other = Company.query.get(other_id)
             if other:
-                unread = PrivateMessage.query.filter_by(
-                    sender_id=other_id, 
-                    receiver_id=current_user.id, 
-                    is_read=False
-                ).filter(PrivateMessage.subject.like('[ANON]%' if is_anon else 'رسالة مجهولة%')).count()
+                if is_anon:
+                    unread = PrivateMessage.query.filter_by(
+                        sender_id=other_id,
+                        receiver_id=current_user.id,
+                        is_read=False
+                    ).filter(PrivateMessage.subject.like('[ANON]%')).count()
+                else:
+                    unread = PrivateMessage.query.filter_by(
+                        sender_id=other_id,
+                        receiver_id=current_user.id,
+                        is_read=False
+                    ).filter(or_(PrivateMessage.subject == None, ~PrivateMessage.subject.like('[ANON]%'))).count()
                 
                 is_official = other.company_name.upper() == 'STOCK FLOW' or other.username.upper() == 'STOCK FLOW'
                 
@@ -2411,12 +2444,13 @@ def get_conversations():
                     'company_name': display_name,
                     'avatar': display_avatar,
                     'last_message': m.message[:50],
-                    'last_message_time': m.sent_at.isoformat() if m.sent_at else None,
+                    'last_message_time': (m.sent_at.isoformat() + 'Z') if m.sent_at else None,
                     'unread_count': unread,
                     'is_premium': other.is_premium if not is_anon else False,
                     'is_official': is_official if not is_anon else False,
                     'is_anonymous': is_anon
                 }
+
     
     conversations_payload = [_normalize_anonymous_entity(item) for item in convos.values()]
     return jsonify({
@@ -2448,7 +2482,7 @@ def get_conversation(other_id):
     else:
         query = query.filter(not_(PrivateMessage.subject.contains('[ANON]')))
         
-    messages = query.order_by(PrivateMessage.sent_at.asc()).all()
+    messages = [m for m in query.order_by(PrivateMessage.sent_at.asc()).all() if message_visible_to_user(m, current_user.id)]
     
     # Mark as read for this specific thread
     read_filter = PrivateMessage.query.filter_by(sender_id=other_id, receiver_id=current_user.id, is_read=False)
@@ -2470,7 +2504,7 @@ def get_conversation(other_id):
             'receiver_id': m.receiver_id,
             'is_me': m.sender_id == current_user.id,
             'message': m.message,
-            'sent_at': m.sent_at.isoformat() if m.sent_at else None,
+            'sent_at': (m.sent_at.isoformat() + 'Z') if m.sent_at else None,
             'is_read': m.is_read,
             'is_anonymous': is_anon
         })
@@ -2670,15 +2704,33 @@ def get_available_companies():
         Company.receive_messages_enabled == True
     ).all()
     
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    threshold = now - timedelta(minutes=5)
+    
     companies_data = []
     for company in companies:
+        last_seen_iso = (company.last_client_seen_at.isoformat() + 'Z') if company.last_client_seen_at else None
+        is_online = bool(company.last_client_seen_at and company.last_client_seen_at >= threshold)
         companies_data.append({
             'id': company.id,
             'company_name': company.company_name,
             'avatar': company.avatar or '',
+            'last_seen': last_seen_iso,
+            'is_online': is_online
         })
         
-    return jsonify(companies_data)
+    # Sort: Online first (newest first), then offline (newest seen first), then never seen
+    online_list = [c for c in companies_data if c['is_online']]
+    offline_with_seen = [c for c in companies_data if not c['is_online'] and c['last_seen']]
+    never_seen = [c for c in companies_data if not c['is_online'] and not c['last_seen']]
+    
+    online_list.sort(key=lambda x: x['last_seen'] or '', reverse=True)
+    offline_with_seen.sort(key=lambda x: x['last_seen'] or '', reverse=True)
+    never_seen.sort(key=lambda x: (x['company_name'] or '').lower())
+    
+    sorted_companies = online_list + offline_with_seen + never_seen
+    return jsonify(sorted_companies)
 
 # --- Notification Endpoints ---
 
@@ -3516,13 +3568,24 @@ def _get_telegram_file_url(file_id: str) -> str | None:
     return None
 
 
-def _build_proxy_url(file_id: str) -> str:
+def _normalize_proxy_media_type(value: str | None) -> str:
+    """Return a safe media type accepted by the public streaming proxy."""
+    media_type = str(value or '').strip().lower()
+    return media_type if media_type in {'photo', 'image', 'video', 'voice', 'audio'} else ''
+
+
+def _build_proxy_url(file_id: str, media_type: str | None = None) -> str:
     """
     ط·آ¸ط¸آ¹ط·آ·ط¢آ¨ط·آ¸أ¢â‚¬آ ط·آ¸ط¸آ¹ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â€ڑآ¬ URL ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ¯ط·آ·ط¢آ§ط·آ·ط¢آ¦ط·آ¸أ¢â‚¬آ¦ ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬â€چط·آ¸أ¢â€ڑآ¬ proxy endpoint ط·آ·ط¢آ¨ط·آ·ط¹آ¾ط·آ·ط¢آ§ط·آ·ط¢آ¹ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ§.
     ط·آ¸أ¢â‚¬طŒط·آ·ط¢آ°ط·آ·ط¢آ§ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ±ط·آ·ط¢آ§ط·آ·ط¢آ¨ط·آ·ط¢آ· ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ§ ط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬آ ط·آ·ط¹آ¾ط·آ¸أ¢â‚¬طŒط·آ¸ط¸آ¹ ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ¯ط·آ·ط¹آ¾ط·آ¸أ¢â‚¬طŒ ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ£ط·آ¸أ¢â‚¬آ ط·آ¸أ¢â‚¬طŒ ط·آ¸ط¸آ¹ط·آ·ط¢آ¹ط·آ·ط¹آ¾ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ¯ ط·آ·ط¢آ¹ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ° file_id ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ«ط·آ·ط¢آ§ط·آ·ط¢آ¨ط·آ·ط¹آ¾.
     """
     base = 'https://www.stock-flow.site'
-    return f"{base}/api/mobile/media/proxy/{file_id}"
+    safe_file_id = quote(str(file_id or ''), safe='')
+    params = {'v': '2'}
+    safe_media_type = _normalize_proxy_media_type(media_type)
+    if safe_media_type:
+        params['media_type'] = safe_media_type
+    return f"{base}/api/mobile/media/proxy/{safe_file_id}?{urlencode(params)}"
 
 
 @api_mobile_bp.route('/media/upload', methods=['POST'])
@@ -3585,7 +3648,7 @@ def upload_media_to_telegram():
         file_id = tg_result['file_id']
 
         # ط·آ·ط¢آ¨ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ§ط·آ·ط·إ’ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â€ڑآ¬ proxy_url ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ¯ط·آ·ط¢آ§ط·آ·ط¢آ¦ط·آ¸أ¢â‚¬آ¦ ط·آ·ط¢آ¨ط·آ·ط¢آ¯ط·آ¸أ¢â‚¬â€چ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â€ڑآ¬ URL ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ¤ط·آ¸أ¢â‚¬ع‘ط·آ·ط¹آ¾
-        proxy_url = _build_proxy_url(file_id)
+        proxy_url = _build_proxy_url(file_id, media_type)
 
         return jsonify({
             'success': True,
@@ -3613,7 +3676,13 @@ def upload_media_to_telegram():
 
 @api_mobile_bp.route('/media/proxy/<path:file_id>', methods=['GET'])
 def proxy_telegram_media(file_id):
-    """Stream Telegram-hosted media through the API. Supports HTTP Range requests for video seeking."""
+    """Public, opaque media stream URL used by native players and the web feed.
+
+    The Telegram file id is not guessable and is stored only with a post.  This
+    endpoint deliberately has no login requirement: Android media downloads do
+    not reliably include the Flask session cookie, and a login redirect is not
+    playable media.
+    """
     if not file_id:
         return jsonify({'success': False, 'message': 'file_id is required.'}), 400
 
@@ -3621,22 +3690,26 @@ def proxy_telegram_media(file_id):
     if not tg_url:
         return jsonify({'success': False, 'message': 'Unable to resolve media URL.'}), 404
 
-    is_video = any(ext in tg_url.lower() for ext in ['.mp4', '.mov', '.avi', '.mkv'])
-    is_audio = any(ext in tg_url.lower() for ext in ['.ogg', '.mp3', '.m4a', '.aac', '.wav', '.oga'])
-    if is_video:
+    requested_type = _normalize_proxy_media_type(request.args.get('media_type'))
+    url_lower = tg_url.lower()
+    if requested_type == 'video':
         content_type = 'video/mp4'
-    elif is_audio:
+    elif requested_type == 'audio':
+        content_type = 'audio/mp4'
+    elif requested_type == 'voice':
         content_type = 'audio/ogg'
-        if '.mp3' in tg_url.lower():
-            content_type = 'audio/mpeg'
-        elif '.m4a' in tg_url.lower():
-            content_type = 'audio/mp4'
+    elif requested_type in {'photo', 'image'}:
+        content_type = 'image/jpeg'
+    elif any(ext in url_lower for ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm']):
+        content_type = 'video/mp4'
+    elif any(ext in url_lower for ext in ['.ogg', '.mp3', '.m4a', '.aac', '.wav', '.oga']):
+        content_type = 'audio/mpeg' if '.mp3' in url_lower else 'audio/ogg'
     else:
         content_type = 'image/jpeg'
 
-    if '.png' in tg_url.lower():
+    if '.png' in url_lower:
         content_type = 'image/png'
-    elif '.webp' in tg_url.lower():
+    elif '.webp' in url_lower:
         content_type = 'image/webp'
 
     # Forward Range header for video/audio streaming (required by mobile video players)
@@ -3679,6 +3752,7 @@ def proxy_telegram_media(file_id):
             response.headers['Content-Length'] = tg_response.headers['Content-Length']
 
         response.headers['Cache-Control'] = 'public, max-age=86400'
+        response.headers['Content-Disposition'] = 'inline'
         response.headers['X-File-Id'] = file_id
         return response
 

@@ -995,12 +995,40 @@
 
             <!-- Chat Section (slide-in) -->
             <div id="chatSection" class="chat-section" style="display:none;">
-                <div class="messages-header" id="chatMessagesHeader">
-                    <div class="chat-header-text">
-                        <h4 id="chatTitle">محادثة مع شركة</h4>
-                        <div id="chatSubtitle"></div>
-                        <div id="typingIndicator" style="display:none;">يكتب الآن...</div>
+                <div class="messages-header" id="chatMessagesHeader" style="display: flex; align-items: center; justify-content: space-between; position: relative;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+                        <!-- 3-Dots Menu Button -->
+                        <div style="position: relative; flex-shrink: 0;">
+                            <button id="chatHeaderMenuBtn" type="button" onclick="toggleHeaderMenu(event)" title="خيارات المحادثة"
+                                style="background: rgba(255,255,255,0.18); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: background 0.2s;">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="conversation-menu-dropdown" id="chatHeaderDropdown" style="top: 45px; right: 0; transform: none; min-width: 170px; z-index: 100;">
+                                <button type="button" class="menu-item danger" id="blockUserMenuBtn" onclick="toggleBlockUser(event)">
+                                    <i class="fas fa-ban me-2"></i> <span id="blockUserMenuText">حظر المستخدم</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Partner Avatar & Name (Clickable to open profile) -->
+                        <div class="chat-header-user" id="chatHeaderUser" onclick="openPartnerProfile()" style="cursor: pointer; display: flex; align-items: center; gap: 10px; min-width: 0;" title="عرض البروفايل">
+                            <div style="position: relative; flex-shrink: 0;">
+                                <img id="chatAvatarImg" src="/static/images/avatars/male-1.jpg" alt=""
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                     style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                <div id="chatAvatarFallback" style="display:none; width: 40px; height: 40px; border-radius: 50%; background: var(--primary-gradient); color: white; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    ش
+                                </div>
+                            </div>
+                            <div class="chat-header-text" style="min-width: 0;">
+                                <h4 id="chatTitle" style="margin: 0; font-size: 1rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">محادثة مع شركة</h4>
+                                <div id="chatSubtitle" style="font-size: 0.75rem;"></div>
+                                <div id="typingIndicator" style="display:none; font-size: 0.75rem; color: #34d399;">يكتب الآن...</div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Back Button -->
                     <button class="back-btn" type="button" onclick="showConversationsList()">
                         <i class="fas fa-arrow-right"></i> العودة
                     </button>
@@ -1215,13 +1243,11 @@
             return '';
         }
 
-        function buildAvatarHtml(name, avatarKey) {
-            const key = normalizeAvatarKey(avatarKey);
-            const imagePath = `/static/images/avatars/${key}.jpg`;
-
+        function buildAvatarHtml(name, avatarVal) {
+            const avatarUrl = _getAvatarUrlHelper(avatarVal);
             return `
                 <div class="avatar-image">
-                    <img src="${imagePath}" alt="${escapeHtml(name)}" onerror="this.src='/static/images/avatars/male-1.jpg'">
+                    <img src="${avatarUrl}" alt="${escapeHtml(name)}" onerror="this.src='/static/images/avatars/male-1.jpg'">
                 </div>
             `;
         }
@@ -1257,19 +1283,165 @@
             return '';
         }
 
+        let currentIsBlockedByMe = false;
+
+        function toggleHeaderMenu(e) {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('chatHeaderDropdown');
+            if (!dropdown) return;
+            const isShowing = dropdown.classList.contains('show');
+            document.querySelectorAll('.conversation-menu-dropdown.show').forEach(m => m.classList.remove('show'));
+            if (!isShowing) {
+                dropdown.classList.add('show');
+            }
+        }
+
+        function updateBlockUI(isBlockedByMe, hasBlockedMe) {
+            currentIsBlockedByMe = !!isBlockedByMe;
+            const blockBtnText = document.getElementById('blockUserMenuText');
+            const blockBtn = document.getElementById('blockUserMenuBtn');
+            const chatInputRow = document.querySelector('.chat-input-row');
+            const chatInputContainer = document.querySelector('.chat-input-container');
+
+            if (blockBtnText) {
+                if (currentIsBlockedByMe) {
+                    blockBtnText.textContent = 'إلغاء حظر المستخدم';
+                    if (blockBtn) {
+                        blockBtn.classList.remove('danger');
+                        blockBtn.style.color = '#3b82f6';
+                    }
+                } else {
+                    blockBtnText.textContent = 'حظر المستخدم';
+                    if (blockBtn) {
+                        blockBtn.classList.add('danger');
+                        blockBtn.style.color = '';
+                    }
+                }
+            }
+
+            let noticeEl = document.getElementById('blockedNoticeBanner');
+            const currentPartnerTitle = document.getElementById('chatPartnerName')?.textContent || '';
+            const isStockFlowOfficial = String(currentPartnerTitle).trim().toUpperCase() === 'STOCK FLOW' || String(currentPartnerTitle).trim() === 'ستوك فلو';
+
+            if (isBlockedByMe || hasBlockedMe) {
+                if (chatInputRow) chatInputRow.style.display = 'none';
+                if (!noticeEl && chatInputContainer) {
+                    noticeEl = document.createElement('div');
+                    noticeEl.id = 'blockedNoticeBanner';
+                    noticeEl.style.cssText = 'padding: 12px 16px; text-align: center; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 0.9rem; font-weight: 600; margin: 8px 16px; font-family: "Cairo", sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.05);';
+                    chatInputContainer.appendChild(noticeEl);
+                }
+                if (noticeEl) {
+                    noticeEl.style.display = 'block';
+                    if (isBlockedByMe) {
+                        noticeEl.innerHTML = '<i class="fas fa-ban me-2"></i> لقد قمت بحظر هذا المستخدم. <a href="javascript:void(0)" onclick="toggleBlockUser()" style="color: #1d4ed8; text-decoration: underline; margin-right: 6px;">إلغاء الحظر</a>';
+                    } else {
+                        noticeEl.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> قام هذا المستخدم بحظرك. لا يمكنك المراسلة.';
+                    }
+                }
+            } else {
+                if (noticeEl) noticeEl.style.display = 'none';
+                if (!isStockFlowOfficial && chatInputRow) {
+                    chatInputRow.style.display = 'flex';
+                }
+            }
+        }
+
+        async function toggleBlockUser(e) {
+            if (e) e.stopPropagation();
+            const d = document.getElementById('chatHeaderDropdown');
+            if (d) d.classList.remove('show');
+
+            if (!currentConversationId || currentConversationId === 0) return;
+
+            const confirmMsg = currentIsBlockedByMe 
+                ? 'هل أنت تأكد من إلغاء حظر هذا المستخدم؟' 
+                : 'هل أنت تأكد من حظر هذا المستخدم؟ لن يتمكن من مراسلتك بعد الآن.';
+
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const response = await fetch(`${API_MOBILE}/messages/block/${currentConversationId}`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    updateBlockUI(data.is_blocked_by_me, data.has_blocked_me);
+                    showToast(data.message || (data.action === 'blocked' ? 'تم الحظر بنجاح' : 'تم إلغاء الحظر'), 'success');
+                    if (typeof loadConversations === 'function') loadConversations();
+                } else {
+                    showToast(data.message || 'حدث خطأ أثناء تنفيذ العملية', 'error');
+                }
+            } catch (err) {
+                console.error('Error toggling block:', err);
+                showToast('تعذر تغيير حالة الحظر', 'error');
+            }
+        }
+
+        function openPartnerProfile() {
+            if (!currentConversationId || currentConversationId === 0) return;
+            const titleEl = document.getElementById('chatTitle');
+            const name = (titleEl ? titleEl.textContent : '').trim();
+            if (!name || name.toUpperCase() === 'STOCK FLOW' || name === 'مستخدم مجهول' || name === 'مجهول الهوية' || name === 'Unknown') return;
+            window.location.href = `/community_bonus/company/${currentConversationId}`;
+        }
+
+        function _getAvatarUrlHelper(avatarVal) {
+            if (!avatarVal) return '/static/images/avatars/male-1.jpg';
+            const av = String(avatarVal).trim();
+            if (av.indexOf('custom-photo:') === 0) {
+                return `/static/images/profile_photos/${av.replace('custom-photo:', '')}`;
+            }
+            if (av.indexOf('http://') === 0 || av.indexOf('https://') === 0 || av.indexOf('/') === 0) {
+                return av;
+            }
+            if (av === 'male-1' || av === 'female-1' || av === 'default-male') {
+                const key = av === 'default-male' ? 'male-1' : av;
+                return `/static/images/avatars/${key}.jpg`;
+            }
+            return `/static/images/avatars/${av}.jpg`;
+        }
+
         function updateChatHeaderMeta(companyId, companyName) {
             const titleEl = document.getElementById('chatTitle');
             const subtitleEl = document.getElementById('chatSubtitle');
+            const avatarImgEl = document.getElementById('chatAvatarImg');
+            const fallbackEl = document.getElementById('chatAvatarFallback');
+            const menuBtn = document.getElementById('chatHeaderMenuBtn');
+
+            if (menuBtn) {
+                if (companyName === 'STOCK FLOW' || !companyId) {
+                    menuBtn.style.display = 'none';
+                } else {
+                    menuBtn.style.display = 'flex';
+                }
+            }
 
             let isVerified = false;
+            let avatarVal = null;
             const conv = conversationsData.find(c => c.company_id === companyId);
-            if (conv && typeof conv.is_verified !== 'undefined') {
+            if (conv) {
                 isVerified = !!conv.is_verified;
+                avatarVal = conv.avatar || conv.company_avatar || conv.avatar_url || null;
             } else {
                 const comp = companiesData.find(c => c.id === companyId);
-                if (comp && typeof comp.is_verified !== 'undefined') {
+                if (comp) {
                     isVerified = !!comp.is_verified;
+                    avatarVal = comp.avatar || comp.company_avatar || comp.avatar_url || null;
                 }
+            }
+
+            if (avatarImgEl && fallbackEl) {
+                const avatarUrl = _getAvatarUrlHelper(avatarVal);
+                avatarImgEl.style.display = 'block';
+                fallbackEl.style.display = 'none';
+                avatarImgEl.src = avatarUrl;
+                fallbackEl.textContent = (companyName || 'ش').charAt(0).toUpperCase();
             }
 
             const verifiedHtml = buildVerifiedBadgeHtml(isVerified);
@@ -1425,7 +1597,7 @@
                     conversationItem.className = `conversation-item ${isUnread ? 'unread' : ''}`;
                     conversationItem.onclick = () => openConversation(companyId, companyName);
 
-                    const avatarHtml = buildAvatarHtml(companyName, conversation.avatar);
+                    const avatarHtml = buildAvatarHtml(companyName, conversation.avatar || conversation.company_avatar || conversation.avatar_url);
                     const verifiedHtml = buildVerifiedBadgeHtml(conversation.is_verified);
                     const action = conversation.is_blocked ? 'unblock' : 'block';
 
@@ -1475,7 +1647,7 @@
                     item.className = 'conversation-item';
                     item.onclick = () => openConversation(companyId, companyName);
 
-                    const avatarHtml = buildAvatarHtml(companyName, company.avatar);
+                    const avatarHtml = buildAvatarHtml(companyName, company.avatar || company.company_avatar || company.avatar_url);
                     const verifiedHtml = buildVerifiedBadgeHtml(company.is_verified);
                     item.innerHTML = `
                         ${avatarHtml}
@@ -1517,7 +1689,7 @@
                 item.type = 'button';
                 item.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2';
 
-                const avatarHtml = buildAvatarHtml(companyName, company.avatar);
+                const avatarHtml = buildAvatarHtml(companyName, company.avatar || company.company_avatar || company.avatar_url);
                 const lastSeenLabel = getLastSeenLabel(company.id);
 
                 item.innerHTML = `
@@ -1565,15 +1737,37 @@
             if (mainSearchEl) mainSearchEl.style.display = 'none';
             if (fabEl) fabEl.style.display = 'none';
 
-            // رسائل النظام (STOCK FLOW) تكون قراءة فقط بدون مربع كتابة
-            if (chatInputContainerEl) {
-                if (companyName === 'STOCK FLOW') {
-                    chatInputContainerEl.style.display = 'none';
-                } else {
-                    chatInputContainerEl.style.display = '';
+            // رسائل النظام (STOCK FLOW) تكون قراءة فقط بدون مربع كتابة مع إظهار التنبيه المطلوب
+            const isStockFlowOfficial = String(companyName || '').trim().toUpperCase() === 'STOCK FLOW' || String(companyName || '').trim() === 'ستوك فلو';
+            const chatInputRow = document.querySelector('.chat-input-row');
+            let stockFlowNotice = document.getElementById('stockFlowNoticeBanner');
+
+            if (isStockFlowOfficial) {
+                if (chatInputRow) chatInputRow.style.display = 'none';
+                if (!stockFlowNotice && chatInputContainerEl) {
+                    stockFlowNotice = document.createElement('div');
+                    stockFlowNotice.id = 'stockFlowNoticeBanner';
+                    stockFlowNotice.style.cssText = 'padding: 14px 16px; text-align: center; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 14px; font-size: 0.88rem; font-weight: 600; margin: 8px 12px; font-family: "Cairo", sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.04); line-height: 1.6;';
+                    chatInputContainerEl.appendChild(stockFlowNotice);
                 }
+                if (stockFlowNotice) {
+                    stockFlowNotice.style.display = 'block';
+                    stockFlowNotice.innerHTML = '<i class="fas fa-info-circle me-1"></i> هذه المحادثه مع حساب STOCK FLOW الرسمي للرسائل الادارية فقط .لذلك تم إخفاء مربع الكتابه ولا يمكن الرد';
+                }
+                const blockMenuBtn = document.getElementById('chatHeaderMenuBtn');
+                if (blockMenuBtn) blockMenuBtn.style.display = 'none';
+            } else {
+                if (stockFlowNotice) stockFlowNotice.style.display = 'none';
+                if (chatInputRow) chatInputRow.style.display = 'flex';
+                const blockMenuBtn = document.getElementById('chatHeaderMenuBtn');
+                if (blockMenuBtn) blockMenuBtn.style.display = '';
             }
 
+            if (chatInputContainerEl) {
+                chatInputContainerEl.style.display = '';
+            }
+
+            updateBlockUI(false, false);
             updateChatHeaderMeta(companyId, companyName);
             partnerIsOnline = null;
             partnerLastSeen = null;
@@ -1678,6 +1872,9 @@
                     }
                 );
                 const data = await response.json();
+                if (data) {
+                    updateBlockUI(!!data.is_blocked_by_me, !!data.has_blocked_me);
+                }
 
                 const chatMessages = document.getElementById('chatMessages');
                 const list = (data && data.messages) ? data.messages : [];
@@ -2140,6 +2337,28 @@
             loadCompaniesList();
             pingPresence();
             setInterval(pingPresence, 45000);
+
+            // التحقق من وجود شركة معينة للبدء في مراسلتها فوراً عبر رابط URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetCompanyId = urlParams.get('company_id') || urlParams.get('partner_id') || urlParams.get('chat_with');
+            const targetCompanyName = urlParams.get('name') || urlParams.get('company_name');
+
+            if (targetCompanyId) {
+                const cid = Number(targetCompanyId);
+                if (targetCompanyName) {
+                    openConversation(cid, targetCompanyName);
+                } else {
+                    fetch(`/community_bonus/api/company/${cid}`, { credentials: 'same-origin' })
+                        .then(r => r.json())
+                        .then(data => {
+                            const name = (data && data.company && data.company.company_name) ? data.company.company_name : 'محادثة';
+                            openConversation(cid, name);
+                        })
+                        .catch(() => {
+                            openConversation(cid, 'محادثة');
+                        });
+                }
+            }
 
             const modalEl = document.getElementById('allCompaniesModal');
             if (modalEl) {

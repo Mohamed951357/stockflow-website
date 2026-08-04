@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    {% include \'_pwa_meta.html\' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>مجتمع ستوك فلو - ستوك فلو</title>
@@ -149,25 +150,104 @@
             box-shadow: 0 4px 12px rgba(18, 67, 196, 0.3);
         }
 
-        /* Mobile Post Form */
-        .post-form-mobile {
-            background: white;
-            border-radius: var(--border-radius);
-            margin: 12px var(--mobile-padding) 0;
-            padding: 16px;
-            box-shadow: var(--card-shadow);
-            position: sticky;
-            top: 130px; /* يظهر تحت الـ tabs مباشرة */
-            z-index: 998;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+        /* ===== FAB (Floating Action Button) ===== */
+        .fab-create-post {
+            position: fixed;
+            bottom: 40px;
+            left: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(18, 67, 196, 0.45);
+            z-index: 1001;
+            cursor: pointer;
+            transition: var(--transition);
+            animation: fab-pulse 2s infinite;
+        }
+        .fab-create-post:hover { transform: scale(1.08); }
+        .fab-create-post:active { transform: scale(0.92); }
+        @keyframes fab-pulse {
+            0%,100% { box-shadow: 0 6px 20px rgba(18,67,196,0.45); }
+            50%     { box-shadow: 0 6px 30px rgba(18,67,196,0.65); }
         }
 
+        /* ===== Create-Post Modal Overlay ===== */
+        .create-post-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 2000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            animation: overlay-in .25s ease;
+        }
+        .create-post-overlay.active { display: flex; }
+        @keyframes overlay-in { from{opacity:0} to{opacity:1} }
+
+        .create-post-modal {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            border-radius: 20px 20px 0 0;
+            padding: 0;
+            overflow-y: auto;
+            animation: modal-slide-up .3s cubic-bezier(.4,0,.2,1);
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+        }
+        @keyframes modal-slide-up { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+        .modal-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid #f1f3f4;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            border-radius: 20px 20px 0 0;
+        }
+        .modal-header-bar h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .modal-close-btn {
+            background: #f1f3f4;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #6c757d;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .modal-close-btn:hover { background: #e9ecef; color: #dc3545; }
+
+        .modal-body {
+            padding: 16px 20px 20px;
+        }
+
+        /* Textarea inside modal */
         .post-input-wrapper {
             position: relative;
             margin-bottom: 12px;
         }
-
         .post-textarea {
             width: 100%;
             border: 2px solid #e9ecef;
@@ -177,41 +257,122 @@
             resize: none;
             transition: var(--transition);
             font-family: inherit;
-            min-height: 80px;
+            min-height: 100px;
         }
-
         .post-textarea:focus {
             outline: none;
             border-color: #1243C4;
             box-shadow: 0 0 0 3px rgba(18, 67, 196, 0.1);
         }
-
         .char-counter {
             position: absolute;
             bottom: 8px;
             left: 12px;
             font-size: 0.7rem;
             color: #6c757d;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255,255,255,0.9);
             padding: 2px 6px;
             border-radius: 4px;
         }
 
-        .form-actions {
+        /* Media buttons row inside modal */
+        .media-upload-section { margin-bottom: 12px; }
+        .media-upload-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .media-btn {
+            background: #f0f4ff;
+            border: 2px solid #dce3f5;
+            color: #1243C4;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .media-btn:hover { background: #dce3f5; border-color: #1243C4; }
+        .media-btn:active { transform: scale(0.93); }
+        .media-btn span {
+            font-size: 0.65rem;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Preview grid */
+        .media-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .media-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+        }
+        .media-preview-item img,
+        .media-preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .media-preview-item .audio-preview {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 2rem;
+        }
+        .media-preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(220,53,69,0.9);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .media-preview-remove:hover { background: #dc3545; transform: scale(1.1); }
+
+        /* Bottom actions bar inside modal */
+        .modal-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 12px;
+            padding: 14px 20px;
+            border-top: 1px solid #f1f3f4;
+            background: #fafbfc;
         }
-
         .anonymous-toggle {
             display: flex;
             align-items: center;
             gap: 8px;
             font-size: 0.8rem;
             color: #6c757d;
+            cursor: pointer;
         }
-
         .toggle-switch {
             position: relative;
             width: 40px;
@@ -221,11 +382,7 @@
             cursor: pointer;
             transition: var(--transition);
         }
-
-        .toggle-switch.active {
-            background: #1243C4;
-        }
-
+        .toggle-switch.active { background: #1243C4; }
         .toggle-switch::after {
             content: '';
             position: absolute;
@@ -237,36 +394,31 @@
             border-radius: 50%;
             transition: var(--transition);
         }
-
-        .toggle-switch.active::after {
-            left: 22px;
-        }
+        .toggle-switch.active::after { left: 22px; }
 
         .submit-btn {
             background: var(--primary-gradient);
             border: none;
             color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
+            padding: 10px 24px;
+            border-radius: 22px;
+            font-size: 0.95rem;
+            font-weight: 600;
             transition: var(--transition);
             display: flex;
             align-items: center;
             gap: 6px;
+            cursor: pointer;
         }
-
-        .submit-btn:active {
-            transform: scale(0.95);
-        }
+        .submit-btn:active { transform: scale(0.95); }
 
         /* Mobile Posts Container - هي المنطقة الوحيدة القابلة للتمرير */
         .posts-container-mobile {
             flex: 1;
-            padding: 12px var(--mobile-padding) 80px; /* مساحة أسفل للـ bottom nav */
-            margin-top: 12px; /* مسافة بسيطة عن الـ post form */
+            padding: 80px var(--mobile-padding) 20px;
+            margin-top: 0;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* سكرول ناعم على الموبايل */
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Mobile Post Card */
@@ -281,9 +433,8 @@
             overflow: hidden;
         }
 
-        /* مسافة إضافية بين فورم كتابة المنشور وأول بوست */
         #posts-list .post-card-mobile:first-child {
-            margin-top: 40px; /* زيادة أكبر للفصل بين الفورم وأول منشور */
+            margin-top: 4px;
         }
 
         .post-card-mobile:active {
@@ -327,6 +478,16 @@
             display: flex;
             align-items: center;
             gap: 4px;
+        }
+
+        .company-name-link {
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .company-name-link:hover {
+            color: #1243C4;
+            text-decoration: underline;
         }
 
         .verification-badge {
@@ -380,6 +541,33 @@
 
         .post-content-mobile a:hover {
             text-decoration: underline;
+        }
+
+        .post-media-mobile {
+            margin: 0 0 12px;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #0f172a;
+        }
+
+        .post-media-mobile video,
+        .post-media-mobile img,
+        .post-audio-mobile audio {
+            display: block;
+            width: 100%;
+            max-height: 420px;
+        }
+
+        .post-media-mobile img {
+            object-fit: contain;
+            background: #f8fafc;
+        }
+
+        .post-audio-mobile {
+            margin: 0 0 12px;
+            padding: 10px;
+            border-radius: 12px;
+            background: #f1f5f9;
         }
 
         /* Mobile Post Actions */
@@ -436,6 +624,40 @@
 
         .comments-section-mobile.show {
             display: block;
+        }
+
+        /* معاينة أحدث تعليق أسفل البوست في الصفحة الرئيسية */
+        .latest-comment-preview {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f1f3f4;
+            cursor: pointer;
+        }
+
+        .latest-comment-preview .comment-item-mobile {
+            margin-bottom: 0;
+        }
+
+        .view-all-comments {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1243C4;
+            margin-bottom: 8px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .view-all-comments:active {
+            opacity: 0.7;
+        }
+
+        .post-clickable {
+            cursor: pointer;
         }
 
         .comment-item-mobile {
@@ -913,12 +1135,13 @@
                 padding-top: max(16px, env(safe-area-inset-top));
             }
 
-            .bottom-nav-mobile {
-                padding-bottom: max(8px, env(safe-area-inset-bottom));
+            .posts-container-mobile {
+                padding-top: calc(80px + env(safe-area-inset-top));
+                padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
             }
 
-            .posts-container-mobile {
-                padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom)));
+            .fab-create-post {
+                bottom: calc(40px + env(safe-area-inset-bottom));
             }
         }
 
@@ -960,7 +1183,7 @@
         <!-- Mobile Header -->
         <div class="mobile-header">
             <div class="header-content">
-                <button class="header-btn" onclick="window.location.href = {{ url_for('company_dashboard')|tojson }}" title="الرئيسية">
+                <button class="header-btn" onclick="window.location.href = '{{ url_for('company_dashboard') }}'" title="الرئيسية">
                     <i class="fas fa-home"></i>
                 </button>
                 <div class="header-title">
@@ -975,45 +1198,66 @@
             </div>
         </div>
 
-        <!-- Mobile Navigation Tabs -->
-        <div class="mobile-tabs">
-            <button class="tab-btn active" id="all-tab" onclick="switchTab('all')">
-                <i class="fas fa-globe"></i>
-                العامة
-            </button>
-            <button class="tab-btn" id="my-tab" onclick="switchTab('my')">
-                <i class="fas fa-user"></i>
-                منشوراتي
-            </button>
-            <button class="tab-btn" id="messages-tab" onclick="openMessagesPage()">
-                <i class="fas fa-envelope"></i>
-                مراسلاتي
-            </button>
-        </div>
 
-        <!-- Mobile Post Form -->
-        <div class="post-form-mobile" id="post-form">
-            <div class="post-input-wrapper">
-                <textarea
-                    class="post-textarea"
-                    id="post-content"
-                    placeholder="ماذا يخطر ببالك؟ شارك مع المجتمع..."
-                    maxlength="500"
-                    rows="3"
-                ></textarea>
-                <div class="char-counter">
-                    <span id="char-count">0</span>/500
+
+        <!-- FAB: Floating Action Button -->
+        <button class="fab-create-post" id="fab-create-post" onclick="openCreatePostModal()" title="إنشاء منشور">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <!-- Create Post Modal -->
+        <div class="create-post-overlay" id="create-post-overlay" onclick="handleOverlayClick(event)">
+            <div class="create-post-modal" id="create-post-modal">
+                <div class="modal-header-bar">
+                    <h3><i class="fas fa-edit" style="margin-left:6px;color:#1243C4"></i>منشور جديد</h3>
+                    <button class="modal-close-btn" onclick="closeCreatePostModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            </div>
-            <div class="form-actions">
-                <div class="anonymous-toggle" onclick="toggleAnonymous()">
-                    <div class="toggle-switch" id="anonymous-toggle"></div>
-                    <span>نشر مجهول</span>
+                <div class="modal-body" id="post-form">
+                    <div class="post-input-wrapper">
+                        <textarea
+                            class="post-textarea"
+                            id="post-content"
+                            placeholder="ماذا يخطر ببالك؟ شارك مع المجتمع..."
+                            maxlength="500"
+                            rows="4"
+                        ></textarea>
+                        <div class="char-counter">
+                            <span id="char-count">0</span>/500
+                        </div>
+                    </div>
+
+                    <!-- Media Upload Section -->
+                    <div class="media-upload-section" id="media-upload-section">
+                        <div class="media-preview-container" id="media-preview-container"></div>
+                        <div class="media-upload-buttons">
+                            <input type="file" id="image-upload" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
+                            <input type="file" id="video-upload" accept="video/*" style="display:none;" onchange="handleVideoUpload(event)">
+                            <input type="file" id="audio-upload" accept="audio/*" style="display:none;" onchange="handleAudioUpload(event)">
+
+                            <button type="button" class="media-btn" onclick="document.getElementById('image-upload').click()" title="إضافة صور">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            <button type="button" class="media-btn" onclick="document.getElementById('video-upload').click()" title="إضافة فيديو">
+                                <i class="fas fa-video"></i>
+                            </button>
+                            <button type="button" class="media-btn" onclick="document.getElementById('audio-upload').click()" title="إضافة صوت">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <button class="submit-btn" onclick="createPost()" id="submit-post-btn">
-                    <i class="fas fa-paper-plane"></i>
-                    نشر
-                </button>
+                <div class="modal-actions">
+                    <div class="anonymous-toggle" onclick="toggleAnonymous()">
+                        <div class="toggle-switch" id="anonymous-toggle"></div>
+                        <span>نشر مجهول</span>
+                    </div>
+                    <button class="submit-btn" onclick="createPost()" id="submit-post-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        نشر
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1044,21 +1288,7 @@
             <div id="posts-list"></div>
         </div>
 
-        <!-- Bottom Navigation -->
-        <div class="bottom-nav-mobile">
-            <button class="bottom-nav-item active" onclick="scrollToTop()">
-                <i class="fas fa-home"></i>
-                <span>الرئيسية</span>
-            </button>
-            <button class="bottom-nav-item" onclick="focusPostForm()">
-                <i class="fas fa-plus-circle"></i>
-                <span>نشر</span>
-            </button>
-            <button class="bottom-nav-item" onclick="refreshPosts()">
-                <i class="fas fa-sync-alt"></i>
-                <span>تحديث</span>
-            </button>
-        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1068,6 +1298,11 @@
         let isAnonymous = false;
         let posts = [];
         let isLoading = false;
+        
+        // Media upload variables
+        let uploadedImages = [];
+        let uploadedVideo = null;
+        let uploadedAudio = null;
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
@@ -1151,6 +1386,167 @@
             }
         }
 
+        // Handle image upload
+        function handleImageUpload(event) {
+            const files = Array.from(event.target.files);
+            
+            if (files.length === 0) return;
+            
+            // Check if video or audio already uploaded
+            if (uploadedVideo || uploadedAudio) {
+                showToast('لا يمكن إضافة صور مع فيديو أو صوت', 'warning');
+                event.target.value = '';
+                return;
+            }
+            
+            // Limit to 10 images total
+            if (uploadedImages.length + files.length > 10) {
+                showToast('الحد الأقصى 10 صور', 'warning');
+                event.target.value = '';
+                return;
+            }
+            
+            files.forEach(file => {
+                if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                    showToast('حجم الصورة كبير جداً (الحد الأقصى 10MB)', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImages.push({
+                        file: file,
+                        preview: e.target.result,
+                        type: 'image'
+                    });
+                    updateMediaPreview();
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            event.target.value = '';
+        }
+
+        // Handle video upload
+        function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+            
+            // Check if images or audio already uploaded
+            if (uploadedImages.length > 0 || uploadedAudio) {
+                showToast('لا يمكن إضافة فيديو مع صور أو صوت', 'warning');
+                event.target.value = '';
+                return;
+            }
+            
+            if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                showToast('حجم الفيديو كبير جداً (الحد الأقصى 50MB)', 'error');
+                event.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedVideo = {
+                    file: file,
+                    preview: e.target.result,
+                    type: 'video'
+                };
+                updateMediaPreview();
+            };
+            reader.readAsDataURL(file);
+            
+            event.target.value = '';
+        }
+
+        // Handle audio upload
+        function handleAudioUpload(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+            
+            // Check if images or video already uploaded
+            if (uploadedImages.length > 0 || uploadedVideo) {
+                showToast('لا يمكن إضافة صوت مع صور أو فيديو', 'warning');
+                event.target.value = '';
+                return;
+            }
+            
+            if (file.size > 20 * 1024 * 1024) { // 20MB limit
+                showToast('حجم الملف الصوتي كبير جداً (الحد الأقصى 20MB)', 'error');
+                event.target.value = '';
+                return;
+            }
+            
+            uploadedAudio = {
+                file: file,
+                type: 'audio'
+            };
+            updateMediaPreview();
+            
+            event.target.value = '';
+        }
+
+        // Update media preview
+        function updateMediaPreview() {
+            const container = document.getElementById('media-preview-container');
+            container.innerHTML = '';
+            
+            // Show image previews
+            uploadedImages.forEach((item, index) => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'media-preview-item';
+                previewItem.innerHTML = `
+                    <img src="${item.preview}" alt="Preview ${index + 1}">
+                    <button class="media-preview-remove" onclick="removeMedia('image', ${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(previewItem);
+            });
+            
+            // Show video preview
+            if (uploadedVideo) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'media-preview-item';
+                previewItem.innerHTML = `
+                    <video src="${uploadedVideo.preview}"></video>
+                    <button class="media-preview-remove" onclick="removeMedia('video', 0)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(previewItem);
+            }
+            
+            // Show audio preview
+            if (uploadedAudio) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'media-preview-item';
+                previewItem.innerHTML = `
+                    <div class="audio-preview">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <button class="media-preview-remove" onclick="removeMedia('audio', 0)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(previewItem);
+            }
+        }
+
+        // Remove media
+        function removeMedia(type, index) {
+            if (type === 'image') {
+                uploadedImages.splice(index, 1);
+            } else if (type === 'video') {
+                uploadedVideo = null;
+            } else if (type === 'audio') {
+                uploadedAudio = null;
+            }
+            updateMediaPreview();
+        }
+
         // Switch tabs
         function switchTab(tab) {
             if (isLoading) return;
@@ -1159,7 +1555,10 @@
 
             // Update tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tab + '-tab').classList.add('active');
+            const btn = document.getElementById(tab + '-tab');
+            if (btn) {
+                btn.classList.add('active');
+            }
 
             // Load posts for the selected tab
             loadPosts();
@@ -1187,6 +1586,22 @@
             return rawList.map((p) => {
                 const views = p.views_count != null ? p.views_count : (p.views != null ? p.views : 0);
                 const liked = !!(p.is_liked || p.liked_by_me || p.user_liked);
+                
+                // Parse media arrays if they're strings
+                let mediaFileIds = p.media_file_ids;
+                let mediaTypes = p.media_types;
+                let mediaPreviewUrls = p.media_preview_urls;
+                
+                if (typeof mediaFileIds === 'string') {
+                    try { mediaFileIds = JSON.parse(mediaFileIds); } catch (e) { mediaFileIds = []; }
+                }
+                if (typeof mediaTypes === 'string') {
+                    try { mediaTypes = JSON.parse(mediaTypes); } catch (e) { mediaTypes = []; }
+                }
+                if (typeof mediaPreviewUrls === 'string') {
+                    try { mediaPreviewUrls = JSON.parse(mediaPreviewUrls); } catch (e) { mediaPreviewUrls = []; }
+                }
+                
                 return {
                     ...p,
                     is_liked: liked,
@@ -1194,8 +1609,54 @@
                     views_count: views,
                     likes_count: p.likes_count != null ? p.likes_count : (p.likes != null ? p.likes : 0),
                     comments_count: p.comments_count != null ? p.comments_count : 0,
+                    media_file_ids: mediaFileIds || [],
+                    media_types: mediaTypes || [],
+                    media_preview_urls: mediaPreviewUrls || []
                 };
             });
+        }
+
+        function mediaProxyUrl(fileId, mediaType) {
+            const type = ['image', 'photo', 'video', 'audio', 'voice'].includes(String(mediaType || '').toLowerCase())
+                ? String(mediaType).toLowerCase()
+                : 'image';
+            return `/api/mobile/media/proxy/${encodeURIComponent(String(fileId))}?media_type=${encodeURIComponent(type)}&v=2`;
+        }
+
+        function postMediaHtml(post) {
+            const previewUrls = Array.isArray(post.media_preview_urls) ? post.media_preview_urls : [];
+            const mediaTypes  = Array.isArray(post.media_types) ? post.media_types : [];
+            const fileIds     = Array.isArray(post.media_file_ids) ? post.media_file_ids : [];
+
+            // If previewUrls has elements, use previewUrls as primary list, otherwise fileIds
+            const list = previewUrls.length > 0 ? previewUrls : fileIds.filter(f => f && f !== '__audio__');
+
+            const media = list.map((item, index) => {
+                const type = String(mediaTypes[index] || 'image').toLowerCase();
+                let url = previewUrls[index] || (fileIds[index] ? mediaProxyUrl(fileIds[index], type) : item);
+                if (typeof url === 'string') {
+                    url = url.replace('https://www.stock-flow.site', '')
+                             .replace('http://www.stock-flow.site', '')
+                             .replace('https://bonuspharma1.pythonanywhere.com', '')
+                             .replace('http://bonuspharma1.pythonanywhere.com', '');
+                }
+                if (type === 'video') {
+                    return `<div class="post-media-mobile"><video controls playsinline preload="metadata" src="${url}">متصفحك لا يدعم تشغيل الفيديو.</video></div>`;
+                }
+                return `<div class="post-media-mobile"><img src="${url}" alt="مرفق المنشور" loading="lazy" onerror="this.parentElement.style.display='none'" /></div>`;
+            }).join('');
+
+            let audioUrl = post.audio_url || (post.audio_file_id ? mediaProxyUrl(post.audio_file_id, 'audio') : '');
+            if (typeof audioUrl === 'string') {
+                audioUrl = audioUrl.replace('https://www.stock-flow.site', '')
+                                   .replace('http://www.stock-flow.site', '')
+                                   .replace('https://bonuspharma1.pythonanywhere.com', '')
+                                   .replace('http://bonuspharma1.pythonanywhere.com', '');
+            }
+            const audio = audioUrl
+                ? `<div class="post-audio-mobile"><audio controls preload="metadata" src="${audioUrl}">متصفحك لا يدعم تشغيل الصوت.</audio></div>`
+                : '';
+            return `<div class="post-media-container">${media}${audio}</div>`;
         }
 
         async function fetchPostsJson(url) {
@@ -1239,11 +1700,14 @@
         }
 
         // Load posts
-        async function loadPosts() {
+        async function loadPosts(isBackground = false) {
             if (isLoading) return;
+            if (isBackground && isMediaPlaying()) return;
 
             isLoading = true;
-            showLoadingState();
+            if (!isBackground && (!posts || posts.length === 0)) {
+                showLoadingState();
+            }
 
             try {
                 const filterValue = getFilterValue(currentTab);
@@ -1280,7 +1744,10 @@
                         }
                     } catch (e) {
                         console.warn('[community] mobile posts:', e);
-                        throw new Error('تعذر تحميل المنشورات. سجّل الدخول كشركة ثم حدّث الصفحة.');
+                        if (!isBackground) {
+                            throw new Error('تعذر تحميل المنشورات. سجّل الدخول كشركة ثم حدّث الصفحة.');
+                        }
+                        return;
                     }
                 }
 
@@ -1297,26 +1764,30 @@
 
             } catch (error) {
                 console.error('Error loading posts:', error);
-                showErrorState(error.message || 'حدث خطأ غير متوقع');
+                if (!isBackground && (!posts || posts.length === 0)) {
+                    showErrorState(error.message || 'حدث خطأ غير متوقع');
+                }
             } finally {
                 isLoading = false;
             }
         }
 
-        // Render posts
+        // Render posts (Smart DOM Update: preserves playing videos, audio, and media elements during background refresh)
         function renderPosts() {
-            const container = document.getElementById('posts-list');
-
-            if (!container) return;
+            const listContainer = document.getElementById('posts-list');
+            if (!listContainer) return;
 
             if (posts.length === 0) {
-                const hint = document.getElementById('empty-state-hint');
-                if (hint) {
-                    hint.textContent = currentTab === 'my'
-                        ? 'في تبويب «منشوراتي» تظهر منشوراتك فقط. جرّب تبويب «العامة» لرؤية كل المنشورات.'
-                        : 'كن أول من يشارك في مجتمع بونص فارما!';
+                const existingCards = listContainer.querySelectorAll('.post-card-mobile');
+                if (existingCards.length === 0) {
+                    const hint = document.getElementById('empty-state-hint');
+                    if (hint) {
+                        hint.textContent = currentTab === 'my'
+                            ? 'في تبويب «منشوراتي» تظهر منشوراتك فقط. جرّب تبويب «العامة» لرؤية كل المنشورات.'
+                            : 'كن أول من يشارك في مجتمع بونص فارما!';
+                    }
+                    showEmptyState();
                 }
-                showEmptyState();
                 return;
             }
 
@@ -1324,7 +1795,66 @@
             hideErrorState();
             hideEmptyState();
 
-            container.innerHTML = posts.map(post => createPostHTML(post)).join('');
+            const existingCards = listContainer.querySelectorAll('.post-card-mobile');
+            if (existingCards.length === 0) {
+                listContainer.innerHTML = posts.map(post => createPostHTML(post)).join('');
+            } else {
+                const newPostIds = new Set(posts.map(p => p.id));
+
+                // 1. Remove deleted posts
+                existingCards.forEach(el => {
+                    const pid = parseInt(el.id.replace('post-', ''), 10);
+                    if (!newPostIds.has(pid)) {
+                        el.remove();
+                    }
+                });
+
+                // 2. Smart update existing, or insert new
+                posts.forEach((post, index) => {
+                    const postEl = document.getElementById(`post-${post.id}`);
+                    if (postEl) {
+                        // Update counts and text without touching video/audio/media DOM
+                        const likeCountEl = postEl.querySelector(`#like-count-${post.id}`);
+                        if (likeCountEl && likeCountEl.textContent != post.likes_count) {
+                            likeCountEl.textContent = post.likes_count;
+                        }
+
+                        const commentCountEl = postEl.querySelector(`#comment-count-${post.id}`);
+                        if (commentCountEl && commentCountEl.textContent != post.comments_count) {
+                            commentCountEl.textContent = post.comments_count;
+                        }
+
+                        // Update latest comment preview if changed
+                        const oldPreview = postEl.querySelector('.latest-comment-preview');
+                        const newPreviewHtml = latestCommentHtml(post);
+                        if (oldPreview) {
+                            if (newPreviewHtml) {
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = newPreviewHtml;
+                                oldPreview.replaceWith(tempDiv.firstElementChild);
+                            } else {
+                                oldPreview.remove();
+                            }
+                        } else if (newPreviewHtml) {
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = newPreviewHtml;
+                            postEl.appendChild(tempDiv.firstElementChild);
+                        }
+                    } else {
+                        // Insert new post card at proper position
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = createPostHTML(post);
+                        const newEl = tempDiv.firstElementChild;
+                        const nextPost = posts[index + 1];
+                        const nextEl = nextPost ? document.getElementById(`post-${nextPost.id}`) : null;
+                        if (nextEl) {
+                            listContainer.insertBefore(newEl, nextEl);
+                        } else {
+                            listContainer.appendChild(newEl);
+                        }
+                    }
+                });
+            }
 
             // Record views for visible posts
             setTimeout(() => {
@@ -1355,21 +1885,29 @@
             // This is handled in renderComments, but good to keep in mind
 
             const isMyPost = post.company_id === currentUserId;
-            const avatarKey = post.is_anonymous ? 'male-1' : (post.avatar || 'male-1');
-            const avatarUrl = `/static/images/avatars/${avatarKey}.jpg`;
+            // post.avatar is now a full URL from backend (_avatar_url helper)
+            // post.avatar_key is the raw key (for fallback only)
+            const avatarUrl = post.is_anonymous
+                ? '/static/images/avatars/male-1.jpg'
+                : (post.avatar || `/static/images/avatars/${post.avatar_key || 'male-1'}.jpg`);
             const displayName = post.is_anonymous ? 'مجهول الهوية' : post.company_name;
+
+            const isProfileClickable = canOpenProfile(post.company_id, post.company_name, post.is_anonymous);
 
             return `
                 <div class="post-card-mobile" id="post-${post.id}">
                     <div class="post-header-mobile">
-                        <img src="${avatarUrl}" alt="Avatar" class="avatar-mobile" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-                        <div class="avatar-mobile" style="display: none; width: 40px; height: 40px; border-radius: 50%; background: var(--primary-gradient); color: white; align-items: center; justify-content: center; font-weight: 600;">${post.is_anonymous ? '?' : (post.company_name ? post.company_name.charAt(0) : 'U')}</div>
+                        <img src="${avatarUrl}" alt="Avatar" class="avatar-mobile ${isProfileClickable ? 'post-clickable' : ''}"
+                             onclick="${isProfileClickable ? `event.stopPropagation(); openCompanyProfile(${post.company_id}, '${escapeHtml(post.company_name)}', ${post.is_anonymous})` : `openPostPage(${post.id})`}"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <div class="avatar-mobile" ${isProfileClickable ? `onclick="event.stopPropagation(); openCompanyProfile(${post.company_id}, '${escapeHtml(post.company_name)}', ${post.is_anonymous})"` : ''} style="display: none; width: 40px; height: 40px; border-radius: 50%; background: var(--primary-gradient); color: white; align-items: center; justify-content: center; font-weight: 600;">${post.is_anonymous ? '?' : (post.company_name ? post.company_name.charAt(0) : 'U')}</div>
                         <div class="post-meta-mobile">
-                            <div class="company-name-mobile">
+                            <div class="company-name-mobile ${isProfileClickable ? 'company-name-link' : ''}" ${isProfileClickable ? `onclick="event.stopPropagation(); openCompanyProfile(${post.company_id}, '${escapeHtml(post.company_name)}', ${post.is_anonymous})"` : `onclick="openPostPage(${post.id})"`}>
                                 ${displayName}
                                 ${post.is_premium ? '<i class="fas fa-check-circle verification-badge" title="حساب موثق"></i>' : ''}
                             </div>
-                            <div class="post-time-mobile">${formatTimeAgo(post.created_at)}</div>
+                            <div class="post-time-mobile" onclick="openPostPage(${post.id})">${formatTimeAgo(post.created_at)}</div>
                         </div>
                         <button class="post-menu-btn" onclick="togglePostMenu(${post.id})" id="menu-btn-${post.id}">
                             <i class="fas fa-ellipsis-v"></i>
@@ -1389,16 +1927,17 @@
                                 <i class="fas fa-flag"></i>
                                 إبلاغ عن المنشور
                             </button>
-                            ${post.is_anonymous ? '' : `
+                            ${isProfileClickable ? `
                             <button class="menu-item" onclick="messageCompany(${post.company_id})">
                                 <i class="fas fa-envelope"></i>
                                 مراسلة الشركة
                             </button>
-                            `}
+                            ` : ''}
                         </div>
                     </div>
 
-                    <div class="post-content-mobile">${escapeHtml(post.content)}</div>
+                    <div class="post-content-mobile post-clickable" onclick="openPostPage(${post.id})">${escapeHtml(post.content || '')}</div>
+                    ${postMediaHtml(post)}
 
                     <div class="post-actions-mobile">
                         <div class="action-group">
@@ -1408,7 +1947,7 @@
                                 <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
                                 <span id="like-count-${post.id}">${post.likes_count}</span>
                             </button>
-                            <button class="action-btn-mobile" onclick="toggleComments(${post.id})">
+                            <button class="action-btn-mobile" onclick="openPostPage(${post.id})">
                                 <i class="far fa-comment"></i>
                                 <span id="comment-count-${post.id}">${post.comments_count}</span>
                             </button>
@@ -1420,22 +1959,65 @@
                         </div>
                     </div>
 
-                    <div class="comments-section-mobile" id="comments-${post.id}">
-                        <div id="comments-list-${post.id}"></div>
-                        <div class="comment-anonymous-toggle" style="margin-bottom: 5px; text-align: right; margin-right: 15px;">
-                            <input type="checkbox" id="anon-comment-${post.id}">
-                            <label for="anon-comment-${post.id}" style="font-size: 0.8rem; color: #6c757d; cursor: pointer;">إضافة تعليق مجهول</label>
+                    ${latestCommentHtml(post)}
+                </div>
+            `;
+        }
+
+        function canOpenProfile(companyId, companyName, isAnonymous) {
+            if (isAnonymous) return false;
+            if (!companyId || companyId === 0) return false;
+            const name = String(companyName || '').toLowerCase().trim();
+            if (!name || name === 'unknown' || name === 'مستخدم مجهول' || name === 'مجهول الهوية' || name === 'مستخدم') {
+                return false;
+            }
+            return true;
+        }
+
+        // فتح صفحة المنشور المنفصلة بكل التعليقات
+        function openPostPage(postId) {
+            window.location.href = `/community_bonus/post/${postId}`;
+        }
+
+        // فتح صفحة البروفايل العامة للشركة داخل المجتمع
+        function openCompanyProfile(companyId, companyName, isAnonymous) {
+            if (!canOpenProfile(companyId, companyName, isAnonymous)) return;
+            window.location.href = `/community_bonus/company/${companyId}`;
+        }
+
+        // معاينة أحدث تعليق فقط أسفل البوست
+        function latestCommentHtml(post) {
+            const c = post.latest_comment;
+            // إذا لم يكن هناك تعليقات ولا latest_comment، لا نعرض أي شيء
+            if (!c && !post.comments_count) return '';
+
+            // إذا كان هناك تعليقات لكن latest_comment فارغ (نادر)، نظهر زر "عرض التعليقات" فقط
+            if (!c && post.comments_count > 0) {
+                return `
+                    <div class="latest-comment-preview" onclick="openPostPage(${post.id})">
+                        <button class="view-all-comments" onclick="event.stopPropagation(); openPostPage(${post.id})">
+                            <i class="far fa-comments"></i> عرض كل التعليقات (${post.comments_count})
+                        </button>
+                    </div>
+                `;
+            }
+
+            // زر "عرض الكل" يظهر فقط إذا كان هناك أكثر من تعليق واحد
+            const viewAllBtn = post.comments_count > 1
+                ? `<button class="view-all-comments" onclick="event.stopPropagation(); openPostPage(${post.id})">
+                       <i class="far fa-comments"></i> عرض كل التعليقات (${post.comments_count})
+                   </button>`
+                : '';
+
+            return `
+                <div class="latest-comment-preview" onclick="openPostPage(${post.id})">
+                    ${viewAllBtn}
+                    <div class="comment-item-mobile">
+                        <div class="comment-header-mobile">
+                            <span class="comment-author-mobile">${escapeHtml(c.company_name || 'مستخدم')}</span>
+                            <span class="comment-time-mobile">${formatTimeAgo(c.created_at)}</span>
                         </div>
-                        <div class="comment-input-mobile">
-                            <input type="text"
-                                   class="comment-input-field"
-                                   id="comment-input-${post.id}"
-                                   placeholder="أضف تعليقاً..."
-                                   onkeypress="if(event.key==='Enter') addComment(${post.id})">
-                            <button class="comment-submit-btn" onclick="addComment(${post.id})">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
+                        <div class="comment-content-mobile">${escapeHtml(c.content || '')}</div>
                     </div>
                 </div>
             `;
@@ -1445,8 +2027,8 @@
         async function createPost() {
             const content = document.getElementById('post-content').value.trim();
 
-            if (!content) {
-                showToast('يرجى كتابة محتوى المنشور', 'warning');
+            if (!content && uploadedImages.length === 0 && !uploadedVideo && !uploadedAudio) {
+                showToast('يرجى كتابة محتوى أو إضافة ملف', 'warning');
                 return;
             }
 
@@ -1465,6 +2047,23 @@
                 const formData = new FormData();
                 formData.append('content', content);
                 formData.append('is_anonymous', isAnonymous);
+
+                // Add images
+                if (uploadedImages.length > 0) {
+                    uploadedImages.forEach((item, index) => {
+                        formData.append('images', item.file);
+                    });
+                }
+
+                // Add video
+                if (uploadedVideo) {
+                    formData.append('video', uploadedVideo.file);
+                }
+
+                // Add audio
+                if (uploadedAudio) {
+                    formData.append('audio', uploadedAudio.file);
+                }
 
                 // Use test endpoint for localhost demo
                 const endpoint = window.location.host === 'localhost:8080'
@@ -1490,9 +2089,17 @@
                     document.getElementById('post-content').value = '';
                     isAnonymous = false;
                     document.getElementById('anonymous-toggle').classList.remove('active');
+                    
+                    // Clear media
+                    uploadedImages = [];
+                    uploadedVideo = null;
+                    uploadedAudio = null;
+                    updateMediaPreview();
+                    
                     updateCharacterCounter();
 
-                    // Reload posts
+                    // Close modal and reload
+                    closeCreatePostModal();
                     loadPosts();
 
                     showToast('تم نشر المنشور بنجاح!', 'success');
@@ -1639,18 +2246,11 @@
 
             // Get current user ID
             let currentUserId = parseInt(document.body.getAttribute('data-user-id') || '0');
-            if (isNaN(currentUserId) || currentUserId === 0) {
-                currentUserId = 1; // Test user ID
-            }
-
-            // Check local storage for my comments
-            const myComments = JSON.parse(localStorage.getItem('myComments') || '[]');
+            if (isNaN(currentUserId)) currentUserId = 0;
 
             commentsList.innerHTML = comments.map(comment => {
-                // Check if user is owner via ID or local storage
-                const isOwner = (comment.company_id === currentUserId) || 
-                                (comment.can_delete) || 
-                                (myComments.includes(comment.id));
+                const isOwner = comment.can_delete === true || (currentUserId > 0 && comment.company_id === currentUserId);
+                const canEdit = comment.can_edit === true || (currentUserId > 0 && comment.company_id === currentUserId);
 
                 return `
                 <div class="comment-item-mobile" id="comment-${comment.id}">
@@ -1658,7 +2258,7 @@
                         <span class="comment-author-mobile">${escapeHtml(comment.company_name || 'Unknown')}</span>
                         <span class="comment-time-mobile">${formatTimeAgo(comment.created_at)}</span>
                         <div class="comment-actions">
-                            ${comment.can_edit ? `
+                            ${canEdit ? `
                                 <button class="comment-edit-btn" onclick="editComment(${comment.id}, ${postId})" title="تعديل التعليق">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -2074,17 +2674,17 @@
 
         // Open messages page
         function openMessagesPage() {
-            window.location.href = '/company_messages';
+            window.location.href = '/company/messages';
         }
 
         // Message company - فتح صفحة المراسلات مع الشركة المحددة
-        function messageCompany(companyId) {
+        function messageCompany(companyId, companyName) {
             if (!companyId) {
                 showToast('تعذر تحديد الشركة للمراسلة', 'error');
                 return;
             }
-            // إعادة توجيه لصفحة المراسلات مع تمرير معرف الشركة
-            window.location.href = `/company_messages?company_id=${companyId}`;
+            const nameParam = companyName ? `&name=${encodeURIComponent(companyName)}` : '';
+            window.location.href = `/company/messages?company_id=${companyId}${nameParam}`;
         }
 
         // Toggle post menu
@@ -2161,7 +2761,7 @@
                     refreshIcon.classList.remove('fa-spin');
                 }, 1000);
             }
-            loadPosts();
+            loadPosts(true);
         }
 
         function scrollToTop() {
@@ -2173,13 +2773,30 @@
             }
         }
 
-        function focusPostForm() {
-            const container = document.querySelector('.mobile-container');
-            const postForm = document.getElementById('post-form');
-            if (container && postForm) {
-                container.scrollTo({ top: 140, behavior: 'smooth' }); // Scroll to post form position
-                document.getElementById('post-content').focus();
+        function openCreatePostModal() {
+            const overlay = document.getElementById('create-post-overlay');
+            overlay.classList.add('active');
+            document.getElementById('fab-create-post').style.display = 'none';
+            setTimeout(() => {
+                const ta = document.getElementById('post-content');
+                if (ta) ta.focus();
+            }, 350);
+        }
+
+        function closeCreatePostModal() {
+            const overlay = document.getElementById('create-post-overlay');
+            overlay.classList.remove('active');
+            document.getElementById('fab-create-post').style.display = 'flex';
+        }
+
+        function handleOverlayClick(e) {
+            if (e.target === document.getElementById('create-post-overlay')) {
+                closeCreatePostModal();
             }
+        }
+
+        function focusPostForm() {
+            openCreatePostModal();
         }
 
         function isElementInViewport(el) {
@@ -2257,12 +2874,25 @@
         `;
         document.head.appendChild(style);
 
+        function isMediaPlaying() {
+            const media = document.querySelectorAll('audio, video');
+            for (let i = 0; i < media.length; i++) {
+                const el = media[i];
+                if (!el.paused && !el.ended && el.currentTime > 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // Handle visibility change for performance
         document.addEventListener('visibilitychange', function() {
-            if (!document.hidden && !isLoading) {
-                // Refresh posts when tab becomes visible
+            if (!document.hidden && !isLoading && !isMediaPlaying()) {
+                // Refresh posts silently when tab becomes visible and no media is playing
                 setTimeout(() => {
-                    loadPosts();
+                    if (!isMediaPlaying()) {
+                        loadPosts(true);
+                    }
                 }, 1000);
             }
         });
@@ -2270,11 +2900,9 @@
         // Handle online/offline
         window.addEventListener('online', function() {
             showToast('تم استعادة الاتصال بالإنترنت', 'success');
-            loadPosts();
-        });
-
-        window.addEventListener('offline', function() {
-            showToast('لا يوجد اتصال بالإنترنت', 'warning');
+            if (!isMediaPlaying()) {
+                loadPosts(true);
+            }
         });
     </script>
 </body>

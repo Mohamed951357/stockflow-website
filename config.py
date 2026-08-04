@@ -24,10 +24,10 @@ class Config:
     AD_IMAGES_FOLDER = 'ad_images'
     APK_FOLDER = 'apk_files'
 
-    # ===== إعدادات الجلسة والكوكيز - الحل النهائي =====
+    # ===== إعدادات الجلسة والكوكيز - 30 يوماً =====
 
-    # الجلسة تستمر 60 يوم
-    PERMANENT_SESSION_LIFETIME = timedelta(days=60)
+    # الجلسة تستمر 30 يوم
+    PERMANENT_SESSION_LIFETIME = timedelta(days=30)
 
     # إعدادات الكوكيز
     SESSION_COOKIE_NAME = 'bonus_pharma_session'
@@ -45,7 +45,7 @@ class Config:
 
     # Remember Me settings
     REMEMBER_COOKIE_NAME = 'bonus_pharma_remember'
-    REMEMBER_COOKIE_DURATION = timedelta(days=60)
+    REMEMBER_COOKIE_DURATION = timedelta(days=30)
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SECURE = os.environ.get('REMEMBER_COOKIE_SECURE', os.environ.get('COOKIE_SECURE', 'false')).lower() in ['true', '1', 'yes', 'on']
     REMEMBER_COOKIE_SAMESITE = os.environ.get('REMEMBER_COOKIE_SAMESITE', os.environ.get('COOKIE_SAMESITE', 'Lax'))

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    {% include \'_pwa_meta.html\' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بونص فارما - مراسلات الشركات</title>
@@ -153,6 +154,126 @@
                     </div>
                 </div>
 
+                <!-- بوت التعارف بين الشركات -->
+                <div class="card mb-4 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-robot me-2"></i>
+                            بوت التعارف بين الشركات
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-3" style="font-size: 0.92rem;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            اضغط زر التشغيل فيختار البوت أزواجاً عشوائية بتحية قصيرة طبيعية (أهلا / سلام عليكم / مساء الخير / صباح الخير).
+                            <strong>المرسل لا يرى أنه أرسل</strong>، والمستقبل يظن أن المحادثة بدأت من الطرف الآخر.
+                            في نفس الدفعة: <strong>من بعت رسالة لا يستقبل رسالة</strong> — كل شركة تظهر مرة واحدة فقط.
+                        </div>
+
+                        <!-- قسم 1: إرسال تعارف يدوي -->
+                        <h6 class="fw-bold mb-3 text-info"><i class="fas fa-paper-plane me-2"></i>إرسال تعارف يدوي (بين شركتين)</h6>
+                        <form method="post" action="{{ url_for('admin_private_messages') }}" class="row g-3 align-items-end mb-4">
+                            <input type="hidden" name="action" value="send_ghost_intro">
+                            <div class="col-md-3">
+                                <label class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">الشركة المرسلة (يظهر اسمها للمستقبل)</label>
+                                <select name="ghost_sender_id" class="form-select" required>
+                                    <option value="">-- اختر الشركة --</option>
+                                    {% for c in companies %}
+                                        {% if c.company_name.upper() != 'STOCK FLOW' %}
+                                        <option value="{{ c.id }}">{{ c.id }} - {{ c.company_name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">الشركة المستقبلة (ستستلم الترحيب)</label>
+                                <select name="ghost_receiver_id" class="form-select" required>
+                                    <option value="">-- اختر الشركة --</option>
+                                    {% for c in companies %}
+                                        {% if c.company_name.upper() != 'STOCK FLOW' %}
+                                        <option value="{{ c.id }}">{{ c.id }} - {{ c.company_name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label mb-1" style="font-size: 0.9rem; font-weight: 600;">نص الرسالة (اختياري)</label>
+                                <input type="text" name="ghost_message" class="form-control" maxlength="1000" placeholder="اتركه فارغاً لاختيار تحية عشوائية قصيرة">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-info text-white w-100">
+                                    <i class="fas fa-paper-plane me-1"></i>
+                                    إرسال تعارف
+                                </button>
+                            </div>
+                        </form>
+
+                        <hr class="my-4">
+
+                        <!-- قسم 2: التشغيل التلقائي والعشوائي بالدفعة -->
+                        <h6 class="fw-bold mb-3 text-warning"><i class="fas fa-cogs me-2"></i>التشغيل العشوائي والتعارف التلقائي</h6>
+                        <div class="row g-4">
+                            <!-- العمود الأيمن: إعدادات التشغيل التلقائي -->
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded-3 border h-100">
+                                    <h7 class="fw-bold d-block mb-3 text-primary" style="font-size: 0.95rem;">
+                                        <i class="fas fa-toggle-on me-1"></i> إعدادات التشغيل التلقائي
+                                    </h7>
+                                    <form method="post" action="{{ url_for('admin_private_messages') }}">
+                                        <input type="hidden" name="action" value="toggle_warmup_enabled">
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="warmup_enabled" id="warmupEnabled"
+                                                       {% if warmup_enabled %}checked{% endif %}>
+                                                <label class="form-check-label fw-semibold" for="warmupEnabled">تفعيل التشغيل التلقائي</label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1" style="font-size: 0.85rem; font-weight: 600;">حجم الدفعة التلقائية</label>
+                                            <input type="number" name="warmup_batch_size" class="form-control" min="1" max="25"
+                                                   value="{{ warmup_batch_size or 3 }}">
+                                        </div>
+                                        <button type="submit" class="btn btn-outline-primary btn-sm w-100 py-2">
+                                            <i class="fas fa-save me-1"></i> حفظ الإعدادات
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- العمود الأيسر: تشغيل دفعة عشوائية الآن -->
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded-3 border h-100">
+                                    <h7 class="fw-bold d-block mb-3 text-warning" style="font-size: 0.95rem;">
+                                        <i class="fas fa-bolt me-1"></i> تشغيل دفعة عشوائية الآن
+                                    </h7>
+                                    <form method="post" action="{{ url_for('admin_private_messages') }}" class="mb-3">
+                                        <input type="hidden" name="action" value="run_warmup_batch">
+                                        <div class="mb-3">
+                                            <label class="form-label mb-1" style="font-size: 0.85rem; font-weight: 600;">عدد الأزواج المطلوب تشغيلها</label>
+                                            <input type="number" name="warmup_batch_size" class="form-control" min="1" max="25"
+                                                   value="{{ warmup_batch_size or 3 }}" required>
+                                            <div class="form-text" style="font-size: 0.78rem;">كل زوج = شركتان (مرسل ومستقبل) عشوائيتان بالكامل.</div>
+                                        </div>
+                                        <button type="submit" class="btn btn-warning btn-sm w-100 text-white fw-bold py-2"
+                                                onclick="return confirm('تشغيل راندم الآن؟ كل شركة تظهر مرة واحدة فقط في الدفعة.');">
+                                            <i class="fas fa-play me-1"></i> تشغيل راندم الآن
+                                        </button>
+                                    </form>
+                                    <hr class="my-3">
+                                    <form method="post" action="{{ url_for('admin_private_messages') }}">
+                                        <input type="hidden" name="action" value="delete_warmup_messages">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100 py-2"
+                                                {% if not warmup_messages_count %}disabled{% endif %}
+                                                onclick="return confirm('حذف كل رسائل الراندم السابقة ({{ warmup_messages_count or 0 }})؟ لا يمكن التراجع.');">
+                                            <i class="fas fa-trash-alt me-1"></i> حذف الراندم السابق ({{ warmup_messages_count or 0 }})
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">
@@ -195,10 +316,34 @@
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="fas fa-list me-2"></i>
-                            إجمالي الرسائل الخاصة: ({{ messages|length }})
+                            إجمالي الرسائل الخاصة: ({{ total_messages_count or 0 }})
                         </h5>
                     </div>
                     <div class="card-body">
+                        <!-- فلتر التواريخ -->
+                        <form method="get" action="{{ url_for('admin_private_messages') }}" class="row g-3 mb-4 align-items-end border-bottom pb-3">
+                            <div class="col-md-3 col-sm-6">
+                                <label class="form-label" style="font-size: 0.9rem; font-weight: 600;">تاريخ البدء</label>
+                                <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <label class="form-label" style="font-size: 0.9rem; font-weight: 600;">تاريخ الانتهاء</label>
+                                <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+                            </div>
+                            <div class="col-md-4 col-sm-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary w-50">
+                                        <i class="fas fa-filter me-1"></i> فلترة
+                                    </button>
+                                    {% if start_date or end_date %}
+                                        <a href="{{ url_for('admin_private_messages') }}" class="btn btn-secondary w-50">
+                                            <i class="fas fa-times me-1"></i> إلغاء الفلتر
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </form>
+
                         {% if messages %}
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
@@ -216,7 +361,7 @@
                                 <tbody>
                                     {% for msg in messages %}
                                     <tr>
-                                        <td>{{ loop.index }}</td>
+                                        <td>{{ (page - 1) * 20 + loop.index }}</td>
                                         <td>{{ msg.sent_at_cairo_formatted }}</td>
                                         <td>
                                             {% if msg.sender %}
@@ -247,7 +392,7 @@
                                         <td>
                                             {% set fixed_subject = msg.subject or 'بدون عنوان' %}
                                             {% set fixed_subject = fixed_subject | replace('ط·آ·ط¢آ±ط·آ·ط¢آ³ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ© ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬طŒط·آ¸ط«â€ ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ©', 'رسالة مجهولة') %}
-                                            {% set fixed_subject = fixed_subject | replace('ط·آ·ط¢آ±ط·آ·ط¢آ³ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ© ط·آ¸أ¢â‚¬آ¦ط·آ¸أ¢â‚¬آ  ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ¸ط«â€ ط·آ·ط¢آ¨ط·آ·ط¢آ§ط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬â€چ', 'رسالة من الموبايل') %}
+                                            {% set fixed_subject = fixed_subject | replace('ط·آ·ط¢آ±ط·آ·ط¢آ³ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ© ط·آ¸أ¢â‚¬آ¦ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ¸ط«â€ ط·آ·ط¢آ¨ط·آ·ط¢آ§ط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬â€چ', 'رسالة من الموبايل') %}
                                             {{ fixed_subject }}
                                         </td>
                                         <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
@@ -256,22 +401,67 @@
                                             </a>
                                         </td>
                                         <td>
+                                            {% if msg.hidden_from_sender %}
+                                                <span class="badge bg-info badge-status me-1">تعارف</span>
+                                            {% endif %}
                                             {% if msg.is_read %}
                                                 <span class="badge bg-success badge-status">مقروءة</span>
                                             {% else %}
                                                 <span class="badge bg-warning text-dark badge-status">غير مقروءة</span>
                                             {% endif %}
+
+                                            <form action="{{ url_for('admin_private_messages') }}" method="POST" class="d-inline ms-2" onsubmit="return confirm('هل أنت متأكد من حذف هذه الرسالة نهائياً من الطرفين؟');">
+                                                <input type="hidden" name="action" value="delete_message">
+                                                <input type="hidden" name="message_id" value="{{ msg.id }}">
+                                                <button type="submit" class="btn btn-sm btn-danger py-0 px-1" title="حذف الرسالة نهائياً من الطرفين" style="font-size: 0.75rem; vertical-align: middle;">
+                                                    <i class="fas fa-trash-alt"></i> حذف
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- أرقام الصفحات (Pagination) -->
+                        {% if total_pages > 1 %}
+                        <nav class="mt-4">
+                            <ul class="pagination pagination-sm justify-content-center mb-0" style="direction: ltr;">
+                                {% if page > 1 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin_private_messages', page=page-1, start_date=start_date, end_date=end_date) }}"><i class="fas fa-chevron-left"></i> السابق</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link"><i class="fas fa-chevron-left"></i> السابق</span></li>
+                                {% endif %}
+
+                                {% for p in range(1, total_pages + 1) %}
+                                    {% if p == page %}
+                                        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                                    {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 2 and p <= page + 2) %}
+                                        <li class="page-item"><a class="page-link" href="{{ url_for('admin_private_messages', page=p, start_date=start_date, end_date=end_date) }}">{{ p }}</a></li>
+                                    {% elif p == 4 or p == total_pages - 3 %}
+                                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page < total_pages %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin_private_messages', page=page+1, start_date=start_date, end_date=end_date) }}">التالي <i class="fas fa-chevron-right"></i></a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">التالي <i class="fas fa-chevron-right"></i></span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+
                         {% else %}
                             <div class="text-center py-5">
                                 <i class="fas fa-comments fa-4x text-muted mb-3"></i>
-                                <h5 class="text-muted">لا توجد مراسلات بين الشركات حتى الآن.</h5>
-                                <p class="text-muted">عند بدء الشركات في تبادل الرسائل ستظهر هنا جميع المراسلات.</p>
+                                <h5 class="text-muted">لا توجد مراسلات بين الشركات مطابقة لشروط البحث.</h5>
+                                <p class="text-muted">عند تبادل الرسائل أو تغيير فلتر التواريخ ستظهر النتائج هنا.</p>
                             </div>
                         {% endif %}
                     </div>

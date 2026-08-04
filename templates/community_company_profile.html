@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    {% include \'_pwa_meta.html\' %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بروفايل الشركة - ستوك فلو</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary:          #1243C4;
+            --primary-dark:     #0A2DA0;
+            --primary-gradient: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);
+            --card-shadow:      0 4px 20px rgba(0,0,0,0.08);
+            --border-radius:    16px;
+            --transition:       all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-attachment: fixed;
+        }
+
+        /* ── Container ── */
+        .mobile-container {
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            height: 100vh;
+            max-width: 100%;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .mobile-header {
+            background: var(--primary-gradient);
+            position: relative;
+            z-index: 50;
+            flex-shrink: 0;
+            box-shadow: 0 2px 12px rgba(18,67,196,0.3);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 12px;
+            min-height: 60px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .header-btn:hover { background: rgba(255,255,255,0.28); transform: scale(1.05); }
+
+        .header-title { flex: 1; color: white; }
+        .header-title h1 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+        .header-subtitle { font-size: 0.72rem; opacity: 0.80; margin-top: 1px; }
+
+        /* ── Scrollable Content Area ── */
+        .content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .content-scroll::-webkit-scrollbar { display: none; }
+
+        /* ── Profile Cover ── */
+        .profile-cover {
+            width: 100%;
+            height: 135px;
+            background: var(--primary-gradient);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .profile-cover::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 100%);
+        }
+
+        .cover-name-watermark {
+            position: absolute;
+            bottom: 10px;
+            right: 16px;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: rgba(255,255,255,0.25);
+            letter-spacing: 1px;
+            user-select: none;
+            pointer-events: none;
+            font-family: 'Cairo', sans-serif;
+            z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 90%;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* ── Profile Info Card ── */
+        .profile-info-card {
+            background: white;
+            padding: 0 16px 16px;
+            border-bottom: 8px solid #f0f2f7;
+        }
+
+        .profile-top-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding-bottom: 4px;
+        }
+
+        /* Avatar */
+        .profile-avatar-wrap {
+            position: relative;
+            margin-top: -42px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .profile-avatar-outer {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.18);
+            position: relative;
+            overflow: hidden;
+            background: #e9ecef;
+        }
+
+        .profile-avatar-outer.premium-ring {
+            border: 4px solid transparent;
+            background-clip: padding-box;
+            box-shadow: 0 0 0 3px white, 0 0 0 5px #F5A623, 0 3px 14px rgba(0,0,0,0.18);
+        }
+
+        .profile-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .profile-avatar-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 1.9rem;
+            font-weight: 800;
+            border-radius: 50%;
+        }
+
+        /* Buttons */
+        .profile-action-btns {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding-bottom: 6px;
+        }
+
+        .btn-follow {
+            padding: 8px 18px;
+            border-radius: 24px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+        }
+
+        .btn-follow.not-following {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 3px 10px rgba(18,67,196,0.30);
+        }
+        .btn-follow.not-following:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(18,67,196,0.40); }
+
+        .btn-follow.following {
+            background: #F3F4F6;
+            color: #374151;
+            border: 1.5px solid #D1D5DB;
+        }
+        .btn-follow.following:hover { background: #FEE2E2; border-color: #FCA5A5; color: #DC2626; }
+
+        .btn-msg {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1.5px solid #D1D5DB;
+            background: #F9FAFB;
+            color: #374151;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .btn-msg:hover { background: #E0E7FF; border-color: var(--primary); color: var(--primary); }
+
+        /* Name + bio */
+        .profile-name-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .profile-name {
+            font-size: 1.18rem;
+            font-weight: 800;
+            color: #1a1a2e;
+            line-height: 1.2;
+        }
+
+        .premium-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: linear-gradient(135deg, #F5A623, #FFD700);
+            color: white;
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(245,166,35,0.38);
+            letter-spacing: 0.3px;
+        }
+
+        .profile-join {
+            font-size: 0.72rem;
+            color: #9CA3AF;
+            margin-top: 3px;
+        }
+
+        .profile-bio {
+            font-size: 0.83rem;
+            color: #6B7280;
+            line-height: 1.6;
+            margin-top: 6px;
+        }
+
+        .own-profile-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(18,67,196,0.08);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin-top: 8px;
+            border: 1px solid rgba(18,67,196,0.15);
+        }
+
+        /* ── Stats ── */
+        .stats-row {
+            display: flex;
+            border-top: 1px solid #F0F2F7;
+            margin-top: 14px;
+            padding-top: 14px;
+        }
+
+        .stat-col {
+            flex: 1;
+            text-align: center;
+        }
+        .stat-col:not(:last-child) {
+            border-left: 1px solid #F0F2F7;
+        }
+
+        .stat-val {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #1a1a2e;
+            line-height: 1;
+        }
+        .stat-lbl {
+            display: block;
+            font-size: 0.68rem;
+            color: #9CA3AF;
+            margin-top: 3px;
+        }
+
+        /* ── Section Divider ── */
+        .section-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px 8px;
+            background: #f0f2f7;
+        }
+
+        .section-bar i { color: var(--primary); font-size: 0.9rem; }
+        .section-bar span { font-weight: 700; font-size: 0.88rem; color: #374151; }
+
+        /* ── Posts ── */
+        .posts-list { padding: 8px 12px 40px; background: #f0f2f7; }
+
+        .post-card {
+            background: white;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.03);
+            animation: fadeUp 0.25s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+        .p-avatar {
+            width: 38px; height: 38px;
+            border-radius: 50%; object-fit: cover; flex-shrink: 0;
+            background: #e9ecef;
+        }
+
+        .p-name-wrap { flex: 1; min-width: 0; }
+
+        .p-name {
+            font-weight: 700; font-size: 0.88rem; color: #1a1a2e;
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        .p-time { font-size: 0.70rem; color: #9CA3AF; }
+
+        .post-content {
+            font-size: 0.86rem; color: #374151;
+            line-height: 1.65; white-space: pre-wrap;
+            word-break: break-word; cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .post-content:hover { color: #1a1a2e; }
+
+        /* Actions */
+        .post-actions {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 8px; border-top: 1px solid #F3F4F6;
+        }
+        .actions-left { display: flex; gap: 12px; align-items: center; }
+
+        .act-btn {
+            background: none; border: none;
+            color: #6B7280; font-size: 0.80rem;
+            display: flex; align-items: center; gap: 4px;
+            cursor: pointer; padding: 4px 6px; border-radius: 8px;
+            transition: var(--transition);
+            font-family: 'Cairo', sans-serif;
+        }
+        .act-btn:hover { background: #F3F4F6; color: #374151; }
+        .act-btn.liked { color: #EF4444; }
+        .act-btn.liked:hover { background: #FEE2E2; }
+
+        .views-count { font-size: 0.70rem; color: #9CA3AF; }
+
+        /* Verification badge */
+        .vbadge { color: #1DA1F2; font-size: 0.78rem; }
+
+        /* ── Loading / Empty / Error ── */
+        .state-card {
+            background: white; border-radius: 16px;
+            padding: 40px 20px; text-align: center;
+            margin: 12px; box-shadow: var(--card-shadow);
+        }
+        .spinner {
+            width: 38px; height: 38px;
+            border: 3px solid #E5E7EB; border-top-color: var(--primary);
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-icon { font-size: 2.4rem; color: #D1D5DB; margin-bottom: 10px; }
+        .empty-title { font-weight: 700; font-size: 0.95rem; color: #374151; margin-bottom: 4px; }
+        .empty-sub { font-size: 0.80rem; color: #9CA3AF; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed; top: 18px; left: 50%;
+            transform: translateX(-50%) translateY(-24px);
+            padding: 10px 20px; border-radius: 24px;
+            font-size: 0.85rem; font-weight: 600;
+            z-index: 9999; white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+            opacity: 0; transition: all 0.28s ease;
+            background: #1a1a2e; color: white;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #059669; }
+        .toast.error   { background: #DC2626; }
+    </style>
+</head>
+<body data-user-id="{{ current_user.id if current_user else 0 }}">
+<div class="mobile-container">
+
+    <!-- ══ Header ══ -->
+    <div class="mobile-header">
+        <div class="header-content">
+            <button class="header-btn" onclick="goBack()">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <div class="header-title">
+                <h1 id="hdr-name">بروفايل الشركة</h1>
+                <div class="header-subtitle">مجتمع ستوك فلو</div>
+            </div>
+            <button class="header-btn" onclick="shareProfile()" title="مشاركة">
+                <i class="fas fa-share-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ Scroll Area ══ -->
+    <div class="content-scroll" id="content-scroll">
+
+        <!-- Loading state -->
+        <div id="state-loading" class="state-card">
+            <div class="spinner"></div>
+            <p style="color:#9CA3AF;font-size:0.85rem;">جاري تحميل البروفايل...</p>
+        </div>
+
+        <!-- Error state -->
+        <div id="state-error" class="state-card" style="display:none;">
+            <div class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#F59E0B;"></i></div>
+            <div class="empty-title">تعذر تحميل البروفايل</div>
+            <div class="empty-sub" id="error-msg">حدث خطأ ما</div>
+            <button onclick="loadProfile()" style="
+                margin-top:14px; background:var(--primary-gradient); color:white;
+                border:none; padding:9px 24px; border-radius:22px;
+                cursor:pointer; font-family:'Cairo',sans-serif; font-weight:700; font-size:0.85rem;
+            ">إعادة المحاولة</button>
+        </div>
+
+        <!-- Profile content -->
+        <div id="profile-content" style="display:none;">
+
+            <!-- Cover -->
+            <div class="profile-cover" id="profile-cover">
+                <div class="cover-name-watermark" id="cover-watermark"></div>
+            </div>
+
+            <!-- Info card -->
+            <div class="profile-info-card">
+                <div class="profile-top-row">
+                    <div class="profile-avatar-wrap">
+                        <div class="profile-avatar-outer" id="avatar-outer">
+                            <img id="avatar-img" class="profile-avatar-img" src="" alt=""
+                                 onerror="this.style.display='none'; document.getElementById('avatar-fallback').style.display='flex';">
+                            <div id="avatar-fallback" class="profile-avatar-fallback" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="profile-action-btns" id="action-btns"></div>
+                </div>
+
+                <!-- Name -->
+                <div class="profile-name-row" id="name-row"></div>
+                <div class="profile-join" id="join-date"></div>
+                <div class="profile-bio" id="bio-text" style="display:none;"></div>
+                <div id="own-chip" class="own-profile-chip" style="display:none;">
+                    <i class="fas fa-user-circle"></i> هذا هو بروفايلك الخاص
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-row">
+                    <div class="stat-col">
+                        <span class="stat-val" id="s-posts">0</span>
+                        <span class="stat-lbl">منشور</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-val" id="s-followers">0</span>
+                        <span class="stat-lbl">متابع</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-val" id="s-following">0</span>
+                        <span class="stat-lbl">يتابع</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-val" id="s-likes">0</span>
+                        <span class="stat-lbl">إعجاب</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posts section header -->
+            <div class="section-bar">
+                <i class="fas fa-th-large"></i>
+                <span id="posts-lbl">المنشورات</span>
+            </div>
+
+            <!-- Posts list -->
+            <div class="posts-list" id="posts-list"></div>
+
+        </div><!-- /profile-content -->
+
+    </div><!-- /content-scroll -->
+
+</div><!-- /mobile-container -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const COMPANY_ID = {{ profile_company_id }};
+    let   cData      = null;
+    let   likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+
+    /* ── Helpers ─────────────────────────────────── */
+    function esc(t) {
+        const d = document.createElement('div');
+        d.textContent = t || '';
+        return d.innerHTML;
+    }
+
+    function timeAgo(ds) {
+        if (!ds) return '';
+        const date = new Date(ds.replace(' ', 'T'));
+        const now  = new Date();
+        const diff = now - date;
+        const min  = Math.floor(diff / 60000);
+        const hr   = Math.floor(diff / 3600000);
+        const day  = Math.floor(diff / 86400000);
+        if (min <  1) return 'الآن';
+        if (min < 60) return `قبل ${min} دقيقة`;
+        if (hr  < 24) return `قبل ${hr} ساعة`;
+        if (day <  7) return `قبل ${day} يوم`;
+        return date.toLocaleDateString('ar-EG');
+    }
+
+    function fmtN(n) {
+        n = parseInt(n) || 0;
+        if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+        if (n >= 1000)    return (n/1000).toFixed(1) + 'K';
+        return n;
+    }
+
+    function toast(msg, type = '') {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className   = `toast ${type} show`;
+        clearTimeout(el._t);
+        el._t = setTimeout(() => el.classList.remove('show'), 2800);
+    }
+
+    function goBack() {
+        if (document.referrer && document.referrer.includes('/community')) {
+            history.back();
+        } else {
+            window.location.href = '/community_bonus';
+        }
+    }
+
+    function shareProfile() {
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: 'بروفايل ستوك فلو', url });
+        } else {
+            navigator.clipboard.writeText(url)
+                .then(() => toast('تم نسخ الرابط!', 'success'))
+                .catch(() => toast('تعذر نسخ الرابط', 'error'));
+        }
+    }
+
+    /* ── Load ─────────────────────────────────────── */
+    async function loadProfile() {
+        document.getElementById('state-loading').style.display = '';
+        document.getElementById('state-error').style.display   = 'none';
+        document.getElementById('profile-content').style.display = 'none';
+
+        try {
+            const res = await fetch(`/community_bonus/api/company/${COMPANY_ID}`, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!res.ok) {
+                const txt = await res.text().catch(() => '');
+                throw new Error(`HTTP ${res.status}: ${txt.slice(0,200)}`);
+            }
+
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            cData = data.company;
+            renderProfile(cData);
+            renderPosts(data.posts || []);
+
+            document.getElementById('state-loading').style.display   = 'none';
+            document.getElementById('profile-content').style.display = '';
+
+        } catch (err) {
+            console.error('Profile load error:', err);
+            document.getElementById('state-loading').style.display = 'none';
+            document.getElementById('state-error').style.display   = '';
+            document.getElementById('error-msg').textContent        = err.message || 'خطأ غير معروف';
+        }
+    }
+
+    /* ── Render profile ────────────────────────────── */
+    function renderProfile(c) {
+        // Header
+        document.getElementById('hdr-name').textContent = c.company_name;
+
+        // Cover photo & watermark
+        const coverEl = document.getElementById('profile-cover');
+        const watermarkEl = document.getElementById('cover-watermark');
+        if (c.cover_photo_url) {
+            coverEl.style.backgroundImage = `url('${c.cover_photo_url}')`;
+            if (watermarkEl) watermarkEl.style.display = 'none';
+        } else {
+            coverEl.style.backgroundImage = '';
+            if (watermarkEl) {
+                watermarkEl.textContent = c.company_name;
+                watermarkEl.style.display = 'block';
+            }
+        }
+
+        // Avatar
+        const img = document.getElementById('avatar-img');
+        const fallback = document.getElementById('avatar-fallback');
+        if (c.avatar) {
+            img.style.display = 'block';
+            fallback.style.display = 'none';
+            img.src = c.avatar;
+            img.alt = c.company_name;
+        } else {
+            img.style.display = 'none';
+            fallback.style.display = 'flex';
+            fallback.textContent = (c.company_name || 'ش').charAt(0).toUpperCase();
+        }
+
+        // Premium ring
+        if (c.is_premium) {
+            document.getElementById('avatar-outer').classList.add('premium-ring');
+        }
+
+        // Name row
+        let nameHtml = `<span class="profile-name">${esc(c.company_name)}</span>`;
+        if (c.is_premium) {
+            nameHtml += ` <i class="fas fa-check-circle" style="color: #1DA1F2; font-size: 1.05rem; margin-right: 4px;" title="حساب موثق"></i>`;
+        }
+        document.getElementById('name-row').innerHTML = nameHtml;
+
+        // Join date
+        if (c.joined_at) {
+            try {
+                const d = new Date(c.joined_at);
+                document.getElementById('join-date').textContent =
+                    'انضم في ' + d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' });
+            } catch (_) {}
+        }
+
+        // Bio
+        if (c.bio) {
+            const bioEl = document.getElementById('bio-text');
+            bioEl.textContent  = c.bio;
+            bioEl.style.display = '';
+        }
+
+        // Own profile chip
+        if (c.is_own) {
+            document.getElementById('own-chip').style.display = '';
+        }
+
+        // Stats
+        document.getElementById('s-posts').textContent     = fmtN(c.posts_count);
+        document.getElementById('s-followers').textContent  = fmtN(c.followers_count);
+        document.getElementById('s-following').textContent  = fmtN(c.following_count);
+        document.getElementById('s-likes').textContent      = fmtN(c.likes_received);
+
+        // Section label
+        document.getElementById('posts-lbl').textContent = `المنشورات (${c.posts_count})`;
+
+        // Action buttons
+        const btns = document.getElementById('action-btns');
+        if (!c.is_own) {
+            btns.innerHTML = `
+                <button class="btn-msg" onclick="openMessages(${c.id})" title="مراسلة">
+                    <i class="fas fa-envelope"></i>
+                </button>
+                <button class="btn-follow ${c.is_following ? 'following' : 'not-following'}"
+                        id="follow-btn" onclick="toggleFollow()">
+                    <i class="${c.is_following ? 'fas fa-user-check' : 'fas fa-user-plus'}"></i>
+                    ${c.is_following ? 'متابَع' : 'متابعة'}
+                </button>
+            `;
+        }
+    }
+
+    /* ── Follow ────────────────────────────────────── */
+    async function toggleFollow() {
+        const btn = document.getElementById('follow-btn');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+
+        try {
+            const res  = await fetch(`/community_bonus/toggle_follow/${COMPANY_ID}`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'Error');
+
+            cData.is_following      = data.following;
+            cData.followers_count   = data.followers_count;
+
+            document.getElementById('s-followers').textContent = fmtN(data.followers_count);
+
+            if (data.following) {
+                btn.className = 'btn-follow following';
+                btn.innerHTML = '<i class="fas fa-user-check"></i> متابَع';
+                toast(`تتابع الآن ${cData.company_name}`, 'success');
+            } else {
+                btn.className = 'btn-follow not-following';
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> متابعة';
+                toast('تم إلغاء المتابعة');
+            }
+
+        } catch (err) {
+            toast('حدث خطأ، حاول مجدداً', 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function openMessages(cid) {
+        const name = (cData && cData.company_name) ? cData.company_name : '';
+        window.location.href = `/company/messages?company_id=${cid}&name=${encodeURIComponent(name)}`;
+    }
+
+    /* ── Render post media (Images, Videos, Audio) ── */
+    function postMediaHtml(post) {
+        const previewUrls = Array.isArray(post.media_preview_urls) ? post.media_preview_urls : [];
+        const mediaTypes  = Array.isArray(post.media_types) ? post.media_types : [];
+
+        const media = previewUrls.map((rawUrl, index) => {
+            const type = String(mediaTypes[index] || 'image').toLowerCase();
+            let url = rawUrl;
+            if (typeof url === 'string') {
+                url = url.replace('https://www.stock-flow.site', '')
+                         .replace('http://www.stock-flow.site', '');
+            }
+            if (type === 'video') {
+                return `<div style="margin-top:8px;"><video controls playsinline preload="metadata" src="${esc(url)}" style="width:100%;max-height:300px;border-radius:10px;background:#000;">متصفحك لا يدعم الفيديو</video></div>`;
+            }
+            return `<div style="margin-top:8px;"><img src="${esc(url)}" style="width:100%;max-height:350px;object-fit:cover;border-radius:10px;" alt="مرفق" onerror="this.parentElement.style.display='none'" /></div>`;
+        }).join('');
+
+        let audioUrl = post.audio_url || '';
+        if (typeof audioUrl === 'string') {
+            audioUrl = audioUrl.replace('https://www.stock-flow.site', '').replace('http://www.stock-flow.site', '');
+        }
+        const audio = audioUrl
+            ? `<div style="margin-top:8px;"><audio controls preload="metadata" src="${esc(audioUrl)}" style="width:100%;">متصفحك لا يدعم الصوت</audio></div>`
+            : '';
+
+        return media + audio;
+    }
+
+    /* ── Render posts ──────────────────────────────── */
+    function renderPosts(posts) {
+        const list = document.getElementById('posts-list');
+
+        if (!posts.length) {
+            list.innerHTML = `
+                <div class="state-card" style="margin:0;">
+                    <div class="empty-icon"><i class="far fa-newspaper"></i></div>
+                    <div class="empty-title">لا توجد منشورات</div>
+                    <div class="empty-sub">الشركة لم تنشر أي منشورات بعد</div>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = posts.map(buildPostCard).join('');
+    }
+
+    function buildPostCard(post) {
+        const isLiked = post.is_liked || likedPosts.includes(post.id);
+
+        const avatarSrc = post.avatar || '/static/images/avatars/male-1.jpg';
+        const nameBadge = post.is_premium
+            ? `<i class="fas fa-check-circle vbadge"></i>`
+            : '';
+        const anonTag = post.is_anonymous
+            ? `<span style="font-size:0.70rem; color:#6B7280; background:#F3F4F6; padding:2px 8px; border-radius:10px; margin-right:6px;"><i class="fas fa-user-secret"></i> نشر بمجهول</span>`
+            : '';
+
+        return `
+        <div class="post-card">
+            <div class="post-header">
+                <img class="p-avatar" src="${esc(avatarSrc)}" alt=""
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                     style="width:38px;height:38px;border-radius:50%;object-fit:cover;">
+                <div class="p-avatar" style="display:none;width:38px;height:38px;border-radius:50%;background:var(--primary-gradient);color:white;align-items:center;justify-content:center;font-weight:700;">
+                    ${(post.company_name || 'ش').charAt(0).toUpperCase()}
+                </div>
+                <div class="p-name-wrap">
+                    <div class="p-name">${esc(post.company_name)} ${nameBadge} ${anonTag}</div>
+                    <div class="p-time">${timeAgo(post.created_at)}</div>
+                </div>
+            </div>
+            ${post.content ? `<div class="post-content" onclick="openPost(${post.id})">${esc(post.content)}</div>` : ''}
+            ${postMediaHtml(post)}
+            <div class="post-actions">
+                <div class="actions-left">
+                    <button class="act-btn ${isLiked ? 'liked' : ''}"
+                            id="like-${post.id}" onclick="toggleLike(${post.id}, this)">
+                        <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
+                        <span id="lc-${post.id}">${post.likes_count || 0}</span>
+                    </button>
+                    <button class="act-btn" onclick="openPost(${post.id})">
+                        <i class="far fa-comment"></i>
+                        <span>${post.comments_count || 0}</span>
+                    </button>
+                </div>
+                <span class="views-count">
+                    <i class="far fa-eye"></i> ${post.views_count || 0}
+                </span>
+            </div>
+        </div>`;
+    }
+
+    function openPost(id) {
+        window.location.href = `/community_bonus/post/${id}`;
+    }
+
+    /* ── Like ──────────────────────────────────────── */
+    async function toggleLike(postId, btn) {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        try {
+            const res  = await fetch('/community_bonus/toggle_like', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ post_id: postId })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            const countEl = document.getElementById(`lc-${postId}`);
+
+            if (data.liked) {
+                btn.classList.add('liked');
+                btn.querySelector('i').className = 'fas fa-heart';
+                if (!likedPosts.includes(postId)) likedPosts.push(postId);
+            } else {
+                btn.classList.remove('liked');
+                btn.querySelector('i').className = 'far fa-heart';
+                likedPosts = likedPosts.filter(i => i !== postId);
+            }
+
+            if (countEl) countEl.textContent = data.likes_count;
+            localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+
+        } catch (err) {
+            toast('حدث خطأ في الإعجاب', 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    /* ── Init ──────────────────────────────────────── */
+    loadProfile();
+</script>
+</body>
+</html>

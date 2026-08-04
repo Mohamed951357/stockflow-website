@@ -959,6 +959,26 @@
             <div class="profile-avatar-container">
                 <div class="profile-avatar" id="mainProfileAvatar">
                     {% set avatar_key = company.avatar if company.avatar else 'male-1' %}
+                    {% if avatar_key == 'default-male' %}{% set avatar_key = 'male-1' %}{% endif %}
+                    {% if avatar_key.startswith('custom-photo:') %}
+                    <img src="{{ url_for('static', filename='images/profile_photos/' + avatar_key[13:]) }}"
+                        alt="Profile Picture" id="mainProfileImage"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                        style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                    <div class="avatar-placeholder rounded-circle"
+                        style="display: none; width: 120px; height: 120px; background: linear-gradient(135deg, #1243C4, #0A2DA0); color: white; align-items: center; justify-content: center; font-weight: bold; font-size: 40px; border: 4px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                        {{ company.company_name[0] if company.company_name else 'C' }}
+                    </div>
+                    {% elif avatar_key[:4] == 'http' or avatar_key[:7] == '/media/' %}
+                    <img src="{{ avatar_key }}"
+                        alt="Profile Picture" id="mainProfileImage"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                        style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                    <div class="avatar-placeholder rounded-circle"
+                        style="display: none; width: 120px; height: 120px; background: linear-gradient(135deg, #1243C4, #0A2DA0); color: white; align-items: center; justify-content: center; font-weight: bold; font-size: 40px; border: 4px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                        {{ company.company_name[0] if company.company_name else 'C' }}
+                    </div>
+                    {% else %}
                     {% set avatar_parts = avatar_key.split('-') %}
                     {% set avatar_type = 'html' if avatar_parts[0] == 'html' else 'jpg' %}
                     {% if avatar_type == 'html' %}
@@ -984,6 +1004,7 @@
                         style="display: none; width: 120px; height: 120px; background: linear-gradient(135deg, #1243C4, #0A2DA0); color: white; align-items: center; justify-content: center; font-weight: bold; font-size: 40px; border: 4px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
                         {{ company.company_name[0] if company.company_name else 'C' }}
                     </div>
+                    {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -1079,8 +1100,11 @@
             <form method="POST" action="{{ url_for('company_profile') }}" class="modern-form">
                 
                         <!-- Hidden Avatar Input -->
+                        {% set av = company.avatar or '' %}
+                        {% set has_custom_photo = av and av not in ['male-1', 'female-1', 'default-male', ''] and (av.startswith('custom-photo:') or av.startswith('http') or av.startswith('/media/') or '/media/avatars/' in av) %}
+                        {% set preset_av = av if av in ['male-1','female-1'] else 'male-1' %}
                         <input type="hidden" name="avatar" id="selected-avatar"
-                            value="{{ company.avatar if company.avatar else 'male-1' }}">
+                            value="{{ preset_av if not has_custom_photo else av }}">
 
                         <div class="mb-3">
                             <label class="form-label text-secondary fw-bold small">اسم الشركة</label>
@@ -1102,6 +1126,7 @@
 
                         <div class="mb-3">
                             <label class="form-label text-secondary fw-bold small mb-2">اختر شخصية (أفاتار)</label>
+                            {% if not has_custom_photo %}
                             <div class="avatar-grid">
                                 {% for i in range(1, 2) %}
                                 <div class="avatar-option" data-value="male-{{ i }}"
@@ -1118,11 +1143,41 @@
                                 </div>
                                 {% endfor %}
                             </div>
+                            {% else %}
+                            <div class="text-muted small p-3" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;">
+                                <i class="fas fa-info-circle me-1 text-warning"></i>لتغيير الأفاتار، احذف الصورة الشخصية أولاً.
+                            </div>
+                            {% endif %}
                         </div>
 
-                        <div class="mb-3" style="display: none;">
-                            <label class="form-label text-secondary fw-bold small mb-2">ارفع صورة وسيتم تحويلها لأفاتار HTML خفيف تلقائيًا</label>
-                            <input type="file" class="form-control" id="avatarUpload" accept="image/*" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary fw-bold small mb-2">رفع صورة شخصية</label>
+                            {% if company.avatar and (company.avatar.startswith('custom-photo:') or company.avatar[:4] == 'http' or '/media/avatars/' in company.avatar) %}
+                            <div class="d-flex align-items-center gap-3 mb-3 p-3" style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;">
+                                <img src="{% if company.avatar.startswith('custom-photo:') %}{{ url_for('static', filename='images/profile_photos/' + company.avatar[13:]) }}{% else %}{{ company.avatar }}{% endif %}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid #22c55e;" onerror="this.style.display='none'">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold text-success small"><i class="fas fa-check-circle me-1"></i>صورتك الحالية</div>
+                                    <div class="text-muted" style="font-size:0.8rem;">يمكنك رفع صورة جديدة أو اختيار أفاتار أدناه.</div>
+                                </div>
+                                <button type="button" onclick="deleteProfilePhoto()" style="background:#ef4444;color:#fff;border:none;border-radius:10px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:0.85rem;white-space:nowrap;">
+                                    <i class="fas fa-trash-alt me-1"></i>حذف الصورة
+                                </button>
+                            </div>
+                            {% endif %}
+                            <div style="padding:16px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:14px;text-align:center;">
+                                <div class="text-muted small mb-3">ارفع صورتك الشخصية مباشرة (JPG/PNG - حتى 5MB)</div>
+                                <label for="avatarFileInput" style="cursor:pointer;display:inline-block;background:#1243C4;color:#fff;border-radius:10px;padding:8px 20px;font-weight:700;font-size:0.9rem;">
+                                    <i class="fas fa-upload me-2"></i>اختر صورة
+                                </label>
+                                <input type="file" id="avatarFileInput" name="avatar_file" accept="image/*" style="display:none;">
+                                <div id="avatarPreviewBox" style="display:none;margin:12px auto 0;text-align:center;">
+                                    <img id="avatarPreviewImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #1243C4;margin-bottom:8px;">
+                                    <br>
+                                    <button type="button" onclick="uploadProfilePhoto()" style="background:#10b981;color:#fff;border:none;border-radius:10px;padding:8px 22px;font-weight:700;cursor:pointer;font-size:0.9rem;">
+                                        <i class="fas fa-check me-1"></i>رفع الصورة
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -1228,6 +1283,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        window.hasCustomPhoto = {{ has_custom_photo|tojson }};
         function renderHtmlAvatar(container, key) {
             let html = '';
             if (key === 'html-1') html = '<div style="width: 120px; height: 120px; background: linear-gradient(45deg, #1243C4, #0A2DA0); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; border: 4px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">HTML 1</div>';
@@ -1238,7 +1294,7 @@
             else html = '<div style="width: 120px; height: 120px; background: linear-gradient(135deg, #a8edea, #fed6e3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #333; font-weight: bold; font-size: 14px; border: 4px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">HTML 6</div>';
             container.innerHTML = html;
         }
-        function selectAvatar(avatarKey) {
+        function updateAvatarPreview(avatarKey) {
             document.getElementById('selected-avatar').value = avatarKey;
             document.querySelectorAll('.avatar-option').forEach(el => {
                 el.classList.remove('selected');
@@ -1248,61 +1304,107 @@
             if (!container) return;
             if (avatarKey.startsWith('html-')) {
                 renderHtmlAvatar(container, avatarKey);
+            } else if (avatarKey.startsWith('custom-photo:') || avatarKey.startsWith('http') || avatarKey.startsWith('/media/')) {
+                let src = avatarKey;
+                if (avatarKey.startsWith('custom-photo:')) {
+                    src = '/static/images/profile_photos/' + avatarKey.slice(13);
+                }
+                container.innerHTML = '<img id="mainProfileImage" alt="Profile Picture" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 4px 8px rgba(0,0,0,0.15);">';
+                document.getElementById('mainProfileImage').src = src;
             } else {
-                container.innerHTML = '<img id="mainProfileImage" alt="Profile Picture">';
+                container.innerHTML = '<img id="mainProfileImage" alt="Profile Picture" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 4px 8px rgba(0,0,0,0.15);">';
                 const mainImg = document.getElementById('mainProfileImage');
                 mainImg.src = `/static/images/avatars/${avatarKey}.jpg`;
                 mainImg.onerror = function(){ this.src = '/static/images/avatars/male-1.jpg'; };
             }
         }
-        function fileToHtmlAvatar(file, cb) {
+        function selectAvatar(avatarKey) {
+            if (window.hasCustomPhoto) return;
+            if (!['male-1', 'female-1'].includes(avatarKey)) return;
+            updateAvatarPreview(avatarKey);
+            fetch('/set_avatar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ avatar: avatarKey }),
+                credentials: 'same-origin'
+            })
+            .then(async r => {
+                const data = await r.json().catch(() => null);
+                if (!data) throw new Error('استجابة غير متوقعة من الخادم');
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    const t = document.createElement('div');
+                    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;';
+                    t.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                    document.body.appendChild(t);
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    alert(data.message || 'تعذر تغيير الأفاتار');
+                }
+            }).catch(e => alert(e.message || 'حدث خطأ أثناء تغيير الأفاتار'));
+        }
+        document.getElementById('avatarFileInput')?.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e){
-                const img = new Image();
-                img.onload = function(){
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = 32; canvas.height = 32;
-                    ctx.drawImage(img, 0, 0, 32, 32);
-                    let r=0,g=0,b=0,n=0;
-                    const data = ctx.getImageData(0,0,32,32).data;
-                    for (let i=0;i<data.length;i+=4){ r+=data[i]; g+=data[i+1]; b+=data[i+2]; n++; }
-                    r/=n; g/=n; b/=n;
-                    const max = Math.max(r,g,b), min = Math.min(r,g,b);
-                    let h=0,s=0,l=(max+min)/510;
-                    const d = max-min;
-                    s = l>0.5 ? d/(510-max-min) : d/(max+min);
-                    if (d===0) h=0; else {
-                        switch(max){
-                            case r: h = ((g-b)/d + (g<b?6:0)); break;
-                            case g: h = ((b-r)/d + 2); break;
-                            case b: h = ((r-g)/d + 4); break;
-                        }
-                        h*=60;
-                    }
-                    let key = 'html-1';
-                    if (s < 0.25) key = 'html-6';
-                    else if ((h >= 0 && h < 25) || (h >= 330 && h <= 360)) key = 'html-2';
-                    else if (h >= 25 && h < 70) key = 'html-4';
-                    else if (h >= 70 && h < 160) key = 'html-5';
-                    else if (h >= 160 && h < 220) key = 'html-3';
-                    else key = 'html-1';
-                    cb(key);
-                };
-                img.src = e.target.result;
+            reader.onload = e => {
+                document.getElementById('avatarPreviewImg').src = e.target.result;
+                document.getElementById('avatarPreviewBox').style.display = 'block';
             };
             reader.readAsDataURL(file);
-        }
-        document.getElementById('avatarUpload')?.addEventListener('change', function(){
-            const f = this.files && this.files[0];
-            if (!f) return;
-            fileToHtmlAvatar(f, function(key){ selectAvatar(key); });
         });
+        function uploadProfilePhoto() {
+            const fileInput = document.getElementById('avatarFileInput');
+            if (!fileInput || !fileInput.files[0]) return;
+            const fd = new FormData();
+            fd.append('avatar_file', fileInput.files[0]);
+            fetch('/upload_avatar', { method: 'POST', body: fd, credentials: 'same-origin' })
+            .then(async r => {
+                const data = await r.json().catch(() => null);
+                if (!data) throw new Error('استجابة غير متوقعة من الخادم');
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    const t = document.createElement('div');
+                    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;';
+                    t.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                    document.body.appendChild(t);
+                    setTimeout(() => location.reload(), 1800);
+                } else {
+                    alert(data.message || 'تعذر رفع الصورة');
+                }
+            }).catch(e => alert(e.message || 'حدث خطأ أثناء رفع الصورة'));
+        }
+        function deleteProfilePhoto() {
+            if (!confirm('هل أنت متأكد من حذف الصورة الشخصية؟')) return;
+            fetch('/delete_avatar', { method: 'POST', credentials: 'same-origin' })
+            .then(async r => {
+                const data = await r.json().catch(() => null);
+                if (!data) throw new Error('استجابة غير متوقعة من الخادم');
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    const t = document.createElement('div');
+                    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;z-index:99999;font-family:Cairo,sans-serif;';
+                    t.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                    document.body.appendChild(t);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert(data.message || 'تعذر حذف الصورة');
+                }
+            }).catch(e => alert(e.message || 'حدث خطأ أثناء حذف الصورة'));
+        }
 
         // Initialize selection on load
         document.addEventListener('DOMContentLoaded', () => {
+            if (window.hasCustomPhoto) return;
             const currentAvatar = document.getElementById('selected-avatar').value || 'male-1';
-            selectAvatar(currentAvatar);
+            const preset = ['male-1', 'female-1'].includes(currentAvatar) ? currentAvatar : 'male-1';
+            updateAvatarPreview(preset);
         });
 
         // معالجة در جوجل

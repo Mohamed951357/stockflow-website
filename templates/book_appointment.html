@@ -376,6 +376,7 @@
         }
 
     </style>
+    {% include '_pwa_meta.html' %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark">
@@ -590,9 +591,6 @@
                                     <button type="submit" class="btn btn-primary" id="submitAppointmentBtn">
                                         <i class="fas fa-paper-plane me-2"></i>إرسال الطلب
                                     </button>
-                                    <a href="{{ url_for('company_dashboard') }}" class="btn btn-secondary">
-                                        <i class="fas fa-arrow-right me-2"></i>العودة
-                                    </a>
                                 </div>
                             </form>
                         </div>
@@ -613,10 +611,6 @@
             <p>
                 سيتم إتاحة هذه الخدمة قريباً. نعتذر عن أي إزعاج.
             </p>
-            <a href="{{ url_for('company_dashboard') }}" class="btn btn-primary">
-                <i class="fas fa-home me-2"></i>
-                العودة للصفحة الرئيسية
-            </a>
         </div>
     </div>
     {% endif %}
@@ -769,8 +763,8 @@
 
                     const communityBadge = document.getElementById('community-count');
                     if (communityBadge) {
-                        if (data.unread_community_messages_count > 0) {
-                            communityBadge.textContent = data.unread_community_messages_count;
+                        if (data.unread_private_messages_count > 0) {
+                            communityBadge.textContent = data.unread_private_messages_count;
                             communityBadge.style.display = 'block';
                         } else {
                             communityBadge.style.display = 'none';

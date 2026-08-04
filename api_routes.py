@@ -949,7 +949,7 @@ def api_login():
         if user.is_active:
             session['user_type'] = 'company'
             session.permanent = True
-            login_user(user, remember=remember_me, duration=timedelta(days=60) if remember_me else None)
+            login_user(user, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
             
             try:
                 user.last_login = datetime.utcnow()
