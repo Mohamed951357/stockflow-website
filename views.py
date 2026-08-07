@@ -3357,7 +3357,31 @@ def register_views(app):
         if current_user.is_premium:
             return redirect(url_for('company_dashboard'))
 
-        return render_template('subscribe_plus.html')
+        unread_notifications_count = get_unread_notifications_count(current_user.id)
+        unread_private_messages_count = PrivateMessage.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False,
+            is_deleted_by_receiver=False
+        ).count()
+        unread_community_messages_count = CommunityMessage.query.filter_by(
+            is_read_by_company=False,
+            sender_type='admin'
+        ).count()
+
+        duration_setting = SystemSetting.query.filter_by(setting_key='premium_duration_months').first()
+        premium_duration_months = duration_setting.setting_value if (duration_setting and duration_setting.setting_value) else ''
+
+        message_setting = SystemSetting.query.filter_by(setting_key='premium_message').first()
+        premium_message = message_setting.setting_value if (message_setting and message_setting.setting_value) else ''
+
+        return render_template('subscribe_plus.html',
+                               company=current_user,
+                               active_page='subscribe_plus',
+                               premium_duration_months=premium_duration_months,
+                               premium_message=premium_message,
+                               unread_notifications_count=unread_notifications_count,
+                               unread_private_messages_count=unread_private_messages_count,
+                               unread_community_messages_count=unread_community_messages_count)
 
     @app.route('/subscribe_payment')
     @login_required

@@ -1,145 +1,26 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الاشتراك في STOCKFLOW PLUS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #f8f9fa;
-            padding-top: 56px;
-        }
-
-        .navbar {
-            background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
-
-        .navbar-brand {
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            color: #fff;
-        }
-
-        .navbar-logo {
-            height: 35px;
-            width: auto;
-            margin-left: 10px;
-        }
-
-        .hero-section {
-            min-height: calc(100vh - 56px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 1rem;
-        }
-
-        .hero-card {
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-            max-width: 900px;
-            width: 100%;
-            padding: 2.5rem 2rem;
-        }
-
-        .badge-plus {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #333;
-            border-radius: 999px;
-            padding: 0.35rem 0.9rem;
-            font-size: 0.85rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-        }
-
-        .hero-title {
-            font-weight: 800;
-            font-size: 1.9rem;
-            margin-top: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .hero-subtitle {
-            color: #6c757d;
-            margin-bottom: 1.5rem;
-        }
-
-        .features-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .features-list li {
-            display: flex;
-            align-items: flex-start;
-            gap: .75rem;
-            margin-bottom: .75rem;
-            color: #495057;
-        }
-
-        .features-list li i {
-            color: #28a745;
-            margin-top: 4px;
-        }
-
-        .price-box {
-            border-radius: 16px;
-            background: #f1f3ff;
-            padding: 1.25rem 1.5rem;
-            text-align: center;
-        }
-
-        .price-main {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #4c6fff;
-        }
-
-        .price-main small {
-            font-size: .9rem;
-            color: #6c757d;
-        }
-
-        .subscribe-btn {
-            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-            border: none;
-            border-radius: 999px;
-            padding: 0.8rem 2.2rem;
-            font-size: 1rem;
-            font-weight: 700;
-            color: #fff;
-            display: inline-flex;
-            align-items: center;
-            gap: .6rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-        }
-
-        .subscribe-btn:hover {
-            opacity: .95;
-        }
-
-        @media (max-width: 767.98px) {
-            .hero-card {
-                padding: 1.75rem 1.25rem;
-            }
-
-            .hero-title {
-                font-size: 1.5rem;
-            }
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>الاشتراك في STOCKFLOW PLUS - {{ system_subtitle if system_subtitle else 'نظام إدارة الأرصدة والمواعيد' }}</title>
     
-        /* --- Mobile Responsiveness Bounds Fix --- */
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);
+            --accent-gold: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            --accent-cyan: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            --whatsapp-gradient: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+        }
+
         html, body {
             overflow-x: hidden !important;
             width: 100vw !important;
@@ -149,161 +30,483 @@
             overscroll-behavior-x: none !important;
         }
 
+        body {
+            background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%) !important;
+            font-family: 'Cairo', sans-serif !important;
+            min-height: 100vh !important;
+            padding-top: 85px !important;
+            padding-bottom: 40px !important;
+            color: var(--text-dark);
+            position: relative;
+        }
+
+        /* Ambient glowing effect in background */
+        .ambient-glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.25) 0%, rgba(18, 67, 196, 0) 70%);
+            top: -100px;
+            right: -100px;
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .ambient-glow-bottom {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.18) 0%, rgba(10, 45, 160, 0) 70%);
+            bottom: -150px;
+            left: -150px;
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+        }
+
+        /* Glassmorphism main card */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            padding: 2.5rem 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Hero Badge */
+        .badge-plus-sparkle {
+            background: var(--accent-gold);
+            color: #1e1e1e;
+            border-radius: 999px;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+            letter-spacing: 0.5px;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4); transform: scale(1); }
+            100% { box-shadow: 0 10px 30px rgba(255, 215, 0, 0.7); transform: scale(1.03); }
+        }
+
+        .hero-title {
+            font-weight: 900;
+            font-size: 2.2rem;
+            color: #0b1630;
+            margin-top: 1rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+        }
+
+        .hero-title span {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Feature items */
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.2rem 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: #1243C4;
+            box-shadow: 0 12px 25px rgba(18, 67, 196, 0.12);
+        }
+
+        .feature-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            color: #1243C4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .feature-title {
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Pricing Box */
+        .pricing-box {
+            background: linear-gradient(145deg, #1243C4 0%, #0A2DA0 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            color: #ffffff;
+            box-shadow: 0 15px 35px rgba(10, 45, 160, 0.35);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .pricing-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .pricing-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #ffd700;
+            margin-bottom: 0.75rem;
+        }
+
+        .pricing-subtitle {
+            font-size: 1rem;
+            opacity: 0.95;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* CTA Buttons */
+        .btn-whatsapp {
+            background: var(--whatsapp-gradient);
+            color: #ffffff !important;
+            border: none;
+            border-radius: 999px;
+            padding: 0.85rem 1.8rem;
+            font-size: 1.05rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            width: 100%;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.35);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.5);
+            color: #ffffff !important;
+        }
+
+        .btn-activation-modal {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff !important;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 999px;
+            padding: 0.75rem 1.8rem;
+            font-size: 1rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn-activation-modal:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        /* Custom Activation Modal */
+        .modal-content-custom {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .modal-header-custom {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            padding: 1.5rem;
+            border: none;
+        }
+
+        @media (max-width: 767.98px) {
+            .glass-card {
+                padding: 1.75rem 1.25rem;
+                border-radius: 20px;
+            }
+            .hero-title {
+                font-size: 1.65rem;
+            }
+            .hero-subtitle {
+                font-size: 0.98rem;
+            }
+            .pricing-box {
+                padding: 1.5rem 1.25rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('company_dashboard') }}">
-                {% if current_logo_path %}
-                    <img src="{{ current_logo_path }}" alt="Logo" class="navbar-logo">
-                {% else %}
-                    <img src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Logo" class="navbar-logo">
-                {% endif %}
-                <span class="full-text">{{ system_subtitle }}</span>
-                <span class="short-text d-none"></span>
-            </a>
-        </div>
-    </nav>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-bottom"></div>
 
-    <section class="hero-section">
-        <div class="hero-card">
-            <div class="row g-4 align-items-center">
-                <div class="col-md-7">
-                    <span class="badge-plus">
-                        <i class="fas fa-gem"></i>
-                        STOCKFLOW PLUS
-                    </span>
-                    <h1 class="hero-title"> مع STOCKFLOW PLUS</h1>
-                    <p class="hero-subtitle">
-                        باقة مميزة تساعدك في إدارة الأصناف والمراسلات بشكل أسهل وأسرع.
-                    </p>
-                    <ul class="features-list">
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <span>عدد لامحدود من البحثات .</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <span>مزايا إضافية في التقارير والمتابعة.</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <span>تحديثات جديدة بشكل مستمر للمشتركين في الباقة.</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-md-5">
-                    <div class="price-box mb-3">
-                        <div class="price-main">
-                            50 جنيه
-                            <small>/ 3 شهور فقط</small>
+    <!-- StockFlow Company Navbar -->
+    {% include '_company_navbar.html' %}
+
+    <div class="container main-container">
+        <div class="glass-card">
+            <div class="text-center mb-4">
+                <span class="badge-plus-sparkle">
+                    <i class="fas fa-gem"></i>
+                    STOCKFLOW PLUS
+                </span>
+                <h1 class="hero-title">رقّ حسابك واستمتع بـ <span>إمكانيات بلا حدود</span></h1>
+                <p class="hero-subtitle">
+                    باقة ممتازة تمكّنك من إضافة وإدارة الأصناف، إجراء البحث اللامحدود، والحصول على أولوية المراسلات والتنبيهات.
+                </p>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="row g-3 mb-5">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-boxes-stacked"></i>
                         </div>
-                        <div class="text-muted mt-2">
-                            تدفع مرة واحدة فقط، وبدون أي التزامات إضافية.
+                        <div>
+                            <h3 class="feature-title">حفظ أصناف غير محدود</h3>
+                            <p class="feature-desc">إضافة ومتابعة كافة الأصناف المهمة في قائمة "أصنافي" بدون أي قيود أو حدود.</p>
                         </div>
                     </div>
-                    <div class="text-center">
-                        <a href="javascript:void(0)" onclick="showActivationModal()" class="subscribe-btn w-100 justify-content-center mb-3">
-                            <i class="fas fa-gem"></i>
-                            اشترك الآن بكود تفعيل
-                        </a>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-magnifying-glass-chart"></i>
+                        </div>
+                        <div>
+                            <h3 class="feature-title">بحث فوري ولابحدود</h3>
+                            <p class="feature-desc">البحث الشامل والمستمر في أرصدة الشركات والأصناف والوصول السريع لكافة البيانات.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div>
+                            <h3 class="feature-title">تنبيهات وتقارير حصرية</h3>
+                            <p class="feature-desc">متابعة دقيقة للأرصدة وتلقي التنبيهات الفورية وتسهيل الإرسال والمتابعة.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-6">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <div>
+                            <h3 class="feature-title">أولوية المراسلات والدعم</h3>
+                            <p class="feature-desc">تواصل دائم وأولوية الاستجابة في المراسلات والدعم الفني السريع للشركات المشتركة.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12 col-lg-6">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                        </div>
+                        <div>
+                            <h3 class="feature-title">تحديثات ومميزات مستمرة</h3>
+                            <p class="feature-desc">الوصول الفوري لكل التحديثات والأدوات الجديدة التي يتم إضافتها لمنصة StockFlow.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription CTA Section -->
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="pricing-box">
+                        <div class="pricing-title">
+                            <i class="fas fa-crown me-2"></i>
+                            باقة التفعيل المميز
+                        </div>
+
+                        {% if premium_duration_months %}
+                        <div class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill mb-3">
+                            <i class="fas fa-calendar-check me-1"></i>
+                            مدة الاشتراك التلقائية: {{ premium_duration_months }} {% if premium_duration_months == '1' %}شهر{% elif premium_duration_months == '2' %}شهور{% else %}أشهر{% endif %}
+                        </div>
+                        {% endif %}
+
+                        <p class="pricing-subtitle">
+                            {% if premium_message %}
+                                {{ premium_message }}
+                            {% else %}
+                                تفعيل فوري للباقة للاستفادة الكاملة من كافة مميزات النظام بدون قيود.
+                            {% endif %}
+                        </p>
                         
-                        <div class="mt-3 pt-3 border-top d-none">
-                            <button class="btn btn-outline-primary w-100" style="border-radius:999px; font-weight:700;" onclick="showActivationModal()">
+                        <div class="d-flex flex-column gap-3">
+                            <a href="https://wa.me/201554077727?text={{ 'مرحباً توبي، أرغب في تفعيل اشتراك STOCKFLOW PLUS لحسابي' | urlencode }}" 
+                               target="_blank" 
+                               class="btn-whatsapp">
+                                <i class="fab fa-whatsapp fa-lg"></i>
+                                اشترك الآن عبر الواتساب (تفعيل فوري)
+                            </a>
+
+                            <button type="button" class="btn-activation-modal" onclick="showActivationModal()">
                                 <i class="fas fa-key me-1"></i>
                                 لدي كود تفعيل
                             </button>
                         </div>
 
-                        <div class="text-muted small mt-2">
-                            استخدم كود الدعوة الممنوح لك لتفعيل مميزات STOCKFLOW PLUS.
+                        <div class="mt-3 small text-white-50">
+                            <i class="fas fa-shield-halved me-1"></i>
+                            تواصل مباشر مع الدعم والتفعيل خلال دقائق معدودة
                         </div>
                     </div>
-
-                    <!-- Modal لإدخال كود التفعيل -->
-                    <div class="modal fade" id="activationModal" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
-                                <div class="modal-header border-0 pb-0">
-                                    <h5 class="modal-title fw-bold">تفعيل الحساب المميز</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body py-4">
-                                    <p class="text-muted mb-4">يرجى إدخال كود التفعيل اللى حصلت عليه من توبى على واتساب رقم 201554077727 كلم توبى وهو هيفعلك الإشتراك.</p>
-                                    <div class="form-floating mb-3">
-                                        <input type="text" class="form-control" id="activationCodeInput" placeholder="كود التفعيل" style="border-radius: 12px; border: 2px solid #e2e8f0; font-weight: 700; letter-spacing: 2px; text-align: center;">
-                                        <label for="activationCodeInput">كود التفعيل</label>
-                                    </div>
-                                    <div id="activationMessage" class="small mt-2 d-none"></div>
-                                </div>
-                                <div class="modal-footer border-0 pt-0">
-                                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 999px;">إلغاء</button>
-                                    <button type="button" class="btn btn-primary px-4" id="confirmActivationBtn" onclick="confirmActivation()" style="border-radius: 999px; background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%); border: none;">
-                                        تفعيل الآن
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <script>
-                        function showActivationModal() {
-                            const modal = new bootstrap.Modal(document.getElementById('activationModal'));
-                            modal.show();
-                        }
-
-                        async function confirmActivation() {
-                            const codeInput = document.getElementById('activationCodeInput');
-                            const btn = document.getElementById('confirmActivationBtn');
-                            const msgDiv = document.getElementById('activationMessage');
-                            const code = codeInput.value.trim();
-
-                            if (!code) {
-                                msgDiv.textContent = 'يرجى إدخال الكود أولاً';
-                                msgDiv.className = 'small mt-2 text-danger';
-                                msgDiv.classList.remove('d-none');
-                                return;
-                            }
-
-                            btn.disabled = true;
-                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري التفعيل...';
-
-                            try {
-                                const response = await fetch("{{ url_for('verify_invite_code') }}", {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ invite_code: code })
-                                });
-
-                                const data = await response.json();
-
-                                if (data.success) {
-                                    msgDiv.textContent = data.message;
-                                    msgDiv.className = 'small mt-2 text-success';
-                                    msgDiv.classList.remove('d-none');
-                                    setTimeout(() => { window.location.href = "{{ url_for('company_dashboard') }}"; }, 2000);
-                                } else {
-                                    msgDiv.textContent = data.message;
-                                    msgDiv.className = 'small mt-2 text-danger';
-                                    msgDiv.classList.remove('d-none');
-                                    btn.disabled = false;
-                                    btn.textContent = 'تفعيل الآن';
-                                }
-                            } catch (error) {
-                                msgDiv.textContent = 'حدث خطأ في الاتصال بالسيرفر';
-                                msgDiv.className = 'small mt-2 text-danger';
-                                msgDiv.classList.remove('d-none');
-                                btn.disabled = false;
-                                btn.textContent = 'تفعيل الآن';
-                            }
-                        }
-                    </script>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+
+    <!-- Modal لإدخال كود التفعيل -->
+    <div class="modal fade" id="activationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-content-custom">
+                <div class="modal-header modal-header-custom">
+                    <h5 class="modal-title fw-bold text-white mb-0">
+                        <i class="fas fa-gem me-2"></i>
+                        تفعيل حساب STOCKFLOW PLUS
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3">
+                        يرجى إدخال كود التفعيل الذي حصلت عليه من توبي لتفعيل الباقة فوراً.
+                    </p>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control text-center fw-bold fs-5" id="activationCodeInput" placeholder="كود التفعيل" style="border-radius: 14px; border: 2px solid #cbd5e1; letter-spacing: 2px;">
+                        <label for="activationCodeInput">كود التفعيل</label>
+                    </div>
+                    <div id="activationMessage" class="alert d-none py-2 px-3 small text-center" role="alert" style="border-radius: 12px;"></div>
+                </div>
+                <div class="modal-footer border-0 bg-light px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary px-4 rounded-pill fw-bold" id="confirmActivationBtn" onclick="confirmActivation()" style="background: var(--primary-gradient); border: none;">
+                        <i class="fas fa-check-circle me-1"></i>
+                        تفعيل الآن
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showActivationModal() {
+            const modalEl = document.getElementById('activationModal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        async function confirmActivation() {
+            const codeInput = document.getElementById('activationCodeInput');
+            const btn = document.getElementById('confirmActivationBtn');
+            const msgDiv = document.getElementById('activationMessage');
+            const code = codeInput.value.trim();
+
+            if (!code) {
+                msgDiv.textContent = 'يرجى إدخال كود التفعيل أولاً';
+                msgDiv.className = 'alert alert-danger py-2 px-3 small text-center';
+                msgDiv.classList.remove('d-none');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري التفعيل...';
+
+            try {
+                const response = await fetch("{{ url_for('verify_invite_code') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ invite_code: code })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    msgDiv.textContent = data.message || 'تم تفعيل حسابك بنجاح!';
+                    msgDiv.className = 'alert alert-success py-2 px-3 small text-center';
+                    msgDiv.classList.remove('d-none');
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('company_dashboard') }}";
+                    }, 1500);
+                } else {
+                    msgDiv.textContent = data.message || 'كود التفعيل غير صحيح أو منتهي الصلاحية.';
+                    msgDiv.className = 'alert alert-danger py-2 px-3 small text-center';
+                    msgDiv.classList.remove('d-none');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> تفعيل الآن';
+                }
+            } catch (error) {
+                msgDiv.textContent = 'حدث خطأ في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.';
+                msgDiv.className = 'alert alert-danger py-2 px-3 small text-center';
+                msgDiv.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> تفعيل الآن';
+            }
+        }
+    </script>
 </body>
 </html>
