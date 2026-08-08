@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% include '_pwa_meta.html' %}
-    <title>STOCK FLOW — تسجيل الدخول</title>
+    <title>STOCK FLOW â€” طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -54,7 +54,7 @@
         max-width:100vw;
     }
 
-    /* ── AMBIENT MESH ── */
+    /* â”€â”€ AMBIENT MESH â”€â”€ */
     body::before {
         content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
         background:
@@ -68,7 +68,7 @@
         50%      { transform:scale(1.06) rotate(.8deg); opacity:.88; }
     }
 
-    /* ── PARTICLES ── */
+    /* â”€â”€ PARTICLES â”€â”€ */
     #pts {
         position:fixed;
         inset:0;
@@ -80,7 +80,7 @@
     .pt  { position:absolute; border-radius:50%; background:rgba(255,255,255,.18); animation:ptUp linear infinite; }
     @keyframes ptUp { 0%{transform:translateY(0) scale(1);opacity:.16} 100%{transform:translateY(-110vh) scale(.3);opacity:0} }
 
-    /* ── ABOUT BTN ── */
+    /* â”€â”€ ABOUT BTN â”€â”€ */
     .about-btn {
         position:fixed; top:max(20px, env(safe-area-inset-top)); left:20px; z-index:1000;
         display:flex; align-items:center; justify-content:flex-start;
@@ -96,9 +96,9 @@
     .about-btn.open span { opacity:1; }
     .about-btn:hover { background:white; color:var(--blue); box-shadow:0 6px 20px rgba(0,0,0,.18); }
 
-    /* ════════════════════════════════
+    /* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ
        PAGE WRAP
-    ════════════════════════════════ */
+    â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */
     .wrap {
         position:relative; z-index:1;
         width:min(100%, 460px); max-width:min(100%, 460px);
@@ -106,7 +106,7 @@
         margin-top:auto; margin-bottom:auto;
     }
 
-    /* ── LOGO ── */
+    /* â”€â”€ LOGO â”€â”€ */
     .logo-zone {
         text-align:center;
         margin-bottom:18px;
@@ -139,7 +139,7 @@
     }
     .logo-zone img:active { transform:scale(.94); }
 
-    /* ── LOGO FALLBACK ── */
+    /* â”€â”€ LOGO FALLBACK â”€â”€ */
     .logo-fallback {
         display:flex; flex-direction:column; align-items:center; gap:8px;
         cursor:pointer; user-select:none;
@@ -173,7 +173,7 @@
         text-shadow:0 2px 12px rgba(0,0,0,.15);
     }
 
-    /* ── ADMIN MODAL ── */
+    /* â”€â”€ ADMIN MODAL â”€â”€ */
     .adm-overlay {
         display:none; position:fixed; inset:0; z-index:99998;
         background:rgba(4,12,40,.72); backdrop-filter:blur(14px);
@@ -207,9 +207,9 @@
         color:var(--text); margin-bottom:1.4rem;
     }
 
-    /* ════════════════════════════════
+    /* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ
        CARD
-    ════════════════════════════════ */
+    â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */
     .card {
         width:100%; background:var(--white);
         max-width:100%;
@@ -224,7 +224,7 @@
         text-align:center; margin-bottom:1.8rem; letter-spacing:-.5px;
     }
 
-    /* ── FIELD ── */
+    /* â”€â”€ FIELD â”€â”€ */
     .fgroup { margin-bottom:1.05rem; }
     .flabel {
         display:block; font-size:.86rem; font-weight:700; color:var(--muted);
@@ -256,12 +256,12 @@
     }
     .pwtoggle:hover { color:var(--blue); }
 
-    /* ── REMEMBER ── */
+    /* â”€â”€ REMEMBER â”€â”€ */
     .rem-row { display:flex; align-items:center; gap:8px; margin-bottom:1.4rem; justify-content:flex-end; }
     .rem-chk { width:18px; height:18px; accent-color:var(--blue); cursor:pointer; border-radius:4px; flex-shrink:0; }
     .rem-lbl { font-size:.87rem; font-weight:600; color:var(--muted); cursor:pointer; user-select:none; }
 
-    /* ── UNIFIED BUTTON BASE ── */
+    /* â”€â”€ UNIFIED BUTTON BASE â”€â”€ */
     /* All action buttons share exact same height and radius */
     .ubtn {
         width:100%; height:46px;
@@ -281,7 +281,7 @@
     .ubtn:hover { transform:translateY(-2px); }
     .ubtn:active { transform:translateY(0) scale(.99); }
 
-    /* LOGIN — filled blue */
+    /* LOGIN â€” filled blue */
     .ubtn-login {
         background:var(--blue); color:white;
         box-shadow:0 6px 26px rgba(18,67,196,.42), inset 0 1px 0 rgba(255,255,255,.14);
@@ -294,7 +294,7 @@
         50%{box-shadow:0 6px 26px rgba(18,67,196,.42),inset 0 1px 0 rgba(255,255,255,.14),0 0 0 8px rgba(18,67,196,.07)}
     }
 
-    /* GOOGLE — outlined, white bg */
+    /* GOOGLE â€” outlined, white bg */
     .ubtn-google {
         background:white; color:#3c4043;
         border:1.5px solid #dadce0;
@@ -304,7 +304,7 @@
     .ubtn-google:hover { background:#f5f7ff; border-color:rgba(18,67,196,.3); box-shadow:0 4px 18px rgba(0,0,0,.1); }
     .ubtn-google .g-logo { width:20px; height:20px; flex-shrink:0; }
 
-    /* WHATSAPP — outlined green */
+    /* WHATSAPP â€” outlined green */
     .ubtn-wa {
         background:rgba(37,211,102,.04); color:#16a34a;
         border:1.5px solid var(--wa);
@@ -320,7 +320,7 @@
         transform:translateY(2px) !important; animation:none !important;
     }
 
-    /* ── FORGOT ── */
+    /* â”€â”€ FORGOT â”€â”€ */
     .forgot {
         display:block; text-align:center; margin:10px 0 4px;
         font-size:.87rem; font-weight:600; color:var(--muted);
@@ -328,22 +328,22 @@
     }
     .forgot:hover { color:var(--blue); }
 
-    /* ── OR DIVIDER ── */
+    /* â”€â”€ OR DIVIDER â”€â”€ */
     .orline {
         display:flex; align-items:center; gap:10px;
         margin:14px 0; color:var(--light); font-size:.79rem; font-weight:600;
     }
     .orline::before, .orline::after { content:''; flex:1; height:1px; background:rgba(18,67,196,.1); }
 
-    /* ── SIGN UP ── */
+    /* â”€â”€ SIGN UP â”€â”€ */
     .signup { text-align:center; font-size:.86rem; font-weight:600; color:var(--muted); margin-top:10px; }
     .signup a { color:var(--blue); font-weight:800; text-decoration:none; }
     .signup a:hover { text-decoration:underline; }
 
-    /* ── GAP BETWEEN BUTTONS ── */
+    /* â”€â”€ GAP BETWEEN BUTTONS â”€â”€ */
     .btn-gap { display:flex; flex-direction:column; gap:10px; }
 
-    /* ── DOWNLOAD ── */
+    /* â”€â”€ DOWNLOAD â”€â”€ */
     .dl-section {
         margin-top:1.5rem; padding-top:1.3rem;
         border-top:1px solid rgba(18,67,196,.07);
@@ -368,7 +368,7 @@
     .dl-play { background:linear-gradient(135deg,#10b981,#059669); color:white; box-shadow:0 6px 18px rgba(16,185,129,.3); }
     .dl-ios  { background:linear-gradient(135deg,var(--blue),var(--blue-dark)); color:white; box-shadow:0 6px 18px rgba(18,67,196,.3); }
 
-    /* ── VERSION FOOTER ── */
+    /* â”€â”€ VERSION FOOTER â”€â”€ */
     .ver {
         margin-top:18px; text-align:center;
         color:rgba(255,255,255,.35);
@@ -378,7 +378,7 @@
         padding-bottom: max(0px, env(safe-area-inset-bottom));
     }
 
-    /* ── WA FLOAT ── */
+    /* â”€â”€ WA FLOAT â”€â”€ */
     .wa-float {
         position:fixed; z-index:10000;
         bottom: max(26px, calc(env(safe-area-inset-bottom) + 14px));
@@ -467,7 +467,7 @@
         cursor:pointer;
     }
 
-    /* ── ALERTS ── */
+    /* â”€â”€ ALERTS â”€â”€ */
     .alert {
         border-radius:12px; border:none; padding:11px 14px;
         font-size:.87rem; font-weight:600; margin-bottom:1rem;
@@ -480,7 +480,7 @@
     .alert-info    { background:rgba(18,67,196,.07);  color:#1e40af; border-right:3px solid var(--blue); }
     .alert-warning { background:rgba(245,158,11,.07); color:#92400e; border-right:3px solid #f59e0b; }
 
-    /* ── SPINNER ── */
+    /* â”€â”€ SPINNER â”€â”€ */
     .spinner-overlay {
         display:none; position:fixed; inset:0;
         background:rgba(12,27,94,.72); backdrop-filter:blur(14px);
@@ -495,7 +495,7 @@
     @keyframes cw  { to{transform:rotate(360deg)} }
     @keyframes ccw { to{transform:rotate(-360deg)} }
 
-    /* ── RESPONSIVE ── */
+    /* â”€â”€ RESPONSIVE â”€â”€ */
     @media(max-width:520px){
         body { padding-left:12px; padding-right:12px; }
         .wrap { width:100%; max-width:100%; }
@@ -572,13 +572,13 @@
 
     <!-- ABOUT BTN -->
     <a href="{{ url_for('about_portfolio') }}" class="about-btn" id="aBtn">
-        <i class="fas fa-info"></i><span>من نحن</span>
+        <i class="fas fa-info"></i><span>ظ…ظ† ظ†طظ†</span>
     </a>
 
-    <!-- ═══════════════════════════ CONTENT ═══════════════════════════ -->
+    <!-- â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ CONTENT â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
     <div class="wrap">
 
-        <!-- LOGO (من لوحة الإعدادات) -->
+        <!-- LOGO (ظ…ظ† ظ„ظˆطط© ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ) -->
         <div class="logo-zone" id="logoZone">
             <img id="logoImg"
                  src="{{ current_logo_path }}"
@@ -597,10 +597,10 @@
             </div>
         </div>
 
-        <!-- ═══════ WHITE CARD ═══════ -->
+        <!-- â•گâ•گâ•گâ•گâ•گâ•گâ•گ WHITE CARD â•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
         <div class="card" id="loginCard">
 
-            <h1 class="card-title">تسجيل الدخول</h1>
+            <h1 class="card-title">طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„</h1>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -617,16 +617,16 @@
 
             <!-- USERNAME -->
             <div class="fgroup">
-                <label class="flabel" for="usr">اسم المستخدم</label>
+                <label class="flabel" for="usr">ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ…</label>
                 <div class="fbox">
                     <div class="ficon"><i class="fas fa-user"></i></div>
-                    <input class="finput" id="usr" type="text" placeholder="أدخل اسم المستخدم" autocomplete="username">
+                    <input class="finput" id="usr" type="text" placeholder="ط£ط¯ط®ظ„ ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ…" autocomplete="username">
                 </div>
             </div>
 
             <!-- PASSWORD -->
             <div class="fgroup">
-                <label class="flabel" for="pwd">كلمة المرور</label>
+                <label class="flabel" for="pwd">ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±</label>
                 <div class="fbox">
                     <div class="ficon"><i class="fas fa-lock"></i></div>
                     <input class="finput" id="pwd" type="password" placeholder="........" autocomplete="current-password">
@@ -636,29 +636,29 @@
 
             <!-- REMEMBER -->
             <div class="rem-row">
-                <label class="rem-lbl" for="rem">تذكرني</label>
+                <label class="rem-lbl" for="rem">طھط°ظƒط±ظ†ظٹ</label>
                 <input class="rem-chk" id="rem" type="checkbox" checked>
             </div>
 
-            <!-- ══ BUTTONS — all same height via .ubtn ══ -->
+            <!-- â•گâ•گ BUTTONS â€” all same height via .ubtn â•گâ•گ -->
             <div class="btn-gap">
 
                 <!-- 1. LOGIN -->
                 <button class="ubtn ubtn-login" id="loginBtn">
-                    تسجيل الدخول
+                    طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„
                 </button>
 
                 <!-- forgot link (between login and others) -->
-                <a href="https://wa.me/201554077727?text=نسيت اسم المستخدم أو كلمة السر" target="_blank" class="forgot" id="forgotLink">هل نسيت كلمة المرور؟</a>
+                <a href="https://wa.me/201554077727?text=ظ†ط³ظٹطھ ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ… ط£ظˆ ظƒظ„ظ…ط© ط§ظ„ط³ط±" target="_blank" class="forgot" id="forgotLink">ظ‡ظ„ ظ†ط³ظٹطھ ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±طں</a>
 
-                <div class="orline">أو المتابعة باستخدام</div>
+                <div class="orline">ط£ظˆ ط§ظ„ظ…طھط§ط¨ط¹ط© ط¨ط§ط³طھط®ط¯ط§ظ…</div>
 
-                <!-- 2. GOOGLE — GSI Official Button (Dynamic Width) -->
+                <!-- 2. GOOGLE â€” GSI Official Button (Dynamic Width) -->
                 <div class="google-login-wrapper w-100 mb-2" id="googleButtonContainer">
                 </div>
 
                 <style>
-                    /* تحسين شكل زر جوجل ليتناسق مع الأزرار الأخرى */
+                    /* طھطط³ظٹظ† ط´ظƒظ„ ط²ط± ط¬ظˆط¬ظ„ ظ„ظٹطھظ†ط§ط³ظ‚ ظ…ط¹ ط§ظ„ط£ط²ط±ط§ط± ط§ظ„ط£ط®ط±ظ‰ */
                     .google-login-wrapper {
                         display: flex;
                         justify-content: center;
@@ -666,7 +666,7 @@
                         width: 100%;
                         margin-top: 5px;
                         margin-bottom: 12px !important;
-                        direction: ltr; /* لحل مشكلة محاذاة الـ iframe الخاصة بجوجل في الصفحات العربية */
+                        direction: ltr; /* ظ„طظ„ ظ…ط´ظƒظ„ط© ظ…طط§ط°ط§ط© ط§ظ„ظ€ iframe ط§ظ„ط®ط§طµط© ط¨ط¬ظˆط¬ظ„ ظپظٹ ط§ظ„طµظپطط§طھ ط§ظ„ط¹ط±ط¨ظٹط© */
                         min-height: 48px;
                     }
                 </style>
@@ -675,7 +675,7 @@
                 function handleCredentialResponse(response) {
                     const btn = document.getElementById('loginBtn');
                     btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الدخول...';
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ط¬ط§ط±ظچ ط§ظ„ط¯ط®ظˆظ„...';
                     document.getElementById('sp').classList.add('on');
 
                     fetch("{{ url_for('auth_web_google_signin') }}", {
@@ -693,22 +693,22 @@
                         } else {
                             document.getElementById('sp').classList.remove('on');
                             btn.disabled = false;
-                            btn.innerHTML = 'تسجيل الدخول';
-                            alert(data.message || 'فشل تسجيل الدخول بجوجل');
+                            btn.innerHTML = 'طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„';
+                            alert(data.message || 'ظپط´ظ„ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ ط¨ط¬ظˆط¬ظ„');
                         }
                     })
                     .catch(err => {
                         document.getElementById('sp').classList.remove('on');
                         btn.disabled = false;
-                        btn.innerHTML = 'تسجيل الدخول';
-                        alert('تعذر الاتصال بالخادم: ' + err.message);
+                        btn.innerHTML = 'طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„';
+                        alert('طھط¹ط°ط± ط§ظ„ط§طھطµط§ظ„ ط¨ط§ظ„ط®ط§ط¯ظ…: ' + err.message);
                     });
                 }
 
                 function renderGoogleButton() {
                     const container = document.getElementById('googleButtonContainer');
                     if (window.google && container) {
-                        container.innerHTML = ''; // تفريغ الحاوية بدلاً من فحص ChildNodes
+                        container.innerHTML = ''; // طھظپط±ظٹط؛ ط§ظ„طط§ظˆظٹط© ط¨ط¯ظ„ط§ظ‹ ظ…ظ† ظپططµ ChildNodes
                         
                         google.accounts.id.initialize({
                             client_id: "{{ config.GOOGLE_CLIENT_ID if config.GOOGLE_CLIENT_ID else '873268136156-i4oug6tmlp0mo0r8v7omn25e1f7431m2.apps.googleusercontent.com' }}",
@@ -716,7 +716,7 @@
                         });
                         
                         let exactWidth = container.offsetWidth;
-                        if (!exactWidth || exactWidth < 100) exactWidth = 350; // حماية إضافية
+                        if (!exactWidth || exactWidth < 100) exactWidth = 350; // طظ…ط§ظٹط© ط¥ط¶ط§ظپظٹط©
                         
                         google.accounts.id.renderButton(
                             container,
@@ -744,7 +744,7 @@
                     }
                 }, 100);
 
-                // في حالة إعادة تحجيم الشاشة (فقط إذا تغير العرض لتجنب الرعشة في الموبايل)
+                // ظپظٹ طط§ظ„ط© ط¥ط¹ط§ط¯ط© طھطط¬ظٹظ… ط§ظ„ط´ط§ط´ط© (ظپظ‚ط· ط¥ط°ط§ طھط؛ظٹط± ط§ظ„ط¹ط±ط¶ ظ„طھط¬ظ†ط¨ ط§ظ„ط±ط¹ط´ط© ظپظٹ ط§ظ„ظ…ظˆط¨ط§ظٹظ„)
                 let lastWidth = window.innerWidth;
                 window.addEventListener('resize', function() {
                     if (window.innerWidth !== lastWidth) {
@@ -758,22 +758,22 @@
                 });
                 </script>
 
-                <!-- 3. WHATSAPP — same height, same radius -->
+                <!-- 3. WHATSAPP â€” same height, same radius -->
                 <a href="https://wa.me/201554077727" class="ubtn ubtn-wa" target="_blank">
                     <i class="fab fa-whatsapp" style="font-size:1.15rem"></i>
-                    نسيت اسم المستخدم أو كلمة السر؟
+                    ظ†ط³ظٹطھ ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ… ط£ظˆ ظƒظ„ظ…ط© ط§ظ„ط³ط±طں
                 </a>
 
             </div>
 
             <!-- SIGN UP -->
             <div class="signup" style="margin-top:14px">
-                <a href="/signup_company">تسجيل شركة جديدة</a>
+                <a href="/signup_company">طھط³ط¬ظٹظ„ ط´ط±ظƒط© ط¬ط¯ظٹط¯ط©</a>
             </div>
 
             <!-- DOWNLOAD -->
             <div class="dl-section">
-                <p class="dl-label">حمّل التطبيق الآن</p>
+                <p class="dl-label">طظ…ظ‘ظ„ ط§ظ„طھط·ط¨ظٹظ‚ ط§ظ„ط¢ظ†</p>
                 <div class="dl-btns">
                     <a class="dl-btn dl-play" href="https://play.google.com/store/apps/details?id=com.mnagy.stockflowapp&pcampaignid=web_share" target="_blank" rel="noopener" style="text-decoration:none;">
                         <i class="fab fa-google-play"></i> Google Play
@@ -789,8 +789,8 @@
         <!-- VERSION -->
         <div class="ver">
             <div>STOCK FLOW v1.4.8</div>
-            <div>© DATA-DRIVEN INTELLIGENCE 2026</div>
-            <a href="/privacy-policy" target="_blank" style="color:rgba(255,255,255,.45);font-size:.7rem;text-decoration:none;transition:color .2s;" onmouseover="this.style.color='rgba(255,255,255,.75)'" onmouseout="this.style.color='rgba(255,255,255,.45)'">سياسة الخصوصية</a>
+            <div>آ© DATA-DRIVEN INTELLIGENCE 2026</div>
+            <a href="/privacy-policy" target="_blank" style="color:rgba(255,255,255,.45);font-size:.7rem;text-decoration:none;transition:color .2s;" onmouseover="this.style.color='rgba(255,255,255,.75)'" onmouseout="this.style.color='rgba(255,255,255,.45)'">ط³ظٹط§ط³ط© ط§ظ„ط®طµظˆطµظٹط©</a>
         </div>
 
     </div>
@@ -801,20 +801,20 @@
             <button class="adm-close" id="admClose"><i class="fas fa-times"></i></button>
             <div class="adm-badge">
                 <i class="fas fa-user-shield"></i>
-                <span>وضع الإدارة</span>
+                <span>ظˆط¶ط¹ ط§ظ„ط¥ط¯ط§ط±ط©</span>
             </div>
-            <h2 class="adm-title">تسجيل دخول المدير</h2>
+            <h2 class="adm-title">طھط³ط¬ظٹظ„ ط¯ط®ظˆظ„ ط§ظ„ظ…ط¯ظٹط±</h2>
 
             <div class="fgroup">
-                <label class="flabel" for="adm_usr">اسم المستخدم</label>
+                <label class="flabel" for="adm_usr">ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ…</label>
                 <div class="fbox">
                     <div class="ficon"><i class="fas fa-user-tie"></i></div>
-                    <input class="finput" id="adm_usr" type="text" placeholder="أدخل اسم مستخدم المدير" autocomplete="off">
+                    <input class="finput" id="adm_usr" type="text" placeholder="ط£ط¯ط®ظ„ ط§ط³ظ… ظ…ط³طھط®ط¯ظ… ط§ظ„ظ…ط¯ظٹط±" autocomplete="off">
                 </div>
             </div>
 
             <div class="fgroup">
-                <label class="flabel" for="adm_pwd">كلمة المرور</label>
+                <label class="flabel" for="adm_pwd">ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±</label>
                 <div class="fbox">
                     <div class="ficon"><i class="fas fa-lock"></i></div>
                     <input class="finput" id="adm_pwd" type="password" placeholder="........" autocomplete="current-password">
@@ -823,7 +823,7 @@
             </div>
 
             <div style="margin-top:1rem">
-                <button class="ubtn ubtn-login" id="admLoginBtn" onclick="doAdminLogin()">دخول الإدارة</button>
+                <button class="ubtn ubtn-login" id="admLoginBtn" onclick="doAdminLogin()">ط¯ط®ظˆظ„ ط§ظ„ط¥ط¯ط§ط±ط©</button>
             </div>
             <div id="admError" style="margin-top:.75rem"></div>
         </div>
@@ -880,18 +880,18 @@
         });
     }();
 
-    /* ═══ LOGIN BUTTON HANDLER ═══ */
+    /* â•گâ•گâ•گ LOGIN BUTTON HANDLER â•گâ•گâ•گ */
     document.getElementById('loginBtn').addEventListener('click', function(){
         const usr=document.getElementById('usr').value.trim();
         const pwd=document.getElementById('pwd').value.trim();
         const rem=document.getElementById('rem').checked;
         const btn=this;
         if(!usr||!pwd){
-            alert('يرجى إدخال اسم المستخدم وكلمة المرور');
+            alert('ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ… ظˆظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±');
             return;
         }
         btn.disabled=true;
-        btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ الدخول...';
+        btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> ط¬ط§ط±ظچ ط§ظ„ط¯ط®ظˆظ„...';
         document.getElementById('sp').classList.add('on');
 
         const fd=new FormData();
@@ -910,22 +910,24 @@
             } else {
                 document.getElementById('sp').classList.remove('on');
                 btn.disabled=false;
-                btn.innerHTML='تسجيل الدخول';
+                btn.innerHTML='طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„';
                 alert(data.message);
             }
         }).catch(()=>{
             document.getElementById('sp').classList.remove('on');
             btn.disabled=false;
-            btn.innerHTML='تسجيل الدخول';
-            alert('تعذر الاتصال بالخادم');
+            btn.innerHTML='طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„';
+            alert('طھط¹ط°ط± ط§ظ„ط§طھطµط§ظ„ ط¨ط§ظ„ط®ط§ط¯ظ…');
         });
     });
 
     /* Enter on password field triggers login */
-    document.getElementById('pwd').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
-    document.getElementById('usr').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pwd').focus(); });
-    document.getElementById('adm_usr').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('adm_pwd').focus(); });
-    document.getElementById('adm_pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doAdminLogin(); });
+    document.getElementById('pwd').addEventListener('keydown',e=>{
+        if(e.key==='Enter') document.getElementById('loginBtn').click();
+    });
+    document.getElementById('usr').addEventListener('keydown',e=>{
+        if(e.key==='Enter') document.getElementById('pwd').focus();
+    });
 
     /* Hide iPhone install hint when already running from Home Screen */
     !function(){
@@ -946,7 +948,7 @@
         }
     }();
 
-    /* ═══ TRIPLE CLICK LOGO → admin modal ═══ */
+    /* â•گâ•گâ•گ TRIPLE CLICK LOGO â†’ admin modal â•گâ•گâ•گ */
     !function(){
         const zone=document.getElementById('logoZone');
         const overlay=document.getElementById('admOverlay');
@@ -990,11 +992,11 @@
         const errDiv=document.getElementById('admError');
         const btn=document.getElementById('admLoginBtn');
         if(!usr||!pwd){
-            errDiv.innerHTML='<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> يرجى إدخال اسم المستخدم وكلمة المرور</div>';
+            errDiv.innerHTML='<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ… ظˆظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±</div>';
             return;
         }
         btn.disabled=true;
-        btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ الدخول...';
+        btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> ط¬ط§ط±ظچ ط§ظ„ط¯ط®ظˆظ„...';
         errDiv.innerHTML='';
 
         const fd=new FormData();
@@ -1014,12 +1016,12 @@
             } else {
                 errDiv.innerHTML='<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> '+data.message+'</div>';
                 btn.disabled=false;
-                btn.innerHTML='دخول الإدارة';
+                btn.innerHTML='ط¯ط®ظˆظ„ ط§ظ„ط¥ط¯ط§ط±ط©';
             }
         }).catch(()=>{
-            errDiv.innerHTML='<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> تعذر الاتصال بالخادم</div>';
+            errDiv.innerHTML='<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> طھط¹ط°ط± ط§ظ„ط§طھطµط§ظ„ ط¨ط§ظ„ط®ط§ط¯ظ…</div>';
             btn.disabled=false;
-            btn.innerHTML='دخول الإدارة';
+            btn.innerHTML='ط¯ط®ظˆظ„ ط§ظ„ط¥ط¯ط§ط±ط©';
         });
     }
 

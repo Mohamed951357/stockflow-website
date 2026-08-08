@@ -976,6 +976,8 @@ document.getElementById('loginBtn').addEventListener('click', function() {
 
 document.getElementById('pwd').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 document.getElementById('usr').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pwd').focus(); });
+document.getElementById('adm_usr').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('adm_pwd').focus(); });
+document.getElementById('adm_pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doAdminLogin(); });
 
 /* Admin Secret Triple Click */
 (function() {
