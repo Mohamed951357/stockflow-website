@@ -682,6 +682,14 @@ def register_views(app):
     @app.before_request
     def _maybe_redirect_premium_trial():
         try:
+            if not hasattr(Company, '_migration_rejected_at_checked'):
+                Company._migration_rejected_at_checked = True
+                try:
+                    db.session.execute(db.text("ALTER TABLE company ADD COLUMN premium_trial_rejected_at DATETIME;"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
             if not current_user.is_authenticated:
                 return
             if session.get('user_type') != 'company':
@@ -1586,6 +1594,7 @@ def register_views(app):
                     current_user.premium_trial_active = True
                     current_user.premium_trial_start = datetime.utcnow()
                     current_user.premium_trial_end = datetime.utcnow() + timedelta(days=trial_days)
+                    current_user.premium_trial_rejected_at = None
                     
                     # تفعيل البريميوم
                     current_user.is_premium = True
@@ -1597,6 +1606,11 @@ def register_views(app):
                     flash(f'🎉 تم تفعيل التجربة المجانية لمدة {trial_days} يوم! استمتع بجميع المزايا.', 'success')
                 else:
                     # رفض التجربة المجانية
+                    current_user.premium_trial_active = False
+                    current_user.premium_trial_start = None
+                    current_user.premium_trial_end = None
+                    current_user.premium_trial_rejected_at = datetime.utcnow()
+                    current_user.is_premium = False
                     db.session.commit()
                     flash('يمكنك الاشتراك في الباقة المميزة في أي وقت من الإعدادات.', 'info')
                 
@@ -1670,8 +1684,8 @@ def register_views(app):
                 accepted_companies.append(company)
             elif company.premium_trial_prompted and (not company.premium_trial_start):
                 # رفض التجربة المجانية في الشهر الحالي
-                last_seen = getattr(company, 'last_client_seen_at', None) or company.last_login or company.last_active
-                if last_seen and last_seen >= start_of_month:
+                rejected_at = getattr(company, 'premium_trial_rejected_at', None)
+                if rejected_at and rejected_at >= start_of_month:
                     rejected_companies.append(company)
         
         # حساب الإحصائيات
@@ -1725,12 +1739,9 @@ def register_views(app):
         rejected_trial_companies = Company.query.filter(
             Company.premium_trial_prompted == True,
             Company.premium_trial_start.is_(None),
-            db.or_(
-                Company.last_client_seen_at >= start_of_month,
-                Company.last_login >= start_of_month,
-                Company.last_active >= start_of_month
-            )
-        ).order_by(Company.company_name.asc()).all()
+            Company.premium_trial_rejected_at.isnot(None),
+            Company.premium_trial_rejected_at >= start_of_month
+        ).order_by(Company.premium_trial_rejected_at.desc()).all()
 
         # تهيئة البيانات للعرض
         def fmt_date(dt):
@@ -7400,6 +7411,7 @@ def register_views(app):
                                 c.premium_trial_active = False
                                 c.premium_trial_start = None
                                 c.premium_trial_end = None
+                                c.premium_trial_rejected_at = None
                     
                     # حفظ مدة التجربة
                     trial_days_setting = SystemSetting.query.filter_by(setting_key='premium_trial_days').first()
@@ -7438,6 +7450,7 @@ def register_views(app):
                         c.premium_trial_active = False
                         c.premium_trial_start = None
                         c.premium_trial_end = None
+                        c.premium_trial_rejected_at = None
                         ids.append(str(c.id))
                     companies_str = ','.join(ids)
                     setting = SystemSetting.query.filter_by(setting_key='premium_trial_companies').first()
@@ -7487,6 +7500,7 @@ def register_views(app):
                         c.premium_trial_active = False
                         c.premium_trial_start = None
                         c.premium_trial_end = None
+                        c.premium_trial_rejected_at = None
                         ids.append(str(c.id))
 
                     companies_str = ','.join(ids)

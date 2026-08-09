@@ -109,6 +109,7 @@ class Company(UserMixin, db.Model):
     premium_trial_active = db.Column(db.Boolean, default=False)
     premium_trial_start = db.Column(db.DateTime, nullable=True)
     premium_trial_end = db.Column(db.DateTime, nullable=True)
+    premium_trial_rejected_at = db.Column(db.DateTime, nullable=True)
     # ---- نهاية خصائص تجربة الاشتراك المميز ----
     
     # حقول إلغاء التفعيل
