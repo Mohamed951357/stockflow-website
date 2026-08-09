@@ -1629,8 +1629,13 @@ def register_views(app):
                 if id_str.strip().isdigit()
             ]
         
-        # جلب جميع الشركات المؤهلة
-        all_eligible_companies = Company.query.filter(Company.id.in_(eligible_company_ids)).all() if eligible_company_ids else []
+        # جلب جميع الشركات المؤهلة أو التي أجابت على العرض
+        if eligible_company_ids:
+            all_eligible_companies = Company.query.filter(
+                db.or_(Company.id.in_(eligible_company_ids), Company.premium_trial_prompted == True)
+            ).all()
+        else:
+            all_eligible_companies = Company.query.filter(Company.premium_trial_prompted == True).all()
         
         # تقسيم الشركات حسب الحالة
         accepted_companies = []  # وافقت على التجربة
@@ -1721,6 +1726,17 @@ def register_views(app):
             Company.premium_end_date.isnot(None)
         ).order_by(Company.premium_end_date.desc()).limit(50).all()
 
+        # جلب الشركات التي وافقت والشركات التي رفضت عرض التجربة المجانية
+        accepted_trial_companies = Company.query.filter(
+            Company.premium_trial_prompted == True,
+            Company.premium_trial_start.isnot(None)
+        ).order_by(Company.premium_trial_start.desc()).all()
+
+        rejected_trial_companies = Company.query.filter(
+            Company.premium_trial_prompted == True,
+            Company.premium_trial_start.is_(None)
+        ).order_by(Company.company_name.asc()).all()
+
         # تهيئة البيانات للعرض
         def fmt_date(dt):
             if not dt:
@@ -1768,12 +1784,21 @@ def register_views(app):
             c._days_left = 0
             c._is_expired = True
 
+        for c in accepted_trial_companies:
+            c._start_fmt = fmt_date(c.premium_trial_start)
+            c._end_fmt = fmt_date(c.premium_trial_end)
+
+        for c in rejected_trial_companies:
+            c._seen_fmt = fmt_date(getattr(c, 'last_client_seen_at', None) or c.last_login or c.last_active)
+
         max_subs = [c for c in active_subs if c._is_max_subscription]
 
         return render_template('manage_subscriptions.html',
                                active_subs=active_subs,
                                max_subs=max_subs,
                                expired_subs=expired_subs,
+                               accepted_trial_companies=accepted_trial_companies,
+                               rejected_trial_companies=rejected_trial_companies,
                                now=now)
 
     @app.route('/cancel_premium_trial/<int:company_id>', methods=['POST'])

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة الاشتراكات - لوحة الإدارة</title>
@@ -71,9 +71,12 @@
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
                 <h3 class="mb-1"><i class="fas fa-crown me-2"></i>إدارة الاشتراكات المميزة</h3>
-                <p class="mb-0 opacity-75">عرض جميع الشركات المشتركة وتتبع حالة اشتراكاتها</p>
+                <p class="mb-0 opacity-75">عرض الاشتراكات ومتابعة موافقة ورفض العروض التجريبية للشركات</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <a href="{{ url_for('premium_trial_report') }}" class="btn btn-dark fw-bold shadow-sm">
+                    <i class="fas fa-chart-pie me-1 text-warning"></i> تقرير نتائج التجربة المجانية
+                </a>
                 <span class="badge bg-dark fs-6">{{ active_subs|length }} مشترك نشط</span>
                 <span class="badge bg-light text-dark fs-6">{{ max_subs|length }} ماكس</span>
             </div>
@@ -84,8 +87,8 @@
     <div class="row mb-4">
         {% set active_count = active_subs|length %}
         {% set max_count = max_subs|length %}
-        {% set expiring_soon = active_subs|selectattr('_days_left', 'defined')|selectattr('_days_left', 'lt', 15)|list|length %}
-        {% set expired_count = expired_subs|length %}
+        {% set accepted_trial_count = accepted_trial_companies|length if accepted_trial_companies is defined else 0 %}
+        {% set rejected_trial_count = rejected_trial_companies|length if rejected_trial_companies is defined else 0 %}
         <div class="col-md-3 mb-3">
             <div class="stat-card">
                 <div class="stat-icon" style="background:#d4edda; color:#28a745;">
@@ -105,21 +108,21 @@
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#fff3cd; color:#856404;">
-                    <i class="fas fa-exclamation-triangle"></i>
+            <div class="stat-card" style="border: 2px solid #28a745;">
+                <div class="stat-icon" style="background:#d1e7dd; color:#0f5132;">
+                    <i class="fas fa-user-check"></i>
                 </div>
-                <h4 class="text-warning mb-0">{{ expiring_soon }}</h4>
-                <small class="text-muted">تنتهي خلال 15 يوم</small>
+                <h4 class="text-success mb-0 fw-bold">{{ accepted_trial_count }}</h4>
+                <small class="text-muted fw-bold">وافقوا على عرض التجربة</small>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#f8d7da; color:#dc3545;">
-                    <i class="fas fa-times-circle"></i>
+            <div class="stat-card" style="border: 2px solid #dc3545;">
+                <div class="stat-icon" style="background:#f8d7da; color:#842029;">
+                    <i class="fas fa-user-times"></i>
                 </div>
-                <h4 class="text-danger mb-0">{{ expired_count }}</h4>
-                <small class="text-muted">اشتراك منتهٍ (آخر 50)</small>
+                <h4 class="text-danger mb-0 fw-bold">{{ rejected_trial_count }}</h4>
+                <small class="text-muted fw-bold">رفضوا عرض التجربة</small>
             </div>
         </div>
     </div>
@@ -264,6 +267,86 @@
             <i class="fas fa-crown fa-3x mb-3"></i>
             <p>لا توجد اشتراكات نشطة حالياً</p>
         </div>
+        {% endif %}
+    </div>
+
+    <!-- Accepted Trial Companies -->
+    <div class="mb-4">
+        <div class="section-title bg-success text-white">
+            <i class="fas fa-user-check"></i> الشركات التي وافقت على التجربة المجانية ({{ accepted_trial_companies|length if accepted_trial_companies is defined else 0 }})
+        </div>
+        {% if accepted_trial_companies %}
+            {% for c in accepted_trial_companies %}
+            <div class="sub-card" style="border-right-color: #198754;">
+                <div>
+                    <div class="company-name text-success">
+                        <i class="fas fa-building me-1"></i>{{ c.company_name }}
+                        <span class="badge bg-success ms-2"><i class="fas fa-check me-1"></i>تم قبول العرض</span>
+                    </div>
+                    <div class="meta mt-1">
+                        <i class="fas fa-user me-1"></i> {{ c.username }}
+                        {% if c.phone %}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-phone me-1"></i> {{ c.phone }}
+                        {% endif %}
+                    </div>
+                    <div class="meta mt-1">
+                        <i class="fas fa-calendar-alt me-1"></i> بدء التجربة: {{ c._start_fmt }}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-calendar-check me-1"></i> انتهاء التجربة: {{ c._end_fmt }}
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('manage_users') }}?search={{ c.company_name }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-external-link-alt me-1"></i>تفاصيل
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state bg-white rounded shadow-sm py-4">
+                <i class="fas fa-user-check fa-2x mb-2 text-muted"></i>
+                <p class="mb-0 text-muted">لا توجد شركات وافقت على العرض حتى الآن</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Rejected Trial Companies -->
+    <div class="mb-4">
+        <div class="section-title bg-secondary text-white">
+            <i class="fas fa-user-times"></i> الشركات التي رفضت التجربة المجانية ({{ rejected_trial_companies|length if rejected_trial_companies is defined else 0 }})
+        </div>
+        {% if rejected_trial_companies %}
+            {% for c in rejected_trial_companies %}
+            <div class="sub-card" style="border-right-color: #dc3545; background: #fff8f8;">
+                <div>
+                    <div class="company-name text-danger">
+                        <i class="fas fa-building me-1"></i>{{ c.company_name }}
+                        <span class="badge bg-danger ms-2"><i class="fas fa-times me-1"></i>تم رفض العرض</span>
+                    </div>
+                    <div class="meta mt-1">
+                        <i class="fas fa-user me-1"></i> {{ c.username }}
+                        {% if c.phone %}
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-phone me-1"></i> {{ c.phone }}
+                        {% endif %}
+                    </div>
+                    <div class="meta mt-1">
+                        <i class="fas fa-clock me-1"></i> آخر ظهور/تفاعل: {{ c._seen_fmt }}
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('manage_users') }}?search={{ c.company_name }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-external-link-alt me-1"></i>تفاصيل
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state bg-white rounded shadow-sm py-4">
+                <i class="fas fa-user-times fa-2x mb-2 text-muted"></i>
+                <p class="mb-0 text-muted">لا توجد شركات رفضت العرض حالياً</p>
+            </div>
         {% endif %}
     </div>
 
