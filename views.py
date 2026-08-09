@@ -692,7 +692,7 @@ def register_views(app):
             path = request.path or ''
             if ep in ['premium_trial_prompt', 'login', 'logout'] or path.startswith('/static'):
                 return
-            if getattr(current_user, 'is_premium', False):
+            if getattr(current_user, 'is_premium', False) and getattr(current_user, 'subscription_plan', '') == 'paid':
                 return
             if hasattr(current_user, 'premium_trial_prompted') and not current_user.premium_trial_prompted:
                 trial_companies_setting = SystemSetting.query.filter_by(setting_key='premium_trial_companies').first()
@@ -7358,7 +7358,7 @@ def register_views(app):
                         flash('مدة التجربة يجب أن تكون رقماً صحيحاً وموجباً.', 'error')
                         return redirect(url_for('system_settings'))
                     
-                    # حفظ قائمة الشركات المؤهلة
+                    # حفظ قائمة الشركات المؤهلة وإعادة تهيئة حالة التجربة لها
                     companies_str = ','.join(selected_company_ids) if selected_company_ids else ''
                     setting = SystemSetting.query.filter_by(setting_key='premium_trial_companies').first()
                     if not setting:
@@ -7366,6 +7366,20 @@ def register_views(app):
                         db.session.add(setting)
                     else:
                         setting.setting_value = companies_str
+
+                    if selected_company_ids:
+                        target_ids = [int(x) for x in selected_company_ids if x.isdigit()]
+                        target_companies = Company.query.filter(Company.id.in_(target_ids)).all()
+                        for c in target_companies:
+                            if getattr(c, 'subscription_plan', '') != 'paid':
+                                c.is_premium = False
+                                c.subscription_plan = 'free'
+                                c.premium_activation_date = None
+                                c.premium_end_date = None
+                                c.premium_trial_prompted = False
+                                c.premium_trial_active = False
+                                c.premium_trial_start = None
+                                c.premium_trial_end = None
                     
                     # حفظ مدة التجربة
                     trial_days_setting = SystemSetting.query.filter_by(setting_key='premium_trial_days').first()
@@ -7378,7 +7392,7 @@ def register_views(app):
                     db.session.commit()
                     
                     company_count = len(selected_company_ids) if selected_company_ids else 0
-                    flash(f'تم حفظ إعدادات التجربة المجانية بنجاح. ({company_count} شركة مؤهلة، {premium_trial_days} يوم)', 'success')
+                    flash(f'تم حفظ إعدادات التجربة المجانية وإظهار العرض لـ ({company_count} شركة مؤهلة، {premium_trial_days} يوم)', 'success')
                 except Exception as e:
                     db.session.rollback()
                     flash(f'حدث خطأ أثناء حفظ إعدادات التجربة المجانية: {str(e)}', 'error')
@@ -7387,10 +7401,19 @@ def register_views(app):
             if action == 'resend_trial_to_free_companies':
                 try:
                     free_companies = Company.query.filter(
-                        db.or_(Company.is_premium == False, Company.is_premium.is_(None))
+                        db.or_(
+                            Company.is_premium == False,
+                            Company.is_premium.is_(None),
+                            Company.subscription_plan != 'paid',
+                            Company.subscription_plan.is_(None)
+                        )
                     ).all()
                     ids = []
                     for c in free_companies:
+                        c.is_premium = False
+                        c.subscription_plan = 'free'
+                        c.premium_activation_date = None
+                        c.premium_end_date = None
                         c.premium_trial_prompted = False
                         c.premium_trial_active = False
                         c.premium_trial_start = None
@@ -7404,7 +7427,7 @@ def register_views(app):
                     else:
                         setting.setting_value = companies_str
                     db.session.commit()
-                    flash(f'تمت إعادة تهيئة عرض التجربة المجانية لعدد {len(ids)} شركة مجانية.', 'success')
+                    flash(f'تمت إعادة تهيئة وإرسال عرض التجربة المجانية لعدد {len(ids)} شركة مجانية.', 'success')
                 except Exception as e:
                     db.session.rollback()
                     flash(f'حدث خطأ أثناء إعادة إرسال عرض التجربة: {str(e)}', 'error')
@@ -7413,7 +7436,12 @@ def register_views(app):
             if action == 'resend_trial_to_iphone_free_companies':
                 try:
                     free_companies = Company.query.filter(
-                        db.or_(Company.is_premium == False, Company.is_premium.is_(None))
+                        db.or_(
+                            Company.is_premium == False,
+                            Company.is_premium.is_(None),
+                            Company.subscription_plan != 'paid',
+                            Company.subscription_plan.is_(None)
+                        )
                     ).all()
                     
                     def is_iphone_user(c):
@@ -7425,12 +7453,16 @@ def register_views(app):
                             'iphone' in ctype or 'ipad' in ctype or 'ios' in ctype or
                             'iphone' in cos or 'ipad' in cos or 'ios' in cos or
                             'iphone' in cdev or 'ipad' in cdev or 'ios' in cdev or
-                            'iphone' in cua or 'ipad' in cua or 'cpu iphone os' in cua or 'cpu os' in cua
+                            'iphone' in cua or 'ipad' in cua or 'ipod' in cua or 'cpu os' in cua or 'cpu iphone os' in cua or 'macintosh' in cua
                         )
 
                     iphone_companies = [c for c in free_companies if is_iphone_user(c)]
                     ids = []
                     for c in iphone_companies:
+                        c.is_premium = False
+                        c.subscription_plan = 'free'
+                        c.premium_activation_date = None
+                        c.premium_end_date = None
                         c.premium_trial_prompted = False
                         c.premium_trial_active = False
                         c.premium_trial_start = None
@@ -7445,7 +7477,7 @@ def register_views(app):
                     else:
                         setting.setting_value = companies_str
                     db.session.commit()
-                    flash(f'تمت إعادة تهيئة عرض التجربة المجانية لعدد {len(ids)} شركة آيفون (iOS) مجانية بنجاح.', 'success')
+                    flash(f'تمت إعادة تهيئة وإرسال عرض التجربة المجانية لعدد {len(ids)} شركة آيفون (iOS) مجانية بنجاح.', 'success')
                 except Exception as e:
                     db.session.rollback()
                     flash(f'حدث خطأ أثناء إعادة إرسال العرض لمستخدمي الآيفون: {str(e)}', 'error')
