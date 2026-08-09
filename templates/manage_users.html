@@ -272,6 +272,47 @@
         }
 
         .search-input {
+
+        /* Search and Filter Section */
+        .search-filter-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-search-trigger {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0 1.75rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-search-trigger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+            color: white;
+        }
+
+        .search-input {
             width: 100%;
             padding: 1rem 3rem 1rem 1rem;
             border: 2px solid #e2e8f0;
@@ -1060,16 +1101,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- Search and Filter Section -->
-        <section class="search-filter-section fade-in">
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن شركة بالاسم أو البريد الإلكتروني أو رقم الهاتف..." value="{{ current_search }}">
-            </div>
-            
-            <div class="view-toggle">
-                <button class="view-btn active" data-view="cards">
                     <i class="fas fa-th-large"></i>
                     بطاقات
                 </button>
@@ -1777,17 +1808,22 @@
 
             // Initialize search
             const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchDebounceTimer);
-                searchDebounceTimer = setTimeout(() => applyServerFilters(1), 650);
-            });
-            searchInput.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    clearTimeout(searchDebounceTimer);
+            const searchBtn = document.getElementById('searchBtn');
+
+            if (searchBtn) {
+                searchBtn.addEventListener('click', function() {
                     applyServerFilters(1);
-                }
-            });
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        applyServerFilters(1);
+                    }
+                });
+            }
 
             // Initialize filter buttons
             const filterButtons = document.querySelectorAll('.filter-btn');
