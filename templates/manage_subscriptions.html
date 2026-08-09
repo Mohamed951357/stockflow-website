@@ -300,6 +300,12 @@
                     <a href="{{ url_for('manage_users') }}?search={{ c.company_name }}" class="btn btn-sm btn-outline-secondary">
                         <i class="fas fa-external-link-alt me-1"></i>تفاصيل
                     </a>
+                    <form method="POST" action="{{ url_for('reset_trial_acceptance', company_id=c.id) }}" class="d-inline"
+                          onsubmit="return confirm('هل تريد حذف قبول العرض لـ {{ c.company_name }}؟ سيتم إلغاء التجربة المجانية وإعادة الحساب إلى المجاني.')">
+                        <button class="btn btn-sm btn-danger" title="حذف القبول وإلغاء التجربة">
+                            <i class="fas fa-trash me-1"></i>حذف القبول
+                        </button>
+                    </form>
                 </div>
             </div>
             {% endfor %}
@@ -339,6 +345,12 @@
                     <a href="{{ url_for('manage_users') }}?search={{ c.company_name }}" class="btn btn-sm btn-outline-secondary">
                         <i class="fas fa-external-link-alt me-1"></i>تفاصيل
                     </a>
+                    <form method="POST" action="{{ url_for('reset_trial_rejection', company_id=c.id) }}" class="d-inline"
+                          onsubmit="return confirm('هل تريد إعادة إرسال العرض لـ {{ c.company_name }}؟ سيتم مسح الرفض وسيظهر له العرض من جديد.')">
+                        <button class="btn btn-sm btn-warning fw-bold" title="مسح الرفض وإعادة إظهار العرض">
+                            <i class="fas fa-redo me-1"></i>إعادة العرض
+                        </button>
+                    </form>
                 </div>
             </div>
             {% endfor %}

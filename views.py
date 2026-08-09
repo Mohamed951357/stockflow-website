@@ -1862,6 +1862,63 @@ def register_views(app):
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/reset_trial_acceptance/<int:company_id>', methods=['POST'])
+    @login_required
+    @check_permission('manage_users')
+    def reset_trial_acceptance(company_id):
+        """حذف قبول العرض وإعادة الشركة إلى الباقة المجانية"""
+        try:
+            company = Company.query.get(company_id)
+            if not company:
+                flash('الشركة غير موجودة.', 'error')
+                return redirect(url_for('manage_subscriptions'))
+            # إلغاء التجربة وإعادة الحساب للمجاني
+            company.is_premium = False
+            company.subscription_plan = 'free'
+            company.premium_activation_date = None
+            company.premium_end_date = None
+            company.premium_trial_prompted = False
+            company.premium_trial_active = False
+            company.premium_trial_start = None
+            company.premium_trial_end = None
+            company.premium_trial_rejected_at = None
+            db.session.commit()
+            flash(f'تم حذف قبول العرض للشركة "{company.company_name}" وإعادة حسابها إلى الباقة المجانية.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ: {str(e)}', 'error')
+        return redirect(url_for('manage_subscriptions'))
+
+    @app.route('/reset_trial_rejection/<int:company_id>', methods=['POST'])
+    @login_required
+    @check_permission('manage_users')
+    def reset_trial_rejection(company_id):
+        """مسح رفض العرض حتى تظهر له شاشة العرض مجدداً"""
+        try:
+            company = Company.query.get(company_id)
+            if not company:
+                flash('الشركة غير موجودة.', 'error')
+                return redirect(url_for('manage_subscriptions'))
+            # مسح الرفض فقط حتى يظهر له العرض مجدداً
+            company.premium_trial_prompted = False
+            company.premium_trial_rejected_at = None
+            # التأكد من وجود الشركة في قائمة المؤهلين
+            setting = SystemSetting.query.filter_by(setting_key='premium_trial_companies').first()
+            if not setting:
+                setting = SystemSetting(setting_key='premium_trial_companies', setting_value=str(company.id))
+                db.session.add(setting)
+            else:
+                current_ids = [id_str.strip() for id_str in setting.setting_value.split(',') if id_str.strip()]
+                if str(company.id) not in current_ids:
+                    current_ids.append(str(company.id))
+                    setting.setting_value = ','.join(current_ids)
+            db.session.commit()
+            flash(f'تم مسح رفض العرض للشركة "{company.company_name}" وسيظهر لها العرض عند دخولها للموقع.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ: {str(e)}', 'error')
+        return redirect(url_for('manage_subscriptions'))
     
     @app.route('/notifications')
     @login_required
