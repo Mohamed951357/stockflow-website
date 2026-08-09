@@ -1645,6 +1645,7 @@ def register_views(app):
         expired_trials = []  # التجارب المنتهية
         
         now = datetime.utcnow()
+        start_of_month = datetime(now.year, now.month, 1)
         
         for company in all_eligible_companies:
             if not hasattr(company, 'premium_trial_prompted'):
@@ -1653,37 +1654,24 @@ def register_views(app):
             if not company.premium_trial_prompted:
                 # لم يتم سؤالها بعد
                 eligible_not_answered.append(company)
-            elif company.premium_trial_active and company.premium_trial_end:
-                # حساب الأيام المتبقية
-                days_remaining = (company.premium_trial_end - now).days
-                company.days_remaining = max(0, days_remaining)
-                
-                if company.premium_trial_end > now:
-                    # التجربة نشطة
-                    active_trials.append(company)
-                else:
-                    # التجربة انتهت
-                    company.days_remaining = 0
-                    expired_trials.append(company)
-                
-                # حساب مدة التجربة
-                if company.premium_trial_start and company.premium_trial_end:
+            elif company.premium_trial_prompted and company.premium_trial_start and company.premium_trial_start >= start_of_month:
+                # موافقة على التجربة في الشهر الحالي
+                if company.premium_trial_active and company.premium_trial_end:
+                    days_remaining = (company.premium_trial_end - now).days
+                    company.days_remaining = max(0, days_remaining)
+                    if company.premium_trial_end > now:
+                        active_trials.append(company)
+                    else:
+                        company.days_remaining = 0
+                        expired_trials.append(company)
                     company.trial_duration = (company.premium_trial_end - company.premium_trial_start).days
                 else:
-                    company.trial_duration = 0
-                
+                    company.trial_duration = (company.premium_trial_end - company.premium_trial_start).days if company.premium_trial_end else 0
                 accepted_companies.append(company)
-            elif company.premium_trial_prompted and not company.premium_trial_active:
-                # تم سؤالها ورفضت أو انتهت التجربة
-                if company.premium_trial_start:
-                    # كانت لديه تجربة وانتهت
-                    if company.premium_trial_start and company.premium_trial_end:
-                        company.trial_duration = (company.premium_trial_end - company.premium_trial_start).days
-                    else:
-                        company.trial_duration = 0
-                    accepted_companies.append(company)
-                else:
-                    # رفض التجربة
+            elif company.premium_trial_prompted and (not company.premium_trial_start):
+                # رفض التجربة المجانية في الشهر الحالي
+                last_seen = getattr(company, 'last_client_seen_at', None) or company.last_login or company.last_active
+                if last_seen and last_seen >= start_of_month:
                     rejected_companies.append(company)
         
         # حساب الإحصائيات
@@ -1714,6 +1702,7 @@ def register_views(app):
     def manage_subscriptions():
         """صفحة إدارة الاشتراكات المميزة للشركات"""
         now = datetime.utcnow()
+        start_of_month = datetime(now.year, now.month, 1)
 
         # جلب جميع الشركات المشتركة حالياً (is_premium=True)
         active_subs = Company.query.filter(
@@ -1726,15 +1715,21 @@ def register_views(app):
             Company.premium_end_date.isnot(None)
         ).order_by(Company.premium_end_date.desc()).limit(50).all()
 
-        # جلب الشركات التي وافقت والشركات التي رفضت عرض التجربة المجانية
+        # جلب الشركات التي وافقت والشركات التي رفضت عرض التجربة المجانية خلال الشهر الحالي فقط
         accepted_trial_companies = Company.query.filter(
             Company.premium_trial_prompted == True,
-            Company.premium_trial_start.isnot(None)
+            Company.premium_trial_start.isnot(None),
+            Company.premium_trial_start >= start_of_month
         ).order_by(Company.premium_trial_start.desc()).all()
 
         rejected_trial_companies = Company.query.filter(
             Company.premium_trial_prompted == True,
-            Company.premium_trial_start.is_(None)
+            Company.premium_trial_start.is_(None),
+            db.or_(
+                Company.last_client_seen_at >= start_of_month,
+                Company.last_login >= start_of_month,
+                Company.last_active >= start_of_month
+            )
         ).order_by(Company.company_name.asc()).all()
 
         # تهيئة البيانات للعرض

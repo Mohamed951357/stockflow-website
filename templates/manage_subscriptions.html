@@ -113,7 +113,7 @@
                     <i class="fas fa-user-check"></i>
                 </div>
                 <h4 class="text-success mb-0 fw-bold">{{ accepted_trial_count }}</h4>
-                <small class="text-muted fw-bold">وافقوا على عرض التجربة</small>
+                <small class="text-muted fw-bold">وافقوا على العرض (هذا الشهر)</small>
             </div>
         </div>
         <div class="col-md-3 mb-3">
@@ -122,7 +122,7 @@
                     <i class="fas fa-user-times"></i>
                 </div>
                 <h4 class="text-danger mb-0 fw-bold">{{ rejected_trial_count }}</h4>
-                <small class="text-muted fw-bold">رفضوا عرض التجربة</small>
+                <small class="text-muted fw-bold">رفضوا العرض (هذا الشهر)</small>
             </div>
         </div>
     </div>
@@ -273,7 +273,7 @@
     <!-- Accepted Trial Companies -->
     <div class="mb-4">
         <div class="section-title bg-success text-white">
-            <i class="fas fa-user-check"></i> الشركات التي وافقت على التجربة المجانية ({{ accepted_trial_companies|length if accepted_trial_companies is defined else 0 }})
+            <i class="fas fa-user-check"></i> الشركات التي وافقت على التجربة المجانية (الشهر الحالي: {{ accepted_trial_companies|length if accepted_trial_companies is defined else 0 }})
         </div>
         {% if accepted_trial_companies %}
             {% for c in accepted_trial_companies %}
@@ -314,7 +314,7 @@
     <!-- Rejected Trial Companies -->
     <div class="mb-4">
         <div class="section-title bg-secondary text-white">
-            <i class="fas fa-user-times"></i> الشركات التي رفضت التجربة المجانية ({{ rejected_trial_companies|length if rejected_trial_companies is defined else 0 }})
+            <i class="fas fa-user-times"></i> الشركات التي رفضت التجربة المجانية (الشهر الحالي: {{ rejected_trial_companies|length if rejected_trial_companies is defined else 0 }})
         </div>
         {% if rejected_trial_companies %}
             {% for c in rejected_trial_companies %}
