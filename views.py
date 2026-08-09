@@ -1717,17 +1717,19 @@ def register_views(app):
         """صفحة إدارة الاشتراكات المميزة للشركات"""
         now = datetime.utcnow()
         start_of_month = datetime(now.year, now.month, 1)
+        # مقارنة بالتاريخ فقط (بدون وقت) لتجنب مشاكل الـ timezone
+        today = now.date()
 
         # جلب جميع الشركات التي لها is_premium=True
         all_premium = Company.query.filter(
             Company.is_premium == True
         ).order_by(Company.premium_end_date.asc().nullslast()).all()
 
-        # تقسيمهم: نشطة (مدتها لم تنته) والمنتهية (تجاوزت premium_end_date)
+        # تقسيمهم: نشطة (مدتها لم تنته بعد اليوم) والمنتهية (انتهت قبل اليوم)
         active_subs = []
         expired_from_premium = []
         for c in all_premium:
-            if c.premium_end_date and c.premium_end_date < now:
+            if c.premium_end_date and c.premium_end_date.date() < today:
                 expired_from_premium.append(c)
             else:
                 active_subs.append(c)
