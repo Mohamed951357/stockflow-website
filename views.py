@@ -1718,16 +1718,31 @@ def register_views(app):
         now = datetime.utcnow()
         start_of_month = datetime(now.year, now.month, 1)
 
-        # جلب جميع الشركات المشتركة حالياً (is_premium=True)
-        active_subs = Company.query.filter(
+        # جلب جميع الشركات التي لها is_premium=True
+        all_premium = Company.query.filter(
             Company.is_premium == True
         ).order_by(Company.premium_end_date.asc().nullslast()).all()
 
+        # تقسيمهم: نشطة (مدتها لم تنته) والمنتهية (تجاوزت premium_end_date)
+        active_subs = []
+        expired_from_premium = []
+        for c in all_premium:
+            if c.premium_end_date and c.premium_end_date < now:
+                expired_from_premium.append(c)
+            else:
+                active_subs.append(c)
+
         # جلب الشركات التي انتهى اشتراكها مؤخراً (is_premium=False لكن كان لها premium_end_date)
-        expired_subs = Company.query.filter(
+        expired_subs_db = Company.query.filter(
             Company.is_premium == False,
             Company.premium_end_date.isnot(None)
         ).order_by(Company.premium_end_date.desc()).limit(50).all()
+
+        # دمج المنتهية مع قائمة المنتهية
+        expired_subs = expired_from_premium + expired_subs_db
+        # ترتيب بالتاريخ (الأحدث أولاً)
+        expired_subs.sort(key=lambda c: c.premium_end_date or datetime.min, reverse=True)
+        expired_subs = expired_subs[:50]
 
         # جلب الشركات التي وافقت والشركات التي رفضت عرض التجربة المجانية خلال الشهر الحالي فقط
         accepted_trial_companies = Company.query.filter(
