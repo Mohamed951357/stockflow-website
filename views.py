@@ -7506,20 +7506,13 @@ def register_views(app):
 
             if action == 'resend_trial_to_free_companies':
                 try:
+                    # جلب الشركات المجانية فقط (is_premium=False بشكل صريح)
                     free_companies = Company.query.filter(
-                        db.or_(
-                            Company.is_premium == False,
-                            Company.is_premium.is_(None),
-                            Company.subscription_plan != 'paid',
-                            Company.subscription_plan.is_(None)
-                        )
+                        Company.is_premium == False
                     ).all()
                     ids = []
                     for c in free_companies:
-                        c.is_premium = False
-                        c.subscription_plan = 'free'
-                        c.premium_activation_date = None
-                        c.premium_end_date = None
+                        # فقط تهيئة حالة التجربة بدون مس بيانات الاشتراك
                         c.premium_trial_prompted = False
                         c.premium_trial_active = False
                         c.premium_trial_start = None
@@ -7542,13 +7535,9 @@ def register_views(app):
 
             if action == 'resend_trial_to_iphone_free_companies':
                 try:
+                    # جلب الشركات المجانية فقط (is_premium=False بشكل صريح)
                     free_companies = Company.query.filter(
-                        db.or_(
-                            Company.is_premium == False,
-                            Company.is_premium.is_(None),
-                            Company.subscription_plan != 'paid',
-                            Company.subscription_plan.is_(None)
-                        )
+                        Company.is_premium == False
                     ).all()
                     
                     def is_iphone_user(c):
@@ -7566,10 +7555,7 @@ def register_views(app):
                     iphone_companies = [c for c in free_companies if is_iphone_user(c)]
                     ids = []
                     for c in iphone_companies:
-                        c.is_premium = False
-                        c.subscription_plan = 'free'
-                        c.premium_activation_date = None
-                        c.premium_end_date = None
+                        # فقط تهيئة حالة التجربة بدون مس بيانات الاشتراك
                         c.premium_trial_prompted = False
                         c.premium_trial_active = False
                         c.premium_trial_start = None
