@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بونص فارما - إعدادات النظام - نظام حجز المواعيد وإدارة الأرصدة المتكامل</title>
@@ -607,15 +607,24 @@
                 <div class="card h-100">
                     <div class="card-header bg-warning text-dark">
                         <i class="fas fa-redo me-2"></i>
-                        <h5>إعادة إرسال عرض التجربة المجانية</h5>
+                        <h5 class="d-inline">إعادة إرسال عرض التجربة المجانية</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted mb-3">إرسال العرض مرة أخرى لكل الشركات المجانية فقط ليظهر لهم قبول أو رفض التجربة.</p>
-                        <form method="POST" onsubmit="return confirm('سيتم إعادة إرسال العرض لكل الشركات المجانية. هل أنت متأكد؟');">
+                        <p class="text-muted mb-3">إرسال العرض مرة أخرى للشركات المجانية ليظهر لهم قبول أو رفض التجربة.</p>
+                        
+                        <form method="POST" onsubmit="return confirm('سيتم إعادة إرسال العرض لكل الشركات المجانية. هل أنت متأكد؟');" class="mb-3">
                             <input type="hidden" name="action" value="resend_trial_to_free_companies">
-                            <button type="submit" class="btn btn-warning w-100">
+                            <button type="submit" class="btn btn-warning w-100 fw-bold">
                                 <i class="fas fa-paper-plane me-2"></i>
                                 إعادة إرسال العرض لكل الشركات المجانية
+                            </button>
+                        </form>
+
+                        <form method="POST" onsubmit="return confirm('سيتم إعادة إرسال العرض لمستخدمي الآيفون (iOS) المجانيين فقط. هل أنت متأكد؟');">
+                            <input type="hidden" name="action" value="resend_trial_to_iphone_free_companies">
+                            <button type="submit" class="btn btn-dark w-100 fw-bold">
+                                <i class="fab fa-apple me-2"></i>
+                                إعادة إرسال العرض لمستخدمي الآيفون فقط
                             </button>
                         </form>
                     </div>

@@ -7410,6 +7410,47 @@ def register_views(app):
                     flash(f'حدث خطأ أثناء إعادة إرسال عرض التجربة: {str(e)}', 'error')
                 return redirect(url_for('system_settings'))
 
+            if action == 'resend_trial_to_iphone_free_companies':
+                try:
+                    free_companies = Company.query.filter(
+                        db.or_(Company.is_premium == False, Company.is_premium.is_(None))
+                    ).all()
+                    
+                    def is_iphone_user(c):
+                        ctype = str(getattr(c, 'last_client_type', '') or '').lower()
+                        cos = str(getattr(c, 'last_client_os', '') or '').lower()
+                        cdev = str(getattr(c, 'last_client_device', '') or '').lower()
+                        cua = str(getattr(c, 'last_client_user_agent', '') or '').lower()
+                        return (
+                            'iphone' in ctype or 'ipad' in ctype or 'ios' in ctype or
+                            'iphone' in cos or 'ipad' in cos or 'ios' in cos or
+                            'iphone' in cdev or 'ipad' in cdev or 'ios' in cdev or
+                            'iphone' in cua or 'ipad' in cua or 'cpu iphone os' in cua or 'cpu os' in cua
+                        )
+
+                    iphone_companies = [c for c in free_companies if is_iphone_user(c)]
+                    ids = []
+                    for c in iphone_companies:
+                        c.premium_trial_prompted = False
+                        c.premium_trial_active = False
+                        c.premium_trial_start = None
+                        c.premium_trial_end = None
+                        ids.append(str(c.id))
+
+                    companies_str = ','.join(ids)
+                    setting = SystemSetting.query.filter_by(setting_key='premium_trial_companies').first()
+                    if not setting:
+                        setting = SystemSetting(setting_key='premium_trial_companies', setting_value=companies_str)
+                        db.session.add(setting)
+                    else:
+                        setting.setting_value = companies_str
+                    db.session.commit()
+                    flash(f'تمت إعادة تهيئة عرض التجربة المجانية لعدد {len(ids)} شركة آيفون (iOS) مجانية بنجاح.', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'حدث خطأ أثناء إعادة إرسال العرض لمستخدمي الآيفون: {str(e)}', 'error')
+                return redirect(url_for('system_settings'))
+
             if action == 'upload_logo':
                 try:
                     if 'logo_file' not in request.files:
@@ -9624,7 +9665,6 @@ def register_views(app):
         premium_message = premium_message_setting.setting_value if premium_message_setting else 'هذه الميزة متاحة فقط للمشتركين في STOCKFLOW PLUS.'
 
         if premium_features_enabled and not current_user.is_premium:
-            flash(premium_message, 'error')
             return jsonify({'success': False, 'error': premium_message}), 403
 
 
@@ -9644,7 +9684,6 @@ def register_views(app):
             ).first()
 
             if existing_fav_product:
-                flash(f'الصنف "{product_name}" موجود بالفعل في قائمة أصنافك.', 'info')
                 return jsonify({'success': True, 'message': f'الصنف "{product_name}" موجود بالفعل في قائمة أصنافك.'}), 200
 
             new_fav_product = FavoriteProduct(
@@ -9659,7 +9698,6 @@ def register_views(app):
             db.session.add(new_fav_product)
             db.session.commit()
 
-            flash(f'تم إضافة "{product_name}" إلى قائمة أصنافك بنجاح!', 'success')
             return jsonify({'success': True, 'message': f'تم إضافة "{product_name}" إلى قائمة أصنافك بنجاح!'}), 200
 
         except Exception as e:
@@ -9690,7 +9728,6 @@ def register_views(app):
         premium_message = premium_message_setting.setting_value if premium_message_setting else 'هذه الميزة متاحة فقط للمشتركين في STOCKFLOW PLUS.'
 
         if premium_features_enabled and not current_user.is_premium:
-            flash(premium_message, 'error')
             return jsonify({'success': False, 'error': premium_message}), 403
 
 
@@ -9702,7 +9739,6 @@ def register_views(app):
 
             db.session.delete(fav_product)
             db.session.commit()
-            flash(f'تم حذف الصنف "{fav_product.product_name}" بنجاح!', 'success')
             return jsonify({'success': True, 'message': f'تم حذف الصنف "{fav_product.product_name}" بنجاح!'}), 200
         except Exception as e:
             db.session.rollback()
