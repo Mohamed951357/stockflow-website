@@ -3112,8 +3112,41 @@ def register_views(app):
             app.logger.warning('Error fetching latest_community_post: %s', e)
             latest_community_post = None
 
+        # جلب بيانات برومو الإعلان مع التحقق من الصلاحية
+        promo_gif_url = None
+        promo_gif_duration = 7
+        try:
+            _promo_settings = _get_system_settings_map({
+                'promo_gif', 'promo_gif_validity',
+                'promo_gif_upload_date', 'promo_gif_duration',
+            })
+            _promo_filename = _promo_settings.get('promo_gif')
+            if _promo_filename:
+                _promo_validity    = _promo_settings.get('promo_gif_validity', 'always')
+                _promo_upload_str  = _promo_settings.get('promo_gif_upload_date')
+                _is_valid = True
+                if _promo_validity != 'always' and _promo_upload_str:
+                    try:
+                        _upload_dt = datetime.fromisoformat(_promo_upload_str)
+                        if _upload_dt.tzinfo is None:
+                            _upload_dt = pytz.UTC.localize(_upload_dt)
+                        _diff = datetime.now(pytz.UTC) - _upload_dt
+                        if _promo_validity == '24hours' and _diff.total_seconds() > 86400:
+                            _is_valid = False
+                        elif _promo_validity == '7days' and _diff.days > 7:
+                            _is_valid = False
+                        elif _promo_validity == '30days' and _diff.days > 30:
+                            _is_valid = False
+                    except Exception:
+                        _is_valid = True
+                if _is_valid:
+                    promo_gif_url      = url_for('static', filename=f'promo_gifs/{_promo_filename}')
+                    promo_gif_duration = _coerce_int_or_default(_promo_settings.get('promo_gif_duration'), 7)
+        except Exception as _promo_err:
+            app.logger.warning('Promo fetch error in company_dashboard: %s', _promo_err)
+
         return render_template('company_dashboard.html',
-                               company=current_user, # تأكد أن هذا السطر يبدأ بنفس المسافات البادئة الصحيحة التي تسبقه
+                               company=current_user,
                                latest_community_post=latest_community_post,
                                unread_private_messages_count=unread_private_messages_count,
                                unread_notifications_count=unread_notifications_count,
@@ -3138,7 +3171,9 @@ def register_views(app):
                                ramadan_glitter_enabled=ramadan_glitter_enabled,
                                launch_countdown_enabled=launch_countdown_enabled,
                                launch_target_date=launch_target_date,
-                               show_confetti=show_confetti)
+                               show_confetti=show_confetti,
+                               promo_gif_url=promo_gif_url,
+                               promo_gif_duration=promo_gif_duration)
     @app.route('/company/messages')
     @login_required
     def company_messages():
