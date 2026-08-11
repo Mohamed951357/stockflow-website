@@ -1140,6 +1140,7 @@ def register_views(app):
             'promo_gif_validity',
             'promo_gif_upload_date',
             'promo_gif_duration',
+            'promo_gif_audience',
         })
         
         # إنشاء كائن system_info مع لوجو البرومو
@@ -1182,8 +1183,14 @@ def register_views(app):
                     is_valid = True  # If error, show the promo
             
             if is_valid:
-                promo_gif_url = url_for('static', filename=f'promo_gifs/{promo_gif_filename}')
-                promo_gif_duration = _coerce_int_or_default(settings.get('promo_gif_duration'), 7)
+                # صفحة اللوجين دايماً يفتحها مستخدم غير مسجّل، لذلك نتحقق من إعداد الجمهور:
+                # - 'all'     : يظهر دايماً (لم يتسجّل بعد)
+                # - 'free'    : يظهر (مستخدم مجاني أو غير مسجّل)
+                # - 'premium' : لا يظهر على صفحة اللوجين (المميزون فقط لديهم تسجيل دخول محفوظ)
+                _promo_audience_login = settings.get('promo_gif_audience', 'all')
+                if _promo_audience_login != 'premium':  # يظهر للجميع أو المجانيين (وليس للمميزين فقط)
+                    promo_gif_url = url_for('static', filename=f'promo_gifs/{promo_gif_filename}')
+                    promo_gif_duration = _coerce_int_or_default(settings.get('promo_gif_duration'), 7)
 
         # Get the current logo path using SystemSetting (same as inject_global_data)
         current_logo_path = None
@@ -2065,6 +2072,17 @@ def register_views(app):
                             db.session.add(validity_setting)
                         else:
                             validity_setting.setting_value = promo_validity
+
+                        # حفظ الجمهور المستهدف للبرومو
+                        promo_audience = request.form.get('promo_audience', 'all')
+                        if promo_audience not in ('all', 'free', 'premium'):
+                            promo_audience = 'all'
+                        audience_setting = SystemSetting.query.filter_by(setting_key='promo_gif_audience').first()
+                        if not audience_setting:
+                            audience_setting = SystemSetting(setting_key='promo_gif_audience', setting_value=promo_audience)
+                            db.session.add(audience_setting)
+                        else:
+                            audience_setting.setting_value = promo_audience
                         
                         if 'promo_image_file' in request.files:
                             file = request.files['promo_image_file']
@@ -2321,6 +2339,9 @@ def register_views(app):
         
         promo_upload_date_setting = SystemSetting.query.filter_by(setting_key='promo_gif_upload_date').first()
         promo_image_upload_date = promo_upload_date_setting.setting_value if promo_upload_date_setting else None
+
+        promo_audience_setting = SystemSetting.query.filter_by(setting_key='promo_gif_audience').first()
+        promo_image_audience = promo_audience_setting.setting_value if promo_audience_setting else 'all'
         
         if promo_image_upload_date:
             try:
@@ -2340,7 +2361,8 @@ def register_views(app):
             promo_image_filename=promo_image_filename,
             promo_image_duration=promo_image_duration,
             promo_image_validity=promo_image_validity,
-            promo_image_upload_date=promo_image_upload_date
+            promo_image_upload_date=promo_image_upload_date,
+            promo_image_audience=promo_image_audience
         )
 
     @app.route('/publish_ad_story/<int:image_id>', methods=['POST'])
@@ -3119,6 +3141,7 @@ def register_views(app):
             _promo_settings = _get_system_settings_map({
                 'promo_gif', 'promo_gif_validity',
                 'promo_gif_upload_date', 'promo_gif_duration',
+                'promo_gif_audience',
             })
             _promo_filename = _promo_settings.get('promo_gif')
             if _promo_filename:
@@ -3140,8 +3163,17 @@ def register_views(app):
                     except Exception:
                         _is_valid = True
                 if _is_valid:
-                    promo_gif_url      = url_for('static', filename=f'promo_gifs/{_promo_filename}')
-                    promo_gif_duration = _coerce_int_or_default(_promo_settings.get('promo_gif_duration'), 7)
+                    # تحقق من الجمهور المستهدف وفقاً لحالة اشتراك المستخدم
+                    _promo_audience = _promo_settings.get('promo_gif_audience', 'all')
+                    _user_is_premium = getattr(current_user, 'is_premium', False)
+                    _audience_match = (
+                        _promo_audience == 'all' or
+                        (_promo_audience == 'free'    and not _user_is_premium) or
+                        (_promo_audience == 'premium' and     _user_is_premium)
+                    )
+                    if _audience_match:
+                        promo_gif_url      = url_for('static', filename=f'promo_gifs/{_promo_filename}')
+                        promo_gif_duration = _coerce_int_or_default(_promo_settings.get('promo_gif_duration'), 7)
         except Exception as _promo_err:
             app.logger.warning('Promo fetch error in company_dashboard: %s', _promo_err)
 

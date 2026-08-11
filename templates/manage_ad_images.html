@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بونص فارما - إدارة الصور الإعلانية - نظام حجز المواعيد</title>
@@ -206,6 +206,63 @@
                             {% if promo_image_upload_date %}
                             تم الرفع: {{ promo_image_upload_date }}
                             {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- الجمهور المستهدف للبرومو -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-users me-2"></i>
+                            من يرى البرومو؟
+                        </label>
+                        <div class="alert alert-secondary py-2 mb-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <small>يحدد هذا الإعداد من سيظهر له البرومو عند فتح الموقع أو تطبيق الموبايل</small>
+                        </div>
+                        <div class="d-flex flex-column gap-2" id="promoAudienceGroup">
+
+                            <label class="d-flex align-items-start gap-3 p-3 border rounded-3 promo-aud-lbl
+                                {% if promo_image_audience == 'all' or not promo_image_audience %}border-success bg-success bg-opacity-10{% endif %}"
+                                style="cursor:pointer;" id="lbl-promo-all">
+                                <input class="form-check-input mt-1 flex-shrink-0" type="radio"
+                                    name="promo_audience" value="all"
+                                    {% if promo_image_audience == 'all' or not promo_image_audience %}checked{% endif %}
+                                    onchange="highlightAudience(this)">
+                                <span>
+                                    <i class="fas fa-globe text-success me-1"></i>
+                                    <strong>لجميع العملاء</strong>
+                                    <small class="d-block text-muted mt-1">يظهر البرومو لكل العملاء — المميزين والمجانيين — سواء كان تسجيل دخولهم محفوظاً أو لا</small>
+                                </span>
+                            </label>
+
+                            <label class="d-flex align-items-start gap-3 p-3 border rounded-3 promo-aud-lbl
+                                {% if promo_image_audience == 'free' %}border-info bg-info bg-opacity-10{% endif %}"
+                                style="cursor:pointer;" id="lbl-promo-free">
+                                <input class="form-check-input mt-1 flex-shrink-0" type="radio"
+                                    name="promo_audience" value="free"
+                                    {% if promo_image_audience == 'free' %}checked{% endif %}
+                                    onchange="highlightAudience(this)">
+                                <span>
+                                    <i class="fas fa-user text-info me-1"></i>
+                                    <strong>العملاء المجانيين فقط</strong>
+                                    <small class="d-block text-muted mt-1">يظهر للعملاء غير المميزين فقط — العملاء المميزون المحفوظون لن يروه</small>
+                                </span>
+                            </label>
+
+                            <label class="d-flex align-items-start gap-3 p-3 border rounded-3 promo-aud-lbl
+                                {% if promo_image_audience == 'premium' %}border-warning bg-warning bg-opacity-10{% endif %}"
+                                style="cursor:pointer;" id="lbl-promo-premium">
+                                <input class="form-check-input mt-1 flex-shrink-0" type="radio"
+                                    name="promo_audience" value="premium"
+                                    {% if promo_image_audience == 'premium' %}checked{% endif %}
+                                    onchange="highlightAudience(this)">
+                                <span>
+                                    <i class="fas fa-crown text-warning me-1"></i>
+                                    <strong>العملاء المميزين فقط</strong>
+                                    <small class="d-block text-muted mt-1">يظهر للعملاء المميزين (PLUS) فقط — العملاء المجانيون لن يروه</small>
+                                </span>
+                            </label>
+
                         </div>
                     </div>
 
@@ -533,6 +590,23 @@
                 });
             });
         });
+
+        /* Promo Audience Highlight */
+        function highlightAudience(radio) {
+            var colorMap = { all: 'success', free: 'info', premium: 'warning' };
+            document.querySelectorAll('.promo-aud-lbl').forEach(function(lbl) {
+                lbl.classList.remove(
+                    'border-success', 'bg-success', 'bg-opacity-10',
+                    'border-info',    'bg-info',
+                    'border-warning', 'bg-warning'
+                );
+            });
+            var color = colorMap[radio.value] || 'success';
+            var parent = radio.closest('.promo-aud-lbl');
+            if (parent) {
+                parent.classList.add('border-' + color, 'bg-' + color, 'bg-opacity-10');
+            }
+        }
     </script>
 </body>
 </html>
