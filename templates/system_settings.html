@@ -4,19 +4,29 @@
 <head>
     {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بونص فارما - إعدادات النظام - نظام حجز المواعيد وإدارة الأرصدة المتكامل</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>بونص فارما - إعدادات النظام</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
-        rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
+        :root {
+            --card-radius: 16px;
+            --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --info-gradient: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
         body {
-            background-color: #f8f9fa;
+            background-color: #f4f6f9;
             font-family: 'Cairo', sans-serif;
+            color: #2c3e50;
+            overflow-x: hidden;
         }
 
         .navbar {
@@ -24,165 +34,176 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .navbar-logo {
-            height: 40px;
-            width: auto;
-            margin-left: 10px;
-        }
-
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        /* Page Header Card */
+        .page-header-card {
+            background: white;
+            border-radius: var(--card-radius);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            padding: 1.5rem 1.75rem;
             margin-bottom: 1.5rem;
         }
 
-        .card-header {
-            border-top-left-radius: 15px;
-            border-top-right-radius: 15px;
-            /* استخدام خصائص Bootstrap لألوان الخلفية والنص */
-            padding: 1rem 1.5rem;
+        /* Category Nav Filter Pills */
+        .category-nav-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 1.5rem;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-pill {
+            background: white;
+            border: 1.5px solid #e2e8f0;
+            color: #475569;
+            font-weight: 700;
+            font-size: 0.88rem;
+            border-radius: 999px;
+            padding: 0.5rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .category-pill:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .category-pill.active {
+            background: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+        }
+
+        /* Settings Card */
+        .settings-card {
+            background: white;
+            border-radius: var(--card-radius);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: all 0.25s ease;
+            height: calc(100% - 1.5rem);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+        }
+
+        .card-header-custom {
+            padding: 1.15rem 1.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
+            justify-content: space-between;
         }
 
-        .card-header h5 {
-            margin-bottom: 0;
+        .card-body-custom {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Inputs & Switches */
+        .form-label {
             font-weight: 700;
+            color: #334155;
+            font-size: 0.92rem;
+            margin-bottom: 0.45rem;
         }
 
-        .logo-preview {
-            max-width: 150px;
-            max-height: 150px;
-            border: 1px solid #ddd;
-            padding: 5px;
-            border-radius: 8px;
-            margin-top: 15px;
-            display: block;
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+        .form-check-input {
+            width: 3rem;
+            height: 1.6rem;
+            cursor: pointer;
+        }
+
+        .form-check-input:checked {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        .logo-preview-box {
+            max-width: 140px;
+            max-height: 120px;
+            border: 2px dashed #cbd5e1;
+            padding: 8px;
+            border-radius: 12px;
+            background: #f8fafc;
+            display: inline-block;
             object-fit: contain;
         }
 
-        /* تحسينات إضافية */
-        .settings-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background-color: #fff;
-            border-radius: 15px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .settings-section h4 {
-            color: #007bff;
-            /* لون أزرق جذاب للعناوين الفرعية */
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        .form-label {
+        .time-quick-btn {
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 600;
-            color: #343a40;
+            padding: 0.35rem 0.75rem;
+            transition: all 0.2s ease;
         }
 
-        .btn-group-toggle .btn {
-            border-radius: 0.5rem;
-            /* حواف مستديرة للأزرار داخل المجموعات */
-            margin: 0.2rem;
+        /* Action Buttons */
+        .btn-save-custom {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            width: 100%;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         }
 
-        .btn-group-toggle .btn:first-child {
-            border-top-right-radius: 0.5rem;
-            /* تصحيح الحواف عند استخدام rtl */
-            border-bottom-right-radius: 0.5rem;
-        }
-
-        .btn-group-toggle .btn:last-child {
-            border-top-left-radius: 0.5rem;
-            border-bottom-left-radius: 0.5rem;
-        }
-
-        /* تحسينات Select2 */
-        .select2-container--bootstrap-5 .select2-selection {
-            min-height: 45px !important;
-            border-radius: 8px !important;
-            border: 1px solid #ced4da !important;
-            padding: 5px !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-            background-color: #28a745 !important;
-            border-color: #28a745 !important;
-            color: white !important;
-            border-radius: 6px !important;
-            padding: 4px 8px !important;
-            margin: 3px !important;
-            font-size: 0.9rem !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
-            color: white !important;
-            margin-left: 5px !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
-            color: #ffdddd !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-search--inline .select2-search__field {
-            margin-top: 5px !important;
-            font-size: 0.95rem !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-dropdown {
-            border-radius: 8px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-results__option--highlighted {
-            background-color: #28a745 !important;
-        }
-
-        /* أزرار التحديد السريع */
-        .btn-sm {
-            font-size: 0.875rem;
-            padding: 0.4rem 1rem;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-sm:hover {
+        .btn-save-custom:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        #selected-count {
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            background: #f8f9fa;
-            transition: all 0.3s ease;
-        }
-
-        #selected-count.text-success {
-            background: #d4edda;
-            color: #155724 !important;
-        }
-
-        .gap-2 {
-            gap: 0.5rem !important;
-        }
-    
-        /* --- Mobile Responsiveness Bounds Fix --- */
+        /* Mobile Viewport Safety */
         html, body {
             overflow-x: hidden !important;
             width: 100vw !important;
             max-width: 100vw !important;
-            touch-action: pan-y !important;
-            -webkit-overflow-scrolling: touch !important;
-            overscroll-behavior-x: none !important;
         }
 
+        @media (max-width: 768px) {
+            .page-header-card {
+                padding: 1.25rem;
+            }
+            .card-body-custom {
+                padding: 1.25rem;
+            }
+        }
     </style>
     <link href="{{ url_for('static', filename='css/admin_identity.css') }}" rel="stylesheet">
 </head>
@@ -190,862 +211,599 @@
 <body>
     {% include '_admin_navbar.html' %}
 
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
-                <i class="fas fa-cog me-2 text-primary"></i>
-                إعدادات النظام
-            </h2>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-right me-2"></i>
-                العودة للوحة الإدارة
-            </a>
-        </div>
-
-        <div id="flash-messages-container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-            {% if message %}
-            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" style="border-radius: 14px;"
-                role="alert">
-                <i
-                    class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endif %}
-            {% endfor %}
-            {% endwith %}
-        </div>
-
-        <div class="row">
-            {# قسم إدارة شعار النظام (اللوجو) #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-info text-white">
-                        <i class="fas fa-image me-2"></i>
-                        <h5>إدارة شعار النظام (اللوجو)</h5>
+    <div class="container py-4">
+        <!-- Page Header Bar -->
+        <div class="page-header-card">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-primary px-2.5 py-1.5 rounded-pill" style="font-size: 0.75rem;">لوحة التحكم</span>
+                        <span class="text-muted small"><i class="fas fa-sliders-h text-primary me-1"></i>التحكم الشامل</span>
                     </div>
-                    <div class="card-body">
+                    <h3 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="fas fa-cog text-primary"></i>
+                        إعدادات النظام العامة
+                    </h3>
+                    <p class="text-muted small mb-0 mt-1">إدارة الهوية البصرية، اشتراكات الشركات، خيارات الصيانة، والمواعيد</p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light border shadow-sm fw-semibold text-secondary d-flex align-items-center gap-2" style="border-radius: 12px; padding: 0.7rem 1.25rem;">
+                        <i class="fas fa-arrow-right"></i>
+                        <span>لوحة الإدارة</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mini Status Badges -->
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-3 border-top">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold small">
+                    <i class="fas fa-hdd me-1"></i> حجم قاعدة البيانات: {{ "%.2f"|format(db_size / (1024 * 1024)) }} ميجابايت
+                </span>
+                <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill fw-semibold small">
+                    <i class="fas fa-folder me-1"></i> ملفات الرفع: {{ uploads_count }} ملف
+                </span>
+                <span class="badge {% if current_maintenance_mode %}bg-danger text-white{% else %}bg-success bg-opacity-10 text-success{% endif %} px-3 py-2 rounded-pill fw-semibold small">
+                    <i class="fas fa-tools me-1"></i> وضع الصيانة: {{ 'مفعل ⚠️' if current_maintenance_mode else 'معطل (النظام متاح)' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm border-0 mb-4" style="border-radius: 14px;" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas {{ 'fa-exclamation-circle text-danger' if category == 'error' else 'fa-check-circle text-success' }} me-2 fa-lg"></i>
+                            <div class="fw-semibold">{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Quick Category Filter Pills -->
+        <div class="category-nav-bar">
+            <span class="category-pill active" data-target="all" onclick="filterSettings('all')">
+                <i class="fas fa-th-large"></i> الكل
+            </span>
+            <span class="category-pill" data-target="branding" onclick="filterSettings('branding')">
+                <i class="fas fa-palette text-primary"></i> الهوية والشعارات
+            </span>
+            <span class="category-pill" data-target="subscriptions" onclick="filterSettings('subscriptions')">
+                <i class="fas fa-crown text-warning"></i> الاشتراكات وباقات بلس
+            </span>
+            <span class="category-pill" data-target="services" onclick="filterSettings('services')">
+                <i class="fas fa-calendar-check text-success"></i> المواعيد والمراسلات
+            </span>
+            <span class="category-pill" data-target="maintenance" onclick="filterSettings('maintenance')">
+                <i class="fas fa-tools text-danger"></i> وضع الصيانة
+            </span>
+            <span class="category-pill" data-target="database" onclick="filterSettings('database')">
+                <i class="fas fa-database text-info"></i> قواعد البيانات والنسخ
+            </span>
+        </div>
+
+        <!-- Settings Cards Grid -->
+        <div class="row g-4" id="settingsContainer">
+
+            <!-- 1. الشعار الرئيسي (BRANDING) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="branding">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-info text-white">
+                        <span><i class="fas fa-image me-2"></i>شعار النظام الرئيسي (اللوجو)</span>
+                    </div>
+                    <div class="card-body-custom">
                         <form method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="action" value="upload_logo">
                             <div class="mb-3">
-                                <label for="logo_file" class="form-label">
-                                    <i class="fas fa-upload me-2"></i>
-                                    رفع شعار جديد
-                                </label>
-                                <input class="form-control" type="file" id="logo_file" name="logo_file"
-                                    accept=".png,.jpg,.jpeg,.gif,.svg">
-                                <div class="form-text">صيغ الملفات المدعومة: PNG, JPG, JPEG, GIF, SVG</div>
+                                <label for="logo_file" class="form-label">رفع شعار جديد</label>
+                                <input class="form-control" type="file" id="logo_file" name="logo_file" accept=".png,.jpg,.jpeg,.gif,.svg">
+                                <div class="form-text small">الصيغ المدعومة: PNG, JPG, JPEG, SVG</div>
                             </div>
-                            <div class="mb-3">
-                                <p class="mb-1">الشعار الحالي:</p>
+                            <div class="mb-3 text-center">
+                                <p class="small text-muted mb-1">الشعار المعتمد حالياً:</p>
                                 {% if current_logo_filename %}
-                                <img src="{{ url_for('static', filename='logos/' + current_logo_filename) }}"
-                                    alt="Current Logo" class="img-fluid logo-preview">
+                                <img src="{{ url_for('static', filename='logos/' + current_logo_filename) }}" alt="Logo" class="logo-preview-box">
                                 {% else %}
-                                <img src="{{ url_for('static', filename='images/default_logo.png') }}"
-                                    alt="Default Logo" class="img-fluid logo-preview">
+                                <img src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Default Logo" class="logo-preview-box">
                                 {% endif %}
-                                <small class="text-muted d-block mt-1">اسم الملف: {{ current_logo_filename if
-                                    current_logo_filename else 'لا يوجد شعار' }}</small>
                             </div>
-                            <button type="submit" class="btn btn-info w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ الشعار
+                            <button type="submit" class="btn btn-info btn-save-custom text-white mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ الشعار
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {# قسم تفعيل اللوجو ثلاثي الأبعاد #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-secondary text-white">
-                        <i class="fas fa-cube me-2"></i>
-                        <h5>تأثير اللوجو ثلاثي الأبعاد</h5>
+            <!-- 2. الشعار الترويجي (BRANDING) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="branding">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-primary text-white">
+                        <span><i class="fas fa-star me-2"></i>الشعار الترويجي (شاشة التحميل)</span>
                     </div>
-                    <div class="card-body">
-                        <form method="POST"
-                            onsubmit="return confirm('هل أنت متأكد من تغيير حالة اللوجو ثلاثي الأبعاد؟');">
-                            <input type="hidden" name="action" value="toggle_3d_logo">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="logo3DSwitch" name="logo_3d_status"
-                                    {% if logo_3d_enabled %} checked {% endif %}>
-                                <label class="form-check-label" for="logo3DSwitch">
-                                    {% if logo_3d_enabled %}
-                                    <i class="fas fa-toggle-on text-success me-2"></i>
-                                    تأثير اللوجو ثلاثي الأبعاد مفعل
-                                    {% else %}
-                                    <i class="fas fa-toggle-off text-danger me-2"></i>
-                                    تأثير اللوجو ثلاثي الأبعاد معطل
-                                    {% endif %}
-                                </label>
-                            </div>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <small>عند التفعيل، سيدور اللوجو بشكل دائري ثلاثي الأبعاد في صفحة تسجيل الدخول.</small>
-                            </div>
-                            <button type="submit" class="btn btn-secondary w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ إعدادات اللوجو
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            {# قسم إدارة الشعار الترويجي (لشاشة التحميل) #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fas fa-star me-2"></i>
-                        <h5>الشعار الترويجي (شاشة التحميل)</h5>
-                    </div>
-                    <div class="card-body">
+                    <div class="card-body-custom">
                         <form method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="action" value="upload_promo_logo">
                             <div class="mb-3">
-                                <label for="promo_logo_file" class="form-label">
-                                    <i class="fas fa-upload me-2"></i>
-                                    رفع شعار ترويجي جديد
-                                </label>
-                                <input class="form-control" type="file" id="promo_logo_file" name="promo_logo_file"
-                                    accept=".png,.jpg,.jpeg,.gif,.svg">
-                                <div class="form-text">يظهر هذا الشعار في شاشة التحميل فقط</div>
+                                <label for="promo_logo_file" class="form-label">رفع شعار شاشة التحميل</label>
+                                <input class="form-control" type="file" id="promo_logo_file" name="promo_logo_file" accept=".png,.jpg,.jpeg,.gif,.svg">
+                                <div class="form-text small">يظهر أثناء بدء تحميل صفحات التطبيق</div>
                             </div>
-                            <div class="mb-3">
-                                <p class="mb-1">الشعار الترويجي الحالي:</p>
+                            <div class="mb-3 text-center">
+                                <p class="small text-muted mb-1">الشعار الترويجي الحالي:</p>
                                 {% if promo_logo_filename %}
-                                <img src="{{ url_for('static', filename='logos/' + promo_logo_filename) }}"
-                                    alt="Current Promo Logo" class="img-fluid logo-preview">
-                                <small class="text-muted d-block mt-1">اسم الملف: {{ promo_logo_filename }}</small>
+                                <img src="{{ url_for('static', filename='logos/' + promo_logo_filename) }}" alt="Promo Logo" class="logo-preview-box">
                                 {% else %}
-                                <div class="text-center p-3 bg-light border rounded">
-                                    <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
-                                    <p class="text-muted mt-2">لا يوجد شعار ترويجي</p>
-                                </div>
+                                <div class="p-3 bg-light border rounded-3 text-muted small">لا يوجد شعار ترويجي</div>
                                 {% endif %}
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ الشعار الترويجي
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            
-            {# قسم تفعيل الثيم الرمضاني #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-danger text-white">
-                        <i class="fas fa-moon me-2"></i>
-                        <h5>ثيم رمضان (ألوان الخيامية)</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة الثيم الرمضاني؟ سيتم تطبيقه على جميع المستخدمين.');">
-                            <input type="hidden" name="action" value="toggle_ramadan_theme">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="ramadanThemeSwitch" 
-                                    name="ramadan_theme_status"
-                                    {% if ramadan_theme_enabled %} checked {% endif %}>
-                                <label class="form-check-label" for="ramadanThemeSwitch">
-                                    {% if ramadan_theme_enabled %}
-                                    <i class="fas fa-toggle-on text-success me-2"></i>
-                                    الثيم الرمضاني مفعل
-                                    {% else %}
-                                    <i class="fas fa-toggle-off text-danger me-2"></i>
-                                    الثيم الرمضاني معطل
-                                    {% endif %}
-                                </label>
-                            </div>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <small>عند التفعيل، سيتم استخدام ألوان الخيامية المصرية التقليدية (أحمر، أزرق، ذهبي، أخضر) في جميع صفحات الموقع.</small>
-                            </div>
-                            <button type="submit" class="btn btn-danger w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ إعدادات الثيم
+                            <button type="submit" class="btn btn-primary btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ الشعار الترويجي
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- (Promo GIF section moved to manage_ad_images) -->
-
-            {# قسم وضع الصيانة (لصفحة الشركات) #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-warning text-dark">
-                        <i class="fas fa-tools me-2"></i>
-                        <h5>وضع الصيانة (لصفحة الشركات)</h5>
+            <!-- 3. تأثير اللوجو 3D (BRANDING) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="branding">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-secondary text-white">
+                        <span><i class="fas fa-cube me-2"></i>تأثير اللوجو ثلاثي الأبعاد (3D)</span>
                     </div>
-                    <div class="card-body">
-                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة وضع الصيانة؟');">
-                            <input type="hidden" name="action" value="toggle_maintenance">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="maintenanceModeSwitch"
-                                    name="maintenance_status" {% if current_maintenance_mode %} checked {% endif %}>
-                                <label class="form-check-label" for="maintenanceModeSwitch">
-                                    {% if current_maintenance_mode %}
-                                    وضع الصيانة مفعل حالياً <i class="fas fa-toggle-on text-success"></i>
-                                    {% else %}
-                                    وضع الصيانة معطل حالياً <i class="fas fa-toggle-off text-danger"></i>
-                                    {% endif %}
-                                </label>
-                            </div>
-                            <div class="mb-3">
-                                <label for="maintenanceMessageInput" class="form-label">
-                                    <i class="fas fa-comment-alt me-2"></i>
-                                    رسالة الصيانة (اختياري)
-                                </label>
-                                <textarea class="form-control" id="maintenanceMessageInput"
-                                    name="maintenance_message_input" rows="3"
-                                    placeholder="أدخل رسالة تظهر للمستخدمين عند تفعيل وضع الصيانة...">{{ current_maintenance_message }}</textarea>
-                                <div class="form-text">هذه الرسالة ستظهر في صفحة تسجيل الدخول إذا تم تفعيل وضع الصيانة
-                                    لصفحات الشركات.</div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="maintenanceEndTimeInput" class="form-label">
-                                    <i class="fas fa-clock me-2"></i>
-                                    وقت انتهاء الصيانة (اختياري)
-                                </label>
-                                <input type="datetime-local" class="form-control" id="maintenanceEndTimeInput"
-                                    name="maintenance_end_time_input"
-                                    value="{{ current_maintenance_end_time if current_maintenance_end_time else '' }}">
-                                <div class="form-text">حدد التاريخ والوقت الذي سينتهي فيه وضع الصيانة تلقائياً. سيظهر
-                                    عداد تنازلي للمستخدمين.</div>
-
-                                <!-- أزرار الاختصار السريع -->
-                                <div class="mt-2 d-flex gap-2 flex-wrap">
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="setMaintenanceTime(1)">
-                                        <i class="fas fa-clock me-1"></i>ساعة واحدة
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="setMaintenanceTime(3)">
-                                        <i class="fas fa-clock me-1"></i>3 ساعات
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="setMaintenanceTime(6)">
-                                        <i class="fas fa-clock me-1"></i>6 ساعات
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="setMaintenanceTime(12)">
-                                        <i class="fas fa-clock me-1"></i>12 ساعة
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="setMaintenanceTime(24)">
-                                        <i class="fas fa-calendar me-1"></i>يوم واحد
-                                    </button>
+                    <div class="card-body-custom">
+                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة تأثير 3D للوجو؟');">
+                            <input type="hidden" name="action" value="toggle_3d_logo">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3">
+                                <div>
+                                    <div class="fw-bold text-dark">دوران اللوجو 3D</div>
+                                    <div class="text-muted small">تأثير ثلاثي الأبعاد بصفحة الدخول</div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" id="logo3DSwitch" name="logo_3d_status" {% if logo_3d_enabled %} checked {% endif %}>
                                 </div>
                             </div>
-
-                            <button type="submit" class="btn btn-warning w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ إعدادات الصيانة
+                            <div class="alert alert-info border-0 py-2 small mb-3">
+                                <i class="fas fa-info-circle me-1"></i> عند التفعيل، يدور اللوجو بشكل ثلاثي الأبعاد في صفحة تسجيل الدخول.
+                            </div>
+                            <button type="submit" class="btn btn-secondary btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ الإعداد
                             </button>
-
-                            <script>
-                                function setMaintenanceTime(hours) {
-                                    const now = new Date();
-                                    now.setHours(now.getHours() + hours);
-                                    const year = now.getFullYear();
-                                    const month = String(now.getMonth() + 1).padStart(2, '0');
-                                    const day = String(now.getDate()).padStart(2, '0');
-                                    const hour = String(now.getHours()).padStart(2, '0');
-                                    const minute = String(now.getMinutes()).padStart(2, '0');
-                                    const dateTimeString = `${year}-${month}-${day}T${hour}:${minute}`;
-                                    document.getElementById('maintenanceEndTimeInput').value = dateTimeString;
-                                }
-                            </script>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {# قسم إعدادات البحث والاشتراك المميز #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fas fa-search-dollar me-2"></i>
-                        <h5>إعدادات البحث والاشتراك</h5>
+            <!-- 4. تخصيص عنوان النظام (BRANDING) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="branding">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-dark text-white">
+                        <span><i class="fas fa-heading me-2"></i>تخصيص العنوان الفرعي للنظام</span>
                     </div>
-                    <div class="card-body">
-                        <form method="POST" class="mb-4">
-                            <input type="hidden" name="action" value="update_search_limit">
-                            <div class="mb-3">
-                                <label for="monthly_search_limit" class="form-label">
-                                    <i class="fas fa-limit me-2"></i>
-                                    حد البحث الشهري (للشركات غير المميزة):
-                                </label>
-                                <input type="number" min="1" class="form-control" id="monthly_search_limit"
-                                    name="monthly_search_limit" value="{{ monthly_search_limit }}" required>
-                                <div class="form-text">الحد الأقصى لعدد عمليات البحث شهرياً للشركات التي لا تملك
-                                    اشتراكاً مميزاً.</div>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ حد البحث
-                            </button>
-                        </form>
-
-                        <hr class="my-4">
-
+                    <div class="card-body-custom">
                         <form method="POST">
-                            <input type="hidden" name="action" value="update_premium_duration">
+                            <input type="hidden" name="action" value="update_system_subtitle">
                             <div class="mb-3">
-                                <label for="premium_duration_months" class="form-label">
-                                    <i class="fas fa-hourglass-half me-2"></i>
-                                    مدة الاشتراك التلقائية (بالأشهر):
-                                </label>
-                                <input type="number" min="1" class="form-control" id="premium_duration_months"
-                                    name="premium_duration_months" value="{{ premium_duration_months }}" required>
-                                <div class="form-text">المدة التلقائية لتفعيل الاشتراك المميز (عندما يتم تفعيله لشركة
-                                    ما).</div>
+                                <label for="systemSubtitle" class="form-label">العنوان الفرعي للمنصة</label>
+                                <input type="text" class="form-control" id="systemSubtitle" name="system_subtitle" value="{{ system_subtitle or 'نظام حجز المواعيد وإدارة الأرصدة المتكامل' }}" maxlength="100" required>
+                                <div class="form-text small">يظهر في صفحة تسجيل الدخول وفي الشريط العلوي.</div>
                             </div>
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ مدة الاشتراك
+                            <button type="submit" class="btn btn-dark btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ العنوان
                             </button>
                         </form>
+                    </div>
+                </div>
+            </div>
 
-                        <hr class="my-4">
+            <!-- 5. ثيم رمضان (THEMES) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="branding">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-danger text-white">
+                        <span><i class="fas fa-moon me-2"></i>ثيم شهر رمضان المبارك</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة الثيم الرمضاني؟');">
+                            <input type="hidden" name="action" value="toggle_ramadan_theme">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3">
+                                <div>
+                                    <div class="fw-bold text-dark">ثيم رمضان (خيامية)</div>
+                                    <div class="text-muted small">تطبيق ألوان وفوانيس رمضان</div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" id="ramadanThemeSwitch" name="ramadan_theme_status" {% if ramadan_theme_enabled %} checked {% endif %}>
+                                </div>
+                            </div>
+                            <div class="alert alert-info border-0 py-2 small mb-3">
+                                <i class="fas fa-info-circle me-1"></i> يطبق خلفيات وألوان الخيامية الرمضانية لجميع المستخدمين.
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ ثيم رمضان
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. وضع الصيانة (MAINTENANCE) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="maintenance">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-warning text-dark">
+                        <span><i class="fas fa-tools me-2"></i>وضع الصيانة (لصفحات الشركات)</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة وضع الصيانة؟');">
+                            <input type="hidden" name="action" value="toggle_maintenance">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3">
+                                <div>
+                                    <div class="fw-bold text-dark">تفعيل وضع الصيانة</div>
+                                    <div class="text-muted small">إيقاف مؤقت لدخول الشركات</div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" id="maintenanceModeSwitch" name="maintenance_status" {% if current_maintenance_mode %} checked {% endif %}>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="maintenanceMessageInput" class="form-label">رسالة الصيانة للمستخدمين</label>
+                                <textarea class="form-control" id="maintenanceMessageInput" name="maintenance_message_input" rows="2" placeholder="أدخل رسالة تظهر للمستخدمين...">{{ current_maintenance_message }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="maintenanceEndTimeInput" class="form-label">وقت انتهاء الصيانة (تلقائي)</label>
+                                <input type="datetime-local" class="form-control" id="maintenanceEndTimeInput" name="maintenance_end_time_input" value="{{ current_maintenance_end_time if current_maintenance_end_time else '' }}">
+                                <div class="d-flex gap-1 flex-wrap mt-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm time-quick-btn" onclick="setMaintenanceTime(1)">1 س</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm time-quick-btn" onclick="setMaintenanceTime(3)">3 س</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm time-quick-btn" onclick="setMaintenanceTime(6)">6 س</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm time-quick-btn" onclick="setMaintenanceTime(12)">12 س</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm time-quick-btn" onclick="setMaintenanceTime(24)">24 س</button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ إعدادات الصيانة
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. حدود البحث والاشتراك المميز (SUBSCRIPTIONS) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="subscriptions">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-primary text-white">
+                        <span><i class="fas fa-search-dollar me-2"></i>حدود البحث والاشتراك</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <form method="POST" class="mb-3">
+                            <input type="hidden" name="action" value="update_search_limit">
+                            <div class="mb-2">
+                                <label for="monthly_search_limit" class="form-label">حد البحث الشهري (للحساب المجاني)</label>
+                                <div class="input-group">
+                                    <input type="number" min="1" class="form-control" id="monthly_search_limit" name="monthly_search_limit" value="{{ monthly_search_limit }}" required>
+                                    <button type="submit" class="btn btn-primary px-3 fw-bold">حفظ</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <form method="POST" class="mb-3">
+                            <input type="hidden" name="action" value="update_premium_duration">
+                            <div class="mb-2">
+                                <label for="premium_duration_months" class="form-label">مدة الاشتراك التلقائية (بالأشهر)</label>
+                                <div class="input-group">
+                                    <input type="number" min="1" class="form-control" id="premium_duration_months" name="premium_duration_months" value="{{ premium_duration_months }}" required>
+                                    <button type="submit" class="btn btn-success px-3 fw-bold">حفظ</button>
+                                </div>
+                            </div>
+                        </form>
 
                         <form method="POST">
                             <input type="hidden" name="action" value="update_premium_trial_days">
-                            <div class="mb-3">
-                                <label for="premium_trial_days" class="form-label">
-                                    <i class="fas fa-flask me-2"></i>
-                                    مدة التجربة المجانية (بالأيام):
-                                </label>
-                                <input type="number" min="1" class="form-control" id="premium_trial_days"
-                                    name="premium_trial_days" value="{{ premium_trial_days or 7 }}" required>
-                                <div class="form-text">عدد الأيام التي يحصل عليها المستخدم كتجربة مجانية للبريميوم.
+                            <div class="mb-2">
+                                <label for="premium_trial_days" class="form-label">مدة التجربة المجانية (بالأيام)</label>
+                                <div class="input-group">
+                                    <input type="number" min="1" class="form-control" id="premium_trial_days" name="premium_trial_days" value="{{ premium_trial_days or 7 }}" required>
+                                    <button type="submit" class="btn btn-outline-success px-3 fw-bold">حفظ</button>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-outline-success w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ مدة التجربة
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. إدارة الميزات المدفوعة PLUS (SUBSCRIPTIONS) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="subscriptions">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-warning text-dark">
+                        <span><i class="fas fa-crown me-2"></i>الميزات المدفوعة (STOCKFLOW PLUS)</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة الميزات المدفوعة؟');">
+                            <input type="hidden" name="action" value="toggle_premium_features">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3">
+                                <div>
+                                    <div class="fw-bold text-dark">تفعيل باقة STOCKFLOW PLUS</div>
+                                    <div class="text-muted small">تقييد الميزات المميزة للمشتركين فقط</div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" id="premiumFeaturesSwitch" name="premium_features_status" {% if current_premium_features_enabled %} checked {% endif %}>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="premiumMessageInput" class="form-label">رسالة الترقية لغير المشتركين</label>
+                                <textarea class="form-control" id="premiumMessageInput" name="premium_message_input" rows="2" placeholder="رسالة تنبيهية عند محاولة فتح ميزة بلس...">{{ current_premium_message }}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ إعدادات بلس
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- قسم تفعيل تجربة المميز لشركات محددة -->
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-success text-white">
-                        <i class="fas fa-gift me-2"></i>
-                        <h5>تفعيل تجربة الاشتراك المميز (تجربة مجانية) لشركات محددة</h5>
+            <!-- 9. تجربة المميز لشركات محددة (SUBSCRIPTIONS) -->
+            <div class="col-12 col-md-12 col-xl-8 setting-item" data-category="subscriptions">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-success text-white">
+                        <span><i class="fas fa-gift me-2"></i>منح التجربة المجانية لشركات محددة</span>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body-custom">
                         <form method="POST">
                             <input type="hidden" name="action" value="update_premium_trial_companies">
                             <div class="mb-3">
-                                <label for="premium_trial_companies" class="form-label">
-                                    <i class="fas fa-building me-2"></i>
-                                    الشركات المؤهلة للتجربة:
-                                </label>
-                                <select multiple class="form-select select2-companies" id="premium_trial_companies"
-                                    name="premium_trial_companies"
-                                    data-placeholder="ابحث عن الشركات أو اكتب اسم الشركة...">
+                                <label for="premium_trial_companies" class="form-label">الشركات المؤهلة للتجربة المجانية:</label>
+                                <select multiple class="form-select select2-companies" id="premium_trial_companies" name="premium_trial_companies" data-placeholder="ابحث عن الشركات بالاسم أو اليوزر...">
                                     {% for company in all_companies %}
-                                    <option value="{{ company.id }}" {% if company.id in
-                                        selected_premium_trial_company_ids %}selected{% endif %}>
+                                    <option value="{{ company.id }}" {% if company.id in selected_premium_trial_company_ids %}selected{% endif %}>
                                         {{ company.company_name }} ({{ company.username }})
                                     </option>
                                     {% endfor %}
                                 </select>
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    يمكنك البحث بكتابة اسم الشركة أو اسم المستخدم. اختر شركة واحدة أو أكثر.
-                                </div>
-                                <!-- أزرار التحديد السريع -->
-                                <div class="mt-3 d-flex gap-2">
-                                    <button type="button" class="btn btn-sm btn-primary" onclick="selectAllCompanies()">
-                                        <i class="fas fa-check-double me-1"></i>
-                                        تحديد الكل
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-secondary"
-                                        onclick="deselectAllCompanies()">
-                                        <i class="fas fa-times me-1"></i>
-                                        إلغاء الكل
-                                    </button>
-                                    <span class="ms-auto align-self-center text-muted" id="selected-count">
-                                        <i class="fas fa-info-circle me-1"></i>
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2">
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="selectAllCompanies()">
+                                            <i class="fas fa-check-double me-1"></i> تحديد الكل
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="deselectAllCompanies()">
+                                            <i class="fas fa-times me-1"></i> إلغاء الكل
+                                        </button>
+                                    </div>
+                                    <span class="badge bg-light text-muted border px-3 py-1.5" id="selected-count">
                                         <span id="count-text">لم يتم اختيار أي شركة</span>
                                     </span>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="premium_trial_days" class="form-label">
-                                    <i class="fas fa-flask me-2"></i>
-                                    مدة التجربة المجانية (بالأيام):
-                                </label>
-                                <input type="number" min="1" class="form-control" id="premium_trial_days"
-                                    name="premium_trial_days" value="{{ premium_trial_days or 7 }}" required>
-                                <div class="form-text">عدد الأيام التي يحصل عليها المستخدم كتجربة مجانية للبريميوم.
+
+                            <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                                <button type="submit" class="btn btn-success fw-bold px-4 py-2" style="border-radius: 12px;">
+                                    <i class="fas fa-save me-1"></i> حفظ الشركات المؤهلة
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="row g-2 mt-3 pt-3 border-top">
+                            <div class="col-sm-6">
+                                <form method="POST" onsubmit="return confirm('إعادة إرسال العرض لكل الشركات المجانية؟');">
+                                    <input type="hidden" name="action" value="resend_trial_to_free_companies">
+                                    <button type="submit" class="btn btn-outline-warning w-100 fw-bold py-2" style="border-radius: 10px;">
+                                        <i class="fas fa-paper-plane me-1"></i> إعادة إرسال العرض للكل
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-sm-6">
+                                <form method="POST" onsubmit="return confirm('إعادة إرسال العرض لمستخدمي الآيفون (iOS) فقط؟');">
+                                    <input type="hidden" name="action" value="resend_trial_to_iphone_free_companies">
+                                    <button type="submit" class="btn btn-outline-dark w-100 fw-bold py-2" style="border-radius: 10px;">
+                                        <i class="fab fa-apple me-1"></i> إرسال لمستخدمي الآيفون فقط
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. نظام المواعيد والمراسلات (SERVICES) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="services">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-primary text-white">
+                        <span><i class="fas fa-calendar-check me-2"></i>نظام حجز المواعيد</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <form method="POST" onsubmit="return confirm('تغيير حالة نظام حجز المواعيد؟');">
+                            <input type="hidden" name="action" value="toggle_appointments">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3">
+                                <div>
+                                    <div class="fw-bold text-dark">حجز المواعيد</div>
+                                    <div class="text-muted small">تمكين الشركات من حجز المواعيد</div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" id="appointmentsEnabledSwitch" name="appointments_status" {% if current_appointments_enabled %} checked {% endif %}>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-outline-success w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ الإعدادات
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <!-- نهاية قسم تجربة المميز -->
-
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-warning text-dark">
-                        <i class="fas fa-redo me-2"></i>
-                        <h5 class="d-inline">إعادة إرسال عرض التجربة المجانية</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-3">إرسال العرض مرة أخرى للشركات المجانية ليظهر لهم قبول أو رفض التجربة.</p>
-                        
-                        <form method="POST" onsubmit="return confirm('سيتم إعادة إرسال العرض لكل الشركات المجانية. هل أنت متأكد؟');" class="mb-3">
-                            <input type="hidden" name="action" value="resend_trial_to_free_companies">
-                            <button type="submit" class="btn btn-warning w-100 fw-bold">
-                                <i class="fas fa-paper-plane me-2"></i>
-                                إعادة إرسال العرض لكل الشركات المجانية
-                            </button>
-                        </form>
-
-                        <form method="POST" onsubmit="return confirm('سيتم إعادة إرسال العرض لمستخدمي الآيفون (iOS) المجانيين فقط. هل أنت متأكد؟');">
-                            <input type="hidden" name="action" value="resend_trial_to_iphone_free_companies">
-                            <button type="submit" class="btn btn-dark w-100 fw-bold">
-                                <i class="fab fa-apple me-2"></i>
-                                إعادة إرسال العرض لمستخدمي الآيفون فقط
+                            <div class="text-muted small mb-3">عند التعطيل، لن تتمكن الشركات من حجز مواعيد جديدة.</div>
+                            <button type="submit" class="btn btn-primary btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ حالة المواعيد
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {# قسم قيود طلبات المواعيد (للشركات) #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-danger text-white">
-                        <i class="fas fa-calendar-times me-2"></i>
-                        <h5>قيود طلبات المواعيد (للشركات)</h5>
+            <!-- 11. مراسلات الشركات (SERVICES) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="services">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-info text-white">
+                        <span><i class="fas fa-comments me-2"></i>مراسلات الشركات الخاصة</span>
                     </div>
-                    <div class="card-body">
-                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تحديث قيود الطلبات؟');">
-                            <input type="hidden" name="action" value="update_request_settings">
-
-                            <div class="mb-3">
-                                <label for="maxDailyRequestsInput" class="form-label">
-                                    <i class="fas fa-sort-numeric-up me-2"></i>
-                                    الحد الأقصى للطلبات اليومية
-                                </label>
-                                <input type="number" class="form-control" id="maxDailyRequestsInput"
-                                    name="max_daily_requests_input" value="{{ current_max_daily_requests }}" min="1"
-                                    required>
-                                <div class="form-text">الحد الأقصى لعدد طلبات المواعيد التي يمكن تلقيها في اليوم الواحد
-                                    (لكل الشركات).</div>
+                    <div class="card-body-custom">
+                        <form method="POST" onsubmit="return confirm('تغيير حالة مراسلات الشركات؟');">
+                            <input type="hidden" name="action" value="toggle_company_messaging">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3">
+                                <div>
+                                    <div class="fw-bold text-dark">المراسلات بين الشركات</div>
+                                    <div class="text-muted small">خدمة الشات الخاص والمجموعات</div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" id="companyMessagingSwitch" name="company_messaging_status" {% if current_company_messaging_enabled %} checked {% endif %}>
+                                </div>
                             </div>
+                            <div class="text-muted small mb-3">عند التعطيل لن تستطيع الشركات فتح صفحة المراسلات.</div>
+                            <button type="submit" class="btn btn-info btn-save-custom text-white mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ حالة المراسلات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
+            <!-- 12. قيود طلبات المواعيد (SERVICES) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="services">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-danger text-white">
+                        <span><i class="fas fa-calendar-times me-2"></i>قيود المواعيد والأيام المعطلة</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <form method="POST" onsubmit="return confirm('تحديث قيود المواعيد؟');">
+                            <input type="hidden" name="action" value="update_request_settings">
                             <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-calendar-alt me-2"></i>
-                                    الأيام المعطلة لتلقي الطلبات
-                                </label>
-                                <div class="row">
+                                <label for="maxDailyRequestsInput" class="form-label">الحد الأقصى للطلبات اليومية</label>
+                                <input type="number" class="form-control" id="maxDailyRequestsInput" name="max_daily_requests_input" value="{{ current_max_daily_requests }}" min="1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">الأيام المعطلة لتلقي الطلبات</label>
+                                <div class="row g-1">
                                     {% for day_key, day_name in week_days.items() %}
-                                    <div class="col-6 col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="disabled_days"
-                                                value="{{ day_key }}" id="day_{{ day_key }}" {% if day_key|string in
-                                                current_disabled_days %} checked {% endif %}>
-                                            <label class="form-check-label" for="day_{{ day_key }}">
-                                                {{ day_name }}
-                                            </label>
+                                    <div class="col-6">
+                                        <div class="form-check small">
+                                            <input class="form-check-input" style="width:1.5rem;height:1.2rem;" type="checkbox" name="disabled_days" value="{{ day_key }}" id="day_{{ day_key }}" {% if day_key|string in current_disabled_days %} checked {% endif %}>
+                                            <label class="form-check-label" for="day_{{ day_key }}">{{ day_name }}</label>
                                         </div>
                                     </div>
                                     {% endfor %}
                                 </div>
-                                <div class="form-text">اختر الأيام التي لا ترغب في تلقي أي طلبات مواعيد فيها.</div>
                             </div>
-
                             <div class="mb-3">
-                                <label for="disabledDaysMessageInput" class="form-label">
-                                    <i class="fas fa-comment-dots me-2"></i>
-                                    رسالة الأيام المعطلة (اختياري)
-                                </label>
-                                <textarea class="form-control" id="disabledDaysMessageInput"
-                                    name="disabled_days_message_input" rows="2"
-                                    placeholder="رسالة تظهر للمستخدمين عند محاولة الحجز في يوم معطل...">{{ current_disabled_days_message }}</textarea>
-                                <div class="form-text">رسالة مخصصة تظهر للشركات عند محاولة حجز موعد في يوم تم تعطيله.
-                                </div>
+                                <label for="disabledDaysMessageInput" class="form-label">رسالة اليوم المعطل</label>
+                                <textarea class="form-control" id="disabledDaysMessageInput" name="disabled_days_message_input" rows="2">{{ current_disabled_days_message }}</textarea>
                             </div>
-
-                            <button type="submit" class="btn btn-danger w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ قيود الطلبات
+                            <button type="submit" class="btn btn-danger btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ القيود
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {# قسم تفعيل/تعطيل نظام حجز المواعيد - NEWLY ADDED #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fas fa-calendar-check me-2"></i>
-                        <h5>تفعيل/تعطيل نظام حجز المواعيد</h5>
+            <!-- 13. إدارة الإعلانات (SERVICES) -->
+            <div class="col-12 col-md-6 col-xl-4 setting-item" data-category="services">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-success text-white">
+                        <span><i class="fas fa-ad me-2"></i>نصوص الإعلانات في المنصة</span>
                     </div>
-                    <div class="card-body">
-                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة نظام حجز المواعيد؟');">
-                            <input type="hidden" name="action" value="toggle_appointments">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="appointmentsEnabledSwitch"
-                                    name="appointments_status" {% if current_appointments_enabled %} checked {% endif
-                                    %}>
-                                <label class="form-check-label" for="appointmentsEnabledSwitch">
-                                    {% if current_appointments_enabled %}
-                                    نظام حجز المواعيد مفعل <i class="fas fa-toggle-on text-success"></i>
-                                    {% else %}
-                                    نظام حجز المواعيد معطل <i class="fas fa-toggle-off text-danger"></i>
-                                    {% endif %}
-                                </label>
-                            </div>
-                            <div class="form-text mb-3">
-                                عند تعطيل النظام، لن يتمكن المستخدمون من حجز مواعيد جديدة، وستظهر لهم رسالة تفيد بأن
-                                الخدمة غير متاحة.
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ حالة نظام المواعيد
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            {# قسم تفعيل/تعطيل مراسلات الشركات (الرسائل الخاصة بين الشركات) #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-info text-white">
-                        <i class="fas fa-comments me-2"></i>
-                        <h5>تفعيل/تعطيل مراسلات الشركات</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة المراسلات بين الشركات؟');">
-                            <input type="hidden" name="action" value="toggle_company_messaging">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="companyMessagingSwitch"
-                                    name="company_messaging_status" {% if current_company_messaging_enabled %} checked {% endif %}>
-                                <label class="form-check-label" for="companyMessagingSwitch">
-                                    {% if current_company_messaging_enabled %}
-                                    المراسلات بين الشركات مفعلة حالياً <i class="fas fa-toggle-on text-success"></i>
-                                    {% else %}
-                                    المراسلات بين الشركات معطلة حالياً <i class="fas fa-toggle-off text-danger"></i>
-                                    {% endif %}
-                                </label>
-                            </div>
-                            <div class="form-text mb-3">
-                                عند التعطيل لن تستطيع الشركات فتح صفحة "المراسلات" أو إرسال رسائل جديدة لشركات أخرى،
-                                وسيظهر لهم تنبيه بأن الخدمة معطلة مؤقتاً.
-                            </div>
-                            <button type="submit" class="btn btn-info w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ حالة المراسلات
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            {# قسم إدارة الإعلانات #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-success text-white">
-                        <i class="fas fa-ad me-2"></i>
-                        <h5>إدارة الإعلانات</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تحديث نصوص الإعلانات؟');">
+                    <div class="card-body-custom">
+                        <form method="POST" onsubmit="return confirm('تحديث نصوص الإعلانات؟');">
                             <input type="hidden" name="action" value="update_ads">
-
                             <div class="mb-3">
-                                <label for="loginAdMessageInput" class="form-label">
-                                    <i class="fas fa-bullhorn me-2"></i>
-                                    إعلان صفحة تسجيل الدخول (اختياري)
-                                </label>
-                                <textarea class="form-control" id="loginAdMessageInput" name="login_ad_message_input"
-                                    rows="3"
-                                    placeholder="أدخل نص الإعلان لصفحة تسجيل الدخول...">{{ current_login_ad }}</textarea>
-                                <div class="form-text">سيظهر هذا الإعلان في صفحة تسجيل الدخول أسفل اللوجو.</div>
+                                <label for="loginAdMessageInput" class="form-label">إعلان صفحة تسجيل الدخول</label>
+                                <textarea class="form-control" id="loginAdMessageInput" name="login_ad_message_input" rows="2" placeholder="يظهر أسفل اللوجو...">{{ current_login_ad }}</textarea>
                             </div>
-
                             <div class="mb-3">
-                                <label for="companyAdMessageInput" class="form-label">
-                                    <i class="fas fa-bullhorn me-2"></i>
-                                    إعلان لوحة تحكم الشركات (اختياري)
-                                </label>
-                                <textarea class="form-control" id="companyAdMessageInput"
-                                    name="company_ad_message_input" rows="3"
-                                    placeholder="أدخل نص الإعلان للشركات بعد تسجيل الدخول...">{{ current_company_ad }}</textarea>
-                                <div class="form-text">سيظهر هذا الإعلان في لوحة تحكم الشركات بعد تسجيل الدخول.</div>
+                                <label for="companyAdMessageInput" class="form-label">إعلان لوحة تحكم الشركات</label>
+                                <textarea class="form-control" id="companyAdMessageInput" name="company_ad_message_input" rows="2" placeholder="يظهر في الصفحة الرئيسية للشركات...">{{ current_company_ad }}</textarea>
                             </div>
-
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ الإعلانات
+                            <button type="submit" class="btn btn-success btn-save-custom mt-auto">
+                                <i class="fas fa-save me-1"></i> حفظ الإعلانات
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {# قسم تخصيص عنوان النظام #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fas fa-heading me-2"></i>
-                        <h5>تخصيص عنوان النظام</h5>
+            <!-- 14. مسح السجلات والنسخ الاحتياطي (DATABASE) -->
+            <div class="col-12 setting-item" data-category="database">
+                <div class="settings-card">
+                    <div class="card-header-custom bg-danger text-white">
+                        <span><i class="fas fa-database me-2"></i>إدارة السجلات وقواعد البيانات والنسخ الاحتياطي</span>
                     </div>
-                    <div class="card-body">
-                        <form method="POST">
-                            <input type="hidden" name="action" value="update_system_subtitle">
-                            <div class="mb-3">
-                                <label for="systemSubtitle" class="form-label">
-                                    <i class="fas fa-text-width me-2"></i>
-                                    العنوان الفرعي للنظام
-                                </label>
-                                <input type="text" class="form-control" id="systemSubtitle" name="system_subtitle"
-                                    value="{{ system_subtitle or 'نظام حجز المواعيد وإدارة الأرصدة المتكامل' }}"
-                                    maxlength="100" required>
-                                <div class="form-text">هذا النص يظهر في صفحة تسجيل الدخول وفي navbar الشركات</div>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ العنوان
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                    <div class="card-body-custom">
+                        <div class="alert alert-warning border-0 d-flex align-items-center gap-2 mb-4">
+                            <i class="fas fa-exclamation-triangle fa-lg text-danger"></i>
+                            <span class="small fw-semibold">تنبيه: عمليات الحذف والمسح نهائية ولا يمكن التراجع عنها. يرجى توخي الحذر قبل التنفيذ.</span>
+                        </div>
 
-            {# قسم إدارة كود دعوة تسجيل المندوبين - تمت إزالته ليتم إدارته تلقائياً من لوحة القيادة #}
-            {#
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-info text-white">
-                        <i class="fas fa-ticket-alt me-2"></i>
-                        <h5>إدارة كود دعوة تسجيل المندوبين</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تحديث كود الدعوة؟');">
-                            <input type="hidden" name="action" value="update_invite_code">
-
-                            <div class="mb-3">
-                                <label for="inviteCodeInput" class="form-label">
-                                    <i class="fas fa-key me-2"></i>
-                                    كود الدعوة الحالي للتسجيل
-                                </label>
-                                <input type="text" class="form-control" id="inviteCodeInput" name="invite_code_input"
-                                    value="{{ current_invite_code }}">
-                                <div class="form-text">هذا الكود مطلوب لتسجيل أي مندوب جديد. اتركه فارغاً لتعطيل شرط كود
-                                    الدعوة.</div>
-                            </div>
-
-                            <button type="submit" class="btn btn-info w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ كود الدعوة
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            #}
-
-            {# قسم إدارة الميزات المدفوعة (STOCKFLOW PLUS) #}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-warning text-dark">
-                        <i class="fas fa-star me-2"></i>
-                        <h5>إدارة الميزات المدفوعة (STOCKFLOW PLUS)</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" onsubmit="return confirm('هل أنت متأكد من تغيير حالة الميزات المدفوعة؟');">
-                            <input type="hidden" name="action" value="toggle_premium_features">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="premiumFeaturesSwitch"
-                                    name="premium_features_status" {% if current_premium_features_enabled %} checked {%
-                                    endif %}>
-                                <label class="form-check-label" for="premiumFeaturesSwitch">
-                                    {% if current_premium_features_enabled %}
-                                    الميزات المدفوعة مفعلة حالياً <i class="fas fa-toggle-on text-success"></i>
-                                    {% else %}
-                                    الميزات المدفوعة معطلة حالياً <i class="fas fa-toggle-off text-danger"></i>
-                                    {% endif %}
-                                </label>
-                            </div>
-                            <div class="mb-3">
-                                <label for="premiumMessageInput" class="form-label">
-                                    <i class="fas fa-comment-alt me-2"></i>
-                                    رسالة الميزات المدفوعة (اختياري)
-                                </label>
-                                <textarea class="form-control" id="premiumMessageInput" name="premium_message_input"
-                                    rows="3"
-                                    placeholder="رسالة تظهر للمستخدمين غير المشتركين في الميزات المدفوعة...">{{ current_premium_message }}</textarea>
-                                <div class="form-text">هذه الرسالة ستظهر للمستخدمين الذين يحاولون الوصول إلى ميزات
-                                    STOCKFLOW PLUS غير المشتركين فيها.</div>
-                            </div>
-                            <button type="submit" class="btn btn-warning w-100">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ إعدادات الميزات المدفوعة
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            {# قسم مسح السجلات والنسخ الاحتياطي #}
-            <div class="col-md-12 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-danger text-white">
-                        <i class="fas fa-trash-alt me-2"></i>
-                        <h5>مسح السجلات والنسخ الاحتياطي</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-3">
-                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
-                            **تنبيه**: العمليات التالية لا يمكن التراجع عنها.
-                        </p>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <form method="POST"
-                                    onsubmit="return confirm('هل أنت متأكد من مسح جميع سجلات البحث؟ هذا الإجراء لا يمكن التراجع عنه!');">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <form method="POST" onsubmit="return confirm('مسح جميع سجلات البحث نهائياً؟');">
                                     <input type="hidden" name="action" value="clear_logs">
-                                    <button type="submit" class="btn btn-danger w-100">
-                                        <i class="fas fa-trash me-2"></i>
-                                        مسح جميع سجلات البحث
+                                    <button type="submit" class="btn btn-outline-danger w-100 py-2.5 fw-bold" style="border-radius: 10px;">
+                                        <i class="fas fa-trash me-1"></i> مسح جميع سجلات البحث
                                     </button>
                                 </form>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <form method="POST"
-                                    onsubmit="return confirm('هل أنت متأكد من حذف سجل البحث الأقدم من شهرين؟ هذا الإجراء سيوفر مساحة ولا يؤثر على الكريديت الحالي.');">
-                                    <input type="hidden" name="action" value="cleanup_search_logs_2months">
-                                    <button type="submit" class="btn btn-warning w-100">
-                                        <i class="fas fa-history me-2"></i>
-                                        حذف سجل البحث الأقدم من شهرين
-                                    </button>
-                                </form>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <form method="POST"
-                                    onsubmit="return confirm('هل أنت متأكد من مسح جميع الإشعارات؟ هذا الإجراء لا يمكن التراجع عنه!');">
-                                    <input type="hidden" name="action" value="purge_all_notifications">
-                                    <button type="submit" class="btn btn-danger w-100">
-                                        <i class="fas fa-bell me-2"></i>
-                                        مسح جميع الإشعارات
-                                    </button>
-                                </form>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <form action="{{ url_for('clear_uploaded_excel_files') }}" method="POST"
-                                    onsubmit="return confirm('هل أنت متأكد من مسح جميع ملفات Excel المرفوعة من مجلد uploads؟ هذا الإجراء لا يؤثر على بيانات الأصناف في قاعدة البيانات.');">
-                                    <button type="submit" class="btn btn-warning w-100">
-                                        <i class="fas fa-file-excel me-2"></i>
-                                        مسح ملفات الأصناف المرفوعة (Temp Files)
-                                    </button>
-                                </form>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <form action="{{ url_for('cleanup_old_backups') }}" method="POST"
-                                    onsubmit="return confirm('هل أنت متأكد من تنظيف النسخ الاحتياطية القديمة؟ سيتم الاحتفاظ بآخر {{ MAX_DB_BACKUPS_TO_KEEP }} نسخة فقط.');">
-                                    <button type="submit" class="btn btn-info w-100">
-                                        <i class="fas fa-history me-2"></i>
-                                        تنظيف النسخ الاحتياطية القديمة (أكثر من {{ MAX_DB_BACKUPS_TO_KEEP }} نسخة)
-                                    </button>
-                                </form>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <form
-                                    action="{{ url_for('automated_log_cleanup', secret_key='internal_call_trigger') }}"
-                                    method="POST"
-                                    onsubmit="return confirm('هل أنت متأكد أنك تريد مسح جميع سجلات الخادم؟ هذا الإجراء لا يمكن التراجع عنه.');">
-                                    <button type="submit" class="btn btn-danger w-100">
-                                        <i class="fas fa-terminal me-2"></i>
-                                        مسح سجلات الخادم (Logs) الآن
-                                    </button>
-                                </form>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <form method="POST"
-                                    onsubmit="return confirm('هل أنت متأكد من إنشاء نسخة احتياطية لقاعدة البيانات؟ سيتم إرسالها لبريدك الإلكتروني وحذفها من الخادم.');">
-                                    <input type="hidden" name="action" value="backup_db">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-database me-2"></i>
-                                        إنشاء نسخة احتياطية لقاعدة البيانات (إلى الإيميل)
-                                    </button>
-                                    <small class="form-text text-muted mt-2">سيتم إرسال النسخة الاحتياطية لبريدك
-                                        الإلكتروني وحذفها من الخادم لتوفير المساحة.</small>
-                                </form>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <form method="POST"
-                                    onsubmit="return confirm('قبل تنفيذ VACUUM يجب أن تكون قد أنشأت نسخة احتياطية حديثة من قاعدة البيانات.\n\nهل أنت متأكد أنك أخذت Backup وتريد ضغط قاعدة البيانات الآن؟');">
-                                    <input type="hidden" name="action" value="vacuum_db">
-                                    <button type="submit" class="btn btn-outline-danger w-100">
-                                        <i class="fas fa-compress me-2"></i>
-                                        ضغط قاعدة البيانات (VACUUM)
-                                    </button>
-                                    <small class="form-text text-muted mt-2">
-                                        يقوم VACUUM بإعادة بناء ملف SQLite لتقليل الحجم بدون تغيير في البيانات، لكن يُفضل دائماً وجود نسخة احتياطية قبل التنفيذ.
-                                    </small>
-                                </form>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <form action="/automated_stock_history_cleanup_internal"
-                                    method="POST"
-                                    onsubmit="return confirm('سيتم حذف جميع سجلات حركة الأصناف الأقدم من ٤ شهور من جدول product_stock_history. هل أنت متأكد؟');">
-                                    <button type="submit" class="btn btn-warning w-100">
-                                        <i class="fas fa-boxes me-2"></i>
-                                        حذف حركة الأصناف الأقدم من ٤ شهور
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            {# قسم معلومات النظام #}
-            <div class="col-md-12 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-secondary text-white">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <h5>معلومات النظام</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong><i class="fas fa-hdd me-2"></i>حجم قاعدة البيانات:</strong> {{
-                                    "%.2f"|format(db_size / (1024 * 1024)) }} ميجابايت</p>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <form method="POST" onsubmit="return confirm('حذف سجل البحث الأقدم من شهرين؟');">
+                                    <input type="hidden" name="action" value="cleanup_search_logs_2months">
+                                    <button type="submit" class="btn btn-outline-warning w-100 py-2.5 fw-bold" style="border-radius: 10px;">
+                                        <i class="fas fa-history me-1"></i> حذف سجل البحث (+ شهرين)
+                                    </button>
+                                </form>
                             </div>
-                            <div class="col-md-6">
-                                <p><strong><i class="fas fa-file-upload me-2"></i>عدد ملفات الرفع:</strong> {{
-                                    uploads_count }} ملف</p>
+
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <form method="POST" onsubmit="return confirm('مسح جميع الإشعارات نهائياً؟');">
+                                    <input type="hidden" name="action" value="purge_all_notifications">
+                                    <button type="submit" class="btn btn-outline-danger w-100 py-2.5 fw-bold" style="border-radius: 10px;">
+                                        <i class="fas fa-bell-slash me-1"></i> مسح جميع الإشعارات
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <form action="{{ url_for('clear_uploaded_excel_files') }}" method="POST" onsubmit="return confirm('مسح جميع ملفات Excel المؤقتة؟');">
+                                    <button type="submit" class="btn btn-outline-secondary w-100 py-2.5 fw-bold" style="border-radius: 10px;">
+                                        <i class="fas fa-file-excel me-1"></i> مسح ملفات الإكسيل المؤقتة
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <form action="{{ url_for('cleanup_old_backups') }}" method="POST" onsubmit="return confirm('تنظيف النسخ الاحتياطية القديمة؟');">
+                                    <button type="submit" class="btn btn-outline-info w-100 py-2.5 fw-bold" style="border-radius: 10px;">
+                                        <i class="fas fa-archive me-1"></i> تنظيف النسخ القديمة
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <form action="{{ url_for('automated_log_cleanup', secret_key='internal_call_trigger') }}" method="POST" onsubmit="return confirm('مسح سجلات الخادم (Logs)؟');">
+                                    <button type="submit" class="btn btn-outline-dark w-100 py-2.5 fw-bold" style="border-radius: 10px;">
+                                        <i class="fas fa-terminal me-1"></i> مسح سجلات السيرفر (Logs)
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-6">
+                                <form method="POST" onsubmit="return confirm('إنشاء نسخة احتياطية لقاعدة البيانات وإرسالها للإيميل؟');">
+                                    <input type="hidden" name="action" value="backup_db">
+                                    <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold" style="border-radius: 10px;">
+                                        <i class="fas fa-envelope-open-text me-1"></i> أخذ نسخة احتياطية (إلى الإيميل)
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-6">
+                                <form method="POST" onsubmit="return confirm('هل تأكدت من أخذ نسخة احتياطية وتريد ضغط قاعدة البيانات (VACUUM)؟');">
+                                    <input type="hidden" name="action" value="vacuum_db">
+                                    <button type="submit" class="btn btn-outline-danger w-100 py-2.5 fw-bold" style="border-radius: 10px;">
+                                        <i class="fas fa-compress me-1"></i> ضغط وتفريغ قاعدة البيانات (VACUUM)
+                                    </button>
+                                </form>
                             </div>
                         </div>
-                        <small class="form-text text-muted mt-2">
-                            هذه المعلومات تعكس المساحة المستخدمة على خادم PythonAnywhere.
-                        </small>
                     </div>
                 </div>
             </div>
@@ -1053,77 +811,47 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery (required for Select2) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const flashMessagesContainer = document.getElementById('flash-messages-container');
-            if (flashMessagesContainer) {
-                flashMessagesContainer.childNodes.forEach(node => {
-                    if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim() === '') {
-                        node.remove();
-                    }
-                });
-                if (flashMessagesContainer.children.length === 0) {
-                    flashMessagesContainer.style.display = 'none';
-                }
-            }
-        });
-
-        // Unified update function for navbar notification counts (if any)
-        function updateCounts() {
-            // This page typically doesn't show dynamic notification counts in the navbar,
-            // but including the function for consistency if needed in the future.
-            // If you add notification badges to this admin navbar, ensure they have IDs
-            // like 'notification-count' or 'community-count'.
-            fetch('/api/unread_counts')
-                .then(response => response.json())
-                .then(data => {
-                    const notificationBadge = document.getElementById('notification-count');
-                    if (notificationBadge) {
-                        if (data.unread_notifications_count > 0) {
-                            notificationBadge.textContent = data.unread_notifications_count;
-                            notificationBadge.style.display = 'block';
-                        } else {
-                            notificationBadge.style.display = 'none';
-                        }
-                    }
-                    const communityBadge = document.getElementById('community-count'); // For admin chat
-                    if (communityBadge) {
-                        if (data.unread_community_messages_count > 0) {
-                            communityBadge.textContent = data.unread_community_messages_count;
-                            communityBadge.style.display = 'block';
-                        } else {
-                            communityBadge.style.display = 'none';
-                        }
-                    }
-                })
-                .catch(error => console.error('Error fetching unread counts:', error));
+        // Maintenance quick time helper
+        function setMaintenanceTime(hours) {
+            const now = new Date();
+            now.setHours(now.getHours() + hours);
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('maintenanceEndTimeInput').value = `${year}-${month}-${day}T${hour}:${minute}`;
         }
 
-        document.addEventListener('DOMContentLoaded', updateCounts);
-        setInterval(updateCounts, 30000); // Update every 30 seconds
+        // Category filter pills
+        function filterSettings(category) {
+            document.querySelectorAll('.category-pill').forEach(pill => {
+                pill.classList.toggle('active', pill.getAttribute('data-target') === category);
+            });
 
-        // Initialize Select2 for companies dropdown
+            document.querySelectorAll('.setting-item').forEach(item => {
+                if (category === 'all' || item.getAttribute('data-category') === category) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Select2 Initialization
         $(document).ready(function () {
             const $select = $('.select2-companies');
-
             $select.select2({
                 theme: 'bootstrap-5',
                 dir: 'rtl',
                 language: {
-                    noResults: function () {
-                        return 'لم يتم العثور على نتائج';
-                    },
-                    searching: function () {
-                        return 'جاري البحث...';
-                    },
-                    inputTooShort: function () {
-                        return 'اكتب حرف واحد على الأقل للبحث';
-                    }
+                    noResults: () => 'لم يتم العثور على نتائج',
+                    searching: () => 'جاري البحث...'
                 },
                 placeholder: 'ابحث عن الشركات أو اكتب اسم الشركة...',
                 allowClear: true,
@@ -1131,45 +859,34 @@
                 closeOnSelect: false
             });
 
-            // Update count on change
-            $select.on('change', function () {
-                updateSelectedCount();
-            });
-
-            // Initial count
+            $select.on('change', updateSelectedCount);
             updateSelectedCount();
         });
 
-        // Function to select all companies
         function selectAllCompanies() {
             const $select = $('#premium_trial_companies');
             $select.find('option').prop('selected', true);
             $select.trigger('change');
         }
 
-        // Function to deselect all companies
         function deselectAllCompanies() {
             const $select = $('#premium_trial_companies');
             $select.val(null);
             $select.trigger('change');
         }
 
-        // Function to update selected count
         function updateSelectedCount() {
             const $select = $('#premium_trial_companies');
-            const selectedCount = $select.val() ? $select.val().length : 0;
-            const totalCount = $select.find('option').length;
+            const count = $select.val() ? $select.val().length : 0;
+            const total = $select.find('option').length;
             const $countText = $('#count-text');
 
-            if (selectedCount === 0) {
+            if (count === 0) {
                 $countText.html('لم يتم اختيار أي شركة');
-                $countText.parent().removeClass('text-success').addClass('text-muted');
-            } else if (selectedCount === totalCount) {
-                $countText.html(`تم اختيار جميع الشركات (${selectedCount})`);
-                $countText.parent().removeClass('text-muted').addClass('text-success');
+            } else if (count === total) {
+                $countText.html(`تم اختيار جميع الشركات (${count})`);
             } else {
-                $countText.html(`تم اختيار ${selectedCount} من ${totalCount} شركة`);
-                $countText.parent().removeClass('text-muted').addClass('text-success');
+                $countText.html(`تم اختيار ${count} من ${total} شركة`);
             }
         }
     </script>

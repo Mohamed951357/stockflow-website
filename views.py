@@ -8302,13 +8302,17 @@ def register_views(app):
         current_appointments_enabled = settings.get('appointments_enabled') == 'true' # NEW: Added this line
         current_company_messaging_enabled = settings.get('company_messages_enabled', 'true') == 'true'
         system_subtitle = settings.get('system_subtitle', 'نظام حجز المواعيد وإدارة الأرصدة المتكامل')
+        logo_3d_enabled = settings.get('logo_3d_status') == 'true'
+        ramadan_theme_enabled = settings.get('ramadan_theme_status') == 'true'
         db_size = 0
         uploads_count = 0
         try:
-            db_path = '/home/Bonuspharma1/db.sqlite3'
+            db_path = current_app.config.get('SQLALCHEMY_DATABASE_URI', '').replace('sqlite:///', '')
             if os.path.exists(db_path):
                 db_size = os.path.getsize(db_path)
-            upload_folder = current_app.config['UPLOAD_FOLDER']
+            elif os.path.exists('db.sqlite3'):
+                db_size = os.path.getsize('db.sqlite3')
+            upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
             if os.path.exists(upload_folder):
                 uploads_count = len([name for name in os.listdir(upload_folder) if os.path.isfile(os.path.join(upload_folder, name))])
         except Exception as e:
@@ -8326,7 +8330,40 @@ def register_views(app):
             except:
                 selected_premium_trial_company_ids = []
         
-        return render_template('system_settings.html', monthly_search_limit=monthly_search_limit, premium_duration_months=premium_duration_months, premium_trial_days=premium_trial_days, current_logo_path=current_logo_path, current_logo_filename=current_logo_filename, promo_logo_filename=promo_logo_filename, promo_gif_filename=promo_gif_filename, promo_gif_duration=promo_gif_duration, promo_gif_validity=promo_gif_validity, promo_gif_upload_date=promo_gif_upload_date, week_days=WEEK_DAYS, current_maintenance_mode=current_maintenance_mode, current_maintenance_message=current_maintenance_message, current_maintenance_end_time=current_maintenance_end_time, current_max_daily_requests=current_max_daily_requests, current_disabled_days=current_disabled_days, current_disabled_days_message=current_disabled_days_message, current_login_ad=current_login_ad, current_company_ad=current_company_ad, current_invite_code=current_invite_code, current_premium_features_enabled=current_premium_features_enabled, current_premium_message=current_premium_message, current_appointments_enabled=current_appointments_enabled, current_company_messaging_enabled=current_company_messaging_enabled, system_subtitle=system_subtitle, db_size=db_size, uploads_count=uploads_count, all_companies=all_companies, selected_premium_trial_company_ids=selected_premium_trial_company_ids)
+        return render_template(
+            'system_settings.html',
+            monthly_search_limit=monthly_search_limit,
+            premium_duration_months=premium_duration_months,
+            premium_trial_days=premium_trial_days,
+            current_logo_path=current_logo_path,
+            current_logo_filename=current_logo_filename,
+            promo_logo_filename=promo_logo_filename,
+            promo_gif_filename=promo_gif_filename,
+            promo_gif_duration=promo_gif_duration,
+            promo_gif_validity=promo_gif_validity,
+            promo_gif_upload_date=promo_gif_upload_date,
+            week_days=WEEK_DAYS,
+            current_maintenance_mode=current_maintenance_mode,
+            current_maintenance_message=current_maintenance_message,
+            current_maintenance_end_time=current_maintenance_end_time,
+            current_max_daily_requests=current_max_daily_requests,
+            current_disabled_days=current_disabled_days,
+            current_disabled_days_message=current_disabled_days_message,
+            current_login_ad=current_login_ad,
+            current_company_ad=current_company_ad,
+            current_invite_code=current_invite_code,
+            current_premium_features_enabled=current_premium_features_enabled,
+            current_premium_message=current_premium_message,
+            current_appointments_enabled=current_appointments_enabled,
+            current_company_messaging_enabled=current_company_messaging_enabled,
+            system_subtitle=system_subtitle,
+            logo_3d_enabled=logo_3d_enabled,
+            ramadan_theme_enabled=ramadan_theme_enabled,
+            db_size=db_size,
+            uploads_count=uploads_count,
+            all_companies=all_companies,
+            selected_premium_trial_company_ids=selected_premium_trial_company_ids
+        )
 
     @app.route('/uploads/logos/<filename>')
     def uploaded_file(filename):
