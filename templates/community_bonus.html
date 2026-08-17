@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>مجتمع ستوك فلو - ستوك فلو</title>
@@ -1905,7 +1905,7 @@
                         <div class="post-meta-mobile">
                             <div class="company-name-mobile ${isProfileClickable ? 'company-name-link' : ''}" ${isProfileClickable ? `onclick="event.stopPropagation(); openCompanyProfile(${post.company_id}, '${escapeHtml(post.company_name)}', ${post.is_anonymous})"` : `onclick="openPostPage(${post.id})"`}>
                                 ${displayName}
-                                ${post.is_premium ? '<i class="fas fa-check-circle verification-badge" title="حساب موثق"></i>' : ''}
+                                ${(post.is_verified || post.is_premium) ? '<i class="fas fa-check-circle verification-badge" title="حساب موثق"></i>' : ''}
                             </div>
                             <div class="post-time-mobile" onclick="openPostPage(${post.id})">${formatTimeAgo(post.created_at)}</div>
                         </div>

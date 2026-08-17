@@ -160,11 +160,34 @@
             })
             .catch(function(err) {});
     }
+
+    var companyPresenceUrl = {{ url_for('company_presence')|tojson }};
+
+    function sendCompanyPresence() {
+        if (document.visibilityState !== 'visible') return;
+
+        fetch(companyPresenceUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            keepalive: true
+        }).catch(function() {});
+    }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', syncNavbarBadges);
     } else {
         syncNavbarBadges();
     }
     setInterval(syncNavbarBadges, 15000);
+
+    // A visible tab confirms that the company is currently using the web app.
+    // The server treats a signal as "online" for two minutes.
+    sendCompanyPresence();
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') sendCompanyPresence();
+    });
+    window.addEventListener('focus', sendCompanyPresence);
+    setInterval(sendCompanyPresence, 60000);
 })();
 </script>

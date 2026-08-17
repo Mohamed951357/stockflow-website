@@ -170,7 +170,8 @@ def _serialize_post(post, current_company_id):
             'media_preview_urls': media_preview_urls,
             'audio_file_id': getattr(post, 'audio_file_id', None),
             'audio_url': getattr(post, 'audio_url', None),
-            'is_premium': company.is_premium if company and hasattr(company, 'is_premium') and not is_anon else False,
+            'is_premium': bool(getattr(company, 'is_premium_active', False)) if company and not is_anon else False,
+            'is_verified': bool(getattr(company, 'is_verified', False)) if company and not is_anon else False,
             'avatar': _avatar_url(company.avatar if company and hasattr(company, 'avatar') else None, is_anon),
             'avatar_key': ('male-1' if is_anon else (company.avatar if company and hasattr(company, 'avatar') else 'male-1')),
             'latest_comment': _latest_comment_data(post.id)
@@ -195,6 +196,7 @@ def _serialize_post(post, current_company_id):
             'audio_file_id': None,
             'audio_url': None,
             'is_premium': False,
+            'is_verified': False,
             'avatar': _avatar_url(None, is_anon),
             'avatar_key': 'male-1',
             'latest_comment': None
@@ -354,7 +356,8 @@ def api_company_profile(company_id):
             'company_name': company.company_name,
             'avatar': _avatar_url(getattr(company, 'avatar', None)),
             'cover_photo_url': _cover_url(getattr(company, 'cover_photo_url', None)),
-            'is_premium': bool(getattr(company, 'is_premium', False)),
+            'is_premium': bool(getattr(company, 'is_premium_active', False)),
+            'is_verified': bool(getattr(company, 'is_verified', False)),
             'bio': getattr(company, 'bio', '') or '',
             'joined_at': joined_at,
             'posts_count': posts_count,

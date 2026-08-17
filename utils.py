@@ -434,6 +434,19 @@ def rotate_invite_code_admin():
         print(f"Error rotating invite code (admin): {e}")
         return None
 
+def issue_user_session_token(user):
+    """
+    Issues and stores a new unique session token for the user,
+    updating both the user database model and the Flask session.
+    This invalidates any previous session on other devices.
+    """
+    import secrets
+    token = secrets.token_hex(32)
+    user.current_session_token = token
+    session['session_token'] = token
+    return token
+
+
 # دالة لـ user_loader - تستورد النماذج هنا
 def _get_request_user_type_hint():
     """Helps restore old remember cookies that stored only a numeric id."""
@@ -804,11 +817,13 @@ def update_database_schema(app, db):
                     print("subscription_plan column already exists.")
 
             # إضافة أعمدة الاشتراك التجريبي (Premium Trial)
+            company_changed = False
             trial_columns = {
                 'premium_trial_prompted': 'BOOLEAN DEFAULT 0',
                 'premium_trial_active': 'BOOLEAN DEFAULT 0',
                 'premium_trial_start': 'DATETIME',
-                'premium_trial_end': 'DATETIME'
+                'premium_trial_end': 'DATETIME',
+                'current_session_token': 'VARCHAR(100)'
             }
             for col_name, col_type in trial_columns.items():
                 if col_name not in columns:
@@ -828,6 +843,25 @@ def update_database_schema(app, db):
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
+
+        if inspector.has_table('admin'):
+            admin_columns = [col['name'] for col in inspector.get_columns('admin')]
+            if 'current_session_token' not in admin_columns:
+                print("Adding current_session_token column to admin table...")
+                try:
+                    db.session.execute(text('ALTER TABLE "admin" ADD COLUMN "current_session_token" VARCHAR(100)'))
+                    db.session.commit()
+                    print("current_session_token column added to admin table successfully!")
+                except Exception as admin_col_e:
+                    db.session.rollback()
+                    print(f"Error adding current_session_token to admin table: {admin_col_e}")
+
+        if not inspector.has_table('phone_verification_request'):
+            try:
+                db.create_all()
+                print("phone_verification_request table created successfully via db.create_all()!")
+            except Exception as pvr_e:
+                print(f"Error creating phone_verification_request table: {pvr_e}")
 
         if inspector.has_table('community_post'):
             cp_columns = [col['name'] for col in inspector.get_columns('community_post')]
@@ -882,6 +916,25 @@ def update_database_schema(app, db):
                         print(f"Error adding {col_name}: {e}")
                         db.session.rollback()
             if cm_changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+        if inspector.has_table('private_message'):
+            pm_columns = {col['name'] for col in inspector.get_columns('private_message')}
+            pm_changed = False
+            for col_name, col_type in {'hidden_from_sender': 'BOOLEAN DEFAULT 0'}.items():
+                if col_name not in pm_columns:
+                    try:
+                        print(f"Adding {col_name} column to private_message table...")
+                        safe_col = _sanitize_identifier(col_name)
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('private_message')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
+                        pm_changed = True
+                    except Exception as pm_e:
+                        print(f"Error adding private_message column {col_name}: {pm_e}")
+                        db.session.rollback()
+            if pm_changed:
                 try:
                     db.session.commit()
                 except Exception:
@@ -948,7 +1001,7 @@ def update_database_schema(app, db):
         if inspector.has_table('product_stock_history'):
             product_stock_history_columns = {col['name'] for col in inspector.get_columns('product_stock_history')}
             psh_changed = False
-            for col_name, col_type in {'item_code': 'VARCHAR(100)', 'discount': 'VARCHAR(100)'}.items():
+            for col_name, col_type in {'item_code': 'VARCHAR(100)', 'discount': 'VARCHAR(100)', 'warehouse_id': 'INTEGER'}.items():
                 if col_name not in product_stock_history_columns:
                     try:
                         print(f"Adding {col_name} column to product_stock_history table...")
@@ -959,6 +1012,25 @@ def update_database_schema(app, db):
                         print(f"Error adding product_stock_history column {col_name}: {h_e}")
                         db.session.rollback()
             if psh_changed:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+        if inspector.has_table('search_log'):
+            search_log_columns = {col['name'] for col in inspector.get_columns('search_log')}
+            sl_changed = False
+            for col_name, col_type in {'warehouse_id': 'INTEGER'}.items():
+                if col_name not in search_log_columns:
+                    try:
+                        print(f"Adding {col_name} column to search_log table...")
+                        safe_col = _sanitize_identifier(col_name)
+                        db.session.execute(text(f"ALTER TABLE {_quote_identifier('search_log')} ADD COLUMN {_quote_identifier(safe_col)} {col_type}"))
+                        sl_changed = True
+                    except Exception as sl_e:
+                        print(f"Error adding search_log column {col_name}: {sl_e}")
+                        db.session.rollback()
+            if sl_changed:
                 try:
                     db.session.commit()
                 except Exception:

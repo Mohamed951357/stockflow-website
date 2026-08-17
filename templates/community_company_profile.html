@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>بروفايل الشركة - ستوك فلو</title>
@@ -673,13 +673,13 @@
         }
 
         // Premium ring
-        if (c.is_premium) {
+        if (c.is_verified || c.is_premium) {
             document.getElementById('avatar-outer').classList.add('premium-ring');
         }
 
         // Name row
         let nameHtml = `<span class="profile-name">${esc(c.company_name)}</span>`;
-        if (c.is_premium) {
+        if (c.is_verified || c.is_premium) {
             nameHtml += ` <i class="fas fa-check-circle" style="color: #1DA1F2; font-size: 1.05rem; margin-right: 4px;" title="حساب موثق"></i>`;
         }
         document.getElementById('name-row').innerHTML = nameHtml;
@@ -824,8 +824,8 @@
         const isLiked = post.is_liked || likedPosts.includes(post.id);
 
         const avatarSrc = post.avatar || '/static/images/avatars/male-1.jpg';
-        const nameBadge = post.is_premium
-            ? `<i class="fas fa-check-circle vbadge"></i>`
+        const nameBadge = (post.is_verified || post.is_premium)
+            ? `<i class="fas fa-check-circle vbadge" title="حساب موثق"></i>`
             : '';
         const anonTag = post.is_anonymous
             ? `<span style="font-size:0.70rem; color:#6B7280; background:#F3F4F6; padding:2px 8px; border-radius:10px; margin-right:6px;"><i class="fas fa-user-secret"></i> نشر بمجهول</span>`

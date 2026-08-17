@@ -32,7 +32,8 @@ from models import (
     AdStory, AdStoryView, AdStoryReaction,
     CompanyStatus, CompanyStatusView, CompanyStatusReaction,
     ProductReminder, PasswordResetToken, SurveyResponse, SurveyAnswer, CompanySurveyStatus,
-    Warehouse, WarehousePermissions, PrivateMessageEditLog, CompanyFollow, PageVisit
+    Warehouse, WarehousePermissions, PrivateMessageEditLog, CompanyFollow, PageVisit,
+    PhoneVerificationRequest
 )
 from sqlalchemy import func, or_, and_, exists, text
 from sqlalchemy.exc import OperationalError, DatabaseError, IntegrityError
@@ -50,6 +51,14 @@ from utils import (
     find_company_for_login,
     normalize_company_name,
     update_company_client_context,
+    issue_user_session_token,
+)
+from stock_report_metrics import calculate_stock_metrics, whole_stock_units
+from company_activity import company_activity_snapshot
+from company_subscription import (
+    company_subscription_snapshot,
+    deactivate_expired_subscription,
+    deactivate_all_expired_subscriptions,
 )
 
 # تعريف المنطقة الزمنية للقاهرة
@@ -643,6 +652,69 @@ def register_views(app):
         }
 
     @app.before_request
+    def _enforce_single_active_session():
+        try:
+            if not current_user.is_authenticated:
+                return
+
+            path = (request.path or '').lower()
+            if (
+                path.startswith('/static')
+                or path.startswith('/logos')
+                or path.startswith('/ad_images')
+                or path.startswith('/apk_files')
+                or path in {'/manifest.json', '/service-worker.js', '/pwabuilder-sw.js', '/favicon.ico'}
+                or path in {'/login', '/logout', '/account_inactive'}
+            ):
+                return
+
+            user_token = getattr(current_user, 'current_session_token', None)
+            session_token = session.get('session_token')
+
+            # حالة الحسابات التي سجلت قبل التحديث (لا يوجد رمز في قاعدة البيانات بعد)
+            if not user_token:
+                if session_token:
+                    current_user.current_session_token = session_token
+                else:
+                    new_token = secrets.token_hex(32)
+                    current_user.current_session_token = new_token
+                    session['session_token'] = new_token
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                return
+
+            # حالة عدم تطابق رمز الجلسة (تم تسجيل الدخول من جهاز آخر أحدث)
+            if not session_token or session_token != user_token:
+                logout_user()
+                session.pop('session_token', None)
+                session.pop('user_type', None)
+                session.pop('is_admin_logged', None)
+                session.pop('company_test_mode', None)
+
+                msg = 'تم تسجيل الدخول إلى هذا الحساب من جهاز آخر، وتم إنهاء هذه الجلسة لحماية حسابك.'
+
+                is_ajax_or_api = (
+                    request.path.startswith('/api/')
+                    or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                    or request.is_json
+                    or 'application/json' in (request.headers.get('Accept') or '')
+                )
+                if is_ajax_or_api:
+                    return jsonify({
+                        'success': False,
+                        'session_terminated': True,
+                        'message': msg,
+                        'redirect_url': url_for('login')
+                    }), 401
+
+                flash(msg, 'warning')
+                return redirect(url_for('login'))
+        except Exception:
+            pass
+
+    @app.before_request
     def _ensure_user_type_in_session():
         if not current_user.is_authenticated:
             return
@@ -672,12 +744,30 @@ def register_views(app):
             if (
                 path.startswith('/static')
                 or path.startswith('/api/mobile')
-                or path in {'/manifest.json', '/service-worker.js', '/client-context'}
+                or path in {'/manifest.json', '/service-worker.js', '/client-context', '/company_presence'}
             ):
                 return
             update_company_client_context(current_user, source_hint='web')
         except Exception:
             db.session.rollback()
+
+    @app.before_request
+    def _expire_current_company_subscription():
+        """Never let an expired plan continue to grant premium privileges."""
+        try:
+            deactivate_all_expired_subscriptions(db.session)
+            if not current_user.is_authenticated:
+                return
+            if session.get('user_type') != 'company' or not isinstance(current_user, Company):
+                return
+            if deactivate_expired_subscription(current_user):
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception(
+                'Unable to normalize expired subscription: company_id=%s',
+                getattr(current_user, 'id', None),
+            )
 
     @app.before_request
     def _maybe_redirect_premium_trial():
@@ -1249,6 +1339,7 @@ def register_views(app):
                         session['is_admin_logged'] = True  # حفظ حالة أن الأدمن مسجل دخول
                         session['company_test_mode'] = False
                         session.permanent = True
+                        issue_user_session_token(user)
                         
                         # تسجيل دخول المستخدم مع خيار التذكر
                         # نستخدم remember_me مع مدة 30 يوماً
@@ -1291,6 +1382,7 @@ def register_views(app):
                     # إعداد الجلسة للشركة
                     session['user_type'] = 'company'
                     session.permanent = True
+                    issue_user_session_token(test_company)
 
                     # تسجيل دخول الشركة مع خيار التذكر
                     login_user(test_company, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
@@ -1377,6 +1469,7 @@ def register_views(app):
                         # إعداد الجلسة للشركة
                         session['user_type'] = 'company'
                         session.permanent = True
+                        issue_user_session_token(user)
 
                         # تسجيل دخول المستخدم مع خيار التذكر
                         login_user(user, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
@@ -1543,6 +1636,7 @@ def register_views(app):
             session['user_type'] = 'company'
             session['company_test_mode'] = False
             session.permanent = True
+            issue_user_session_token(company)
             
             login_user(company, remember=True, duration=timedelta(days=30))
             
@@ -2633,7 +2727,8 @@ def register_views(app):
                 'id': s.id,
                 'company_id': s.company_id,
                 'company_name': c.company_name if c else '',
-                'is_premium': bool(getattr(c, 'is_premium', False)) if c else False,
+                'is_premium': bool(getattr(c, 'is_premium_active', False)) if c else False,
+                'is_verified': bool(getattr(c, 'is_verified', False)) if c else False,
                 'text': s.text,
                 'start_at': s.start_at.isoformat() if s.start_at else None,
                 'end_at': s.end_at.isoformat() if s.end_at else None,
@@ -2957,8 +3052,18 @@ def register_views(app):
     @app.route('/logout')
     @login_required
     def logout():
+        if current_user.is_authenticated:
+            try:
+                if current_user.current_session_token == session.get('session_token'):
+                    current_user.current_session_token = None
+                    db.session.commit()
+            except Exception:
+                db.session.rollback()
         logout_user()
+        session.pop('session_token', None)
         session.pop('user_type', None)
+        session.pop('is_admin_logged', None)
+        session.pop('company_test_mode', None)
         flash('تم تسجيل الخروج بنجاح', 'info')
         return redirect(url_for('login'))
 
@@ -5787,6 +5892,8 @@ def register_views(app):
 
                     if admin.id == current_user.id:
                         session['user_type'] = 'admin'
+                        if session.get('session_token'):
+                            admin.current_session_token = session['session_token']
                         login_user(admin)
 
                 db.session.commit()
@@ -6438,6 +6545,110 @@ def register_views(app):
 
         return render_template('add_user.html')
 
+    @app.route('/api/phone_verification/create', methods=['POST'])
+    def api_phone_verification_create():
+        """إنشاء طلب تحقق من رقم الهاتف عبر توبي على واتساب"""
+        try:
+            data = request.get_json(silent=True) or {}
+            phone_raw = (data.get('phone') or request.form.get('phone') or '').strip()
+
+            if not phone_raw:
+                return jsonify({'success': False, 'message': 'يرجى إدخال رقم الهاتف أولاً.'}), 400
+
+            # التحقق من صحة الرقم المصري (11 رقم يبدأ بـ 01)
+            phone_digits = ''.join(c for c in phone_raw if c.isdigit())
+            if phone_digits.startswith('201') and len(phone_digits) == 12:
+                phone_digits = '0' + phone_digits[2:]
+
+            if not re.match(r'^01\d{9}$', phone_digits):
+                return jsonify({'success': False, 'message': 'رقم الهاتف يجب أن يتكون من 11 رقم ويبدأ بـ 01.'}), 400
+
+            # توليد كود فريد
+            code = f"SF-{random.randint(100000, 999999)}"
+            while PhoneVerificationRequest.query.filter_by(code=code).first():
+                code = f"SF-{random.randint(100000, 999999)}"
+
+            expires_at = datetime.utcnow() + timedelta(minutes=15)
+            new_req = PhoneVerificationRequest(
+                code=code,
+                phone=phone_digits,
+                status='pending',
+                is_verified=False,
+                phone_is_new=True,
+                created_at=datetime.utcnow(),
+                expires_at=expires_at
+            )
+            db.session.add(new_req)
+            db.session.commit()
+
+            toby_phone = "201554077727"
+            wa_text = f"تأكيد رقم ستوك فلو: {code}"
+            from urllib.parse import quote
+            wa_url = f"https://wa.me/{toby_phone}?text={quote(wa_text)}"
+
+            return jsonify({
+                'success': True,
+                'code': code,
+                'phone': phone_digits,
+                'whatsapp_url': wa_url,
+                'expires_in': 900
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'}), 500
+
+    @app.route('/api/phone_verification/status', methods=['GET'])
+    def api_phone_verification_status():
+        """فحص حالة كود التحقق (يتم استدعاؤها دورياً من الواجهة Polling)"""
+        try:
+            code = (request.args.get('code') or '').strip().upper()
+            if not code:
+                return jsonify({'success': False, 'message': 'كود التحقق مطلوب.'}), 400
+
+            ver_req = PhoneVerificationRequest.query.filter_by(code=code).first()
+            if not ver_req:
+                return jsonify({'success': False, 'message': 'كود التحقق غير موجود.'}), 404
+
+            if ver_req.is_expired():
+                ver_req.status = 'expired'
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                return jsonify({
+                    'success': True,
+                    'verified': False,
+                    'status': 'expired',
+                    'message': 'انتهت صلاحية كود التحقق. يرجى طلب كود جديد.'
+                })
+
+            if ver_req.status == 'phone_mismatch':
+                return jsonify({
+                    'success': True,
+                    'verified': False,
+                    'status': 'phone_mismatch',
+                    'message': 'رقم الواتساب الذي ترسل منه لا يطابق الرقم المدخل في صفحة التسجيل.'
+                })
+
+            if ver_req.is_verified:
+                return jsonify({
+                    'success': True,
+                    'verified': True,
+                    'status': ver_req.status,
+                    'phone_is_new': ver_req.phone_is_new,
+                    'verified_phone': ver_req.verified_phone,
+                    'message': 'تم تأكيد الرقم بنجاح! رقمك جديد ولا يتطلب كود دعوة.' if ver_req.phone_is_new else 'تم تأكيد الرقم! هذا الرقم مسجل لحساب سابق، كود الدعوة مطلوب.'
+                })
+
+            return jsonify({
+                'success': True,
+                'verified': False,
+                'status': ver_req.status,
+                'message': 'في انتظار إرسال الرسالة لتوبي على واتساب...'
+            })
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
     @app.route('/signup_company', methods=['GET', 'POST'])
     def signup_company():
         if request.method == 'POST':
@@ -6448,19 +6659,8 @@ def register_views(app):
                 company_name = request.form['company_name'].strip()
                 email = request.form.get('email', '').strip()
                 phone = request.form.get('phone', '').strip()
-                invite_code = request.form['invite_code'].strip()
-
-                current_setting = SystemSetting.query.filter_by(setting_key='invite_code').first()
-                current_code = (current_setting.setting_value if current_setting else '') or ''
-
-                if not current_code:
-                    flash('لم يتم إعداد كود دعوة من قبل الإدارة بعد. يرجى التواصل معهم.', 'error')
-                    return redirect(url_for('signup_company'))
-
-                match_kind = resolve_invite_code_match(invite_code)
-                if not match_kind:
-                    flash('كود الدعوة غير صحيح أو تم استخدامه مسبقاً. يرجى الحصول على كود جديد.', 'error')
-                    return redirect(url_for('signup_company'))
+                invite_code = request.form.get('invite_code', '').strip()
+                verification_code = request.form.get('verification_code', '').strip().upper()
 
                 if password != confirm_password:
                     flash('كلمة المرور وتأكيدها غير متطابقين.', 'error')
@@ -6480,7 +6680,40 @@ def register_views(app):
                     flash('اسم الشركة هذا مسجل بالفعل في النظام. إذا كنت صاحب هذه الشركة، تواصل مع الإدارة.', 'error')
                     return redirect(url_for('signup_company'))
 
+                # فحص التحقق عبر واتساب
+                is_whatsapp_exempt = False
+                match_kind = None
+
+                if verification_code:
+                    ver_req = PhoneVerificationRequest.query.filter_by(code=verification_code, is_verified=True).first()
+                    if ver_req and not ver_req.is_expired() and ver_req.phone_is_new:
+                        # التأكد من مطابقة رقم الهاتف المدخل مع رقم التحقق
+                        p_digits = ''.join(c for c in phone if c.isdigit())
+                        req_p_digits = ''.join(c for c in ver_req.phone if c.isdigit())
+                        v_req_p_digits = ''.join(c for c in (ver_req.verified_phone or '') if c.isdigit())
+                        if p_digits.endswith(req_p_digits[-9:]) or (v_req_p_digits and p_digits.endswith(v_req_p_digits[-9:])):
+                            is_whatsapp_exempt = True
+
+                if not is_whatsapp_exempt:
+                    current_setting = SystemSetting.query.filter_by(setting_key='invite_code').first()
+                    current_code = (current_setting.setting_value if current_setting else '') or ''
+
+                    if not current_code:
+                        flash('لم يتم إعداد كود دعوة من قبل الإدارة بعد. يرجى التواصل معهم أو تأكيد رقمك عبر واتساب.', 'error')
+                        return redirect(url_for('signup_company'))
+
+                    if not invite_code:
+                        flash('كود الدعوة مطلوب لإتمام التسجيل. يرجى إدخال الكود أو تأكيد رقم جديد عبر واتساب.', 'error')
+                        return redirect(url_for('signup_company'))
+
+                    match_kind = resolve_invite_code_match(invite_code)
+                    if not match_kind:
+                        flash('كود الدعوة غير صحيح أو تم استخدامه مسبقاً. يرجى الحصول على كود جديد.', 'error')
+                        return redirect(url_for('signup_company'))
+
                 hashed_password = generate_password_hash(password)
+
+                code_record_value = invite_code if invite_code else (f'WA_VERIFIED:{verification_code}' if is_whatsapp_exempt else 'DIRECT')
 
                 new_company = _create_company_with_sequence_recovery(
                     username=username,
@@ -6489,11 +6722,13 @@ def register_views(app):
                     email=email if email else None,
                     phone=phone if phone else None,
                     is_active=True,
-                    invite_code_used=invite_code,
+                    invite_code_used=code_record_value,
                     created_at=datetime.utcnow()
                 )
 
-                apply_invite_code_consumed(match_kind)
+                if match_kind:
+                    apply_invite_code_consumed(match_kind)
+
                 db.session.commit()
                 _ensure_company_follows_official(new_company)
 
@@ -9280,18 +9515,34 @@ def register_views(app):
             sender_type='admin'
         ).count()
 
-        if premium_features_enabled and not current_user.is_premium:
+        current_logo_setting = SystemSetting.query.filter_by(setting_key='current_logo').first()
+        current_logo_path = url_for(
+            'static', filename=f'logos/{current_logo_setting.setting_value}'
+        ) if current_logo_setting and current_logo_setting.setting_value else None
+        system_subtitle_setting = SystemSetting.query.filter_by(setting_key='system_subtitle').first()
+        system_subtitle = system_subtitle_setting.setting_value if system_subtitle_setting else None
+
+        def _render_stock_reports(reports_data, report_start_date, report_end_date):
+            """Render every reports-page state with the complete navbar context."""
+            return render_template(
+                'company_stock_reports.html',
+                company=current_user,
+                reports_data=reports_data,
+                start_date=report_start_date.strftime('%Y-%m-%d'),
+                end_date=report_end_date.strftime('%Y-%m-%d'),
+                premium_features_enabled=premium_features_enabled,
+                premium_message=premium_message,
+                unread_private_messages_count=unread_private_messages_count,
+                unread_notifications_count=unread_notifications_count,
+                unread_community_messages_count=unread_community_messages_count,
+                current_logo_path=current_logo_path,
+                system_subtitle=system_subtitle,
+            )
+
+        if premium_features_enabled and not getattr(current_user, 'is_premium', False):
             flash(premium_message, 'error')
-            return render_template('company_stock_reports.html',
-                                   company=current_user,
-                                   premium_features_enabled=premium_features_enabled,
-                                   premium_message=premium_message,
-                                   reports_data={},
-                                   start_date=date.today().strftime('%Y-%m-%d'),
-                                   end_date=date.today().strftime('%Y-%m-%d'),
-                                   unread_private_messages_count=unread_private_messages_count,
-                                   unread_notifications_count=unread_notifications_count,
-                                   unread_community_messages_count=unread_community_messages_count)
+            today = date.today()
+            return _render_stock_reports({}, today, today)
 
         end_date_arg = request.args.get('end_date', '').strip()
         start_date_arg = request.args.get('start_date', '').strip()
@@ -9309,184 +9560,153 @@ def register_views(app):
         if start_date > end_date:
             start_date, end_date = end_date, start_date
 
-        report_days_count = (end_date - start_date).days + 1
-        if report_days_count == 0:
-            report_days_count = 1
+        # A very wide custom range can pull millions of history rows and make the
+        # Plus report time out. One year keeps the report useful and predictable.
+        max_report_days = 366
+        if (end_date - start_date).days + 1 > max_report_days:
+            start_date = end_date - timedelta(days=max_report_days - 1)
+            flash('تم قصر نطاق التقرير على آخر سنة لضمان سرعة عرض البيانات.', 'info')
 
-        import math
+        report_days_count = (end_date - start_date).days + 1
 
         reports_data = {}
 
         company_favorite_products = FavoriteProduct.query.filter_by(company_id=current_user.id).all()
 
         if not company_favorite_products:
-            return render_template('company_stock_reports.html',
-                                   company=current_user,
-                                   reports_data=reports_data,
-                                   start_date=start_date.strftime('%Y-%m-%d'),
-                                   end_date=end_date.strftime('%Y-%m-%d'),
-                                   premium_features_enabled=premium_features_enabled,
-                                   premium_message=premium_message)
+            return _render_stock_reports(reports_data, start_date, end_date)
 
-        # *** تحسين الأداء: query واحد يجيب كل السجلات دفعة واحدة بدلاً من N+1 queries ***
-        fav_product_names = [fp.product_name for fp in company_favorite_products]
+        # Fetch both the live products and their history in batches.  The history
+        # index (product_name, record_date) is added by migrate_report_history_index.py.
+        fav_product_names = list(dict.fromkeys(
+            fp.product_name for fp in company_favorite_products if fp.product_name
+        ))
+        company_warehouse_id = getattr(current_user, 'warehouse_id', None)
 
-        all_records = ProductStockHistory.query.filter(
-            ProductStockHistory.product_name.in_(fav_product_names),
-            ProductStockHistory.record_date >= start_date,
-            ProductStockHistory.record_date <= end_date
-        ).order_by(ProductStockHistory.product_name, ProductStockHistory.record_date).all()
+        live_products_query = ProductItem.query.filter(ProductItem.name.in_(fav_product_names))
+        if company_warehouse_id:
+            live_products_query = live_products_query.filter(
+                ProductItem.warehouse_id == company_warehouse_id
+            )
+        live_products_by_name = {}
+        for item in live_products_query.order_by(ProductItem.id.desc()).all():
+            live_products_by_name.setdefault(item.name, item)
+
+        history_load_failed = False
+        try:
+            history_query = ProductStockHistory.query.filter(
+                ProductStockHistory.product_name.in_(fav_product_names),
+                ProductStockHistory.record_date >= start_date,
+                ProductStockHistory.record_date <= end_date,
+            )
+            if company_warehouse_id:
+                history_query = history_query.filter(
+                    ProductStockHistory.warehouse_id == company_warehouse_id
+                )
+            all_records = history_query.order_by(
+                ProductStockHistory.product_name,
+                ProductStockHistory.record_date,
+                ProductStockHistory.recorded_at.desc(),
+                ProductStockHistory.id.desc(),
+            ).all()
+        except Exception:
+            # A report must never become a blank 500 page because history is being
+            # maintained or the database briefly times out.  Live balances remain
+            # available and the underlying failure is recorded in the server log.
+            db.session.rollback()
+            current_app.logger.exception(
+                'Unable to load stock history for company report: company_id=%s',
+                current_user.id,
+            )
+            flash('تعذر تحميل سجل الحركة مؤقتًا؛ تم عرض الرصيد الحالي المتاح.', 'error')
+            all_records = []
+            history_load_failed = True
 
         # تجميع السجلات حسب اسم الصنف
         records_by_product = {}
         for rec in all_records:
-            records_by_product.setdefault(rec.product_name, []).append(rec)
+            product_records = records_by_product.setdefault(rec.product_name, [])
+            # A product can have one snapshot per warehouse on the same date.
+            # Keep only the latest snapshot for the date; mixing warehouse
+            # balances creates false stock drops and inflated recommendations.
+            if not product_records or product_records[-1].record_date != rec.record_date:
+                product_records.append(rec)
 
         for fav_product in company_favorite_products:
             product_name_for_report = fav_product.product_name
             records = records_by_product.get(product_name_for_report, [])
 
             if not records:
+                live_item = live_products_by_name.get(product_name_for_report)
+                # ProductItem.quantity is stored as text, while the report template
+                # renders it as a number.  Convert it here so a favourite without
+                # history cannot make the reports page fail with a TypeError.
+                has_live_qty = bool(live_item and live_item.quantity is not None)
+                live_qty = whole_stock_units(
+                    live_item.quantity if has_live_qty else None
+                )
+
                 reports_data[product_name_for_report] = {
-                    'message': 'لا توجد بيانات تاريخية كافية لهذا الصنف في الفترة المحددة لتوليد التقرير.',
-                    'start_quantity': 'غير متوفر',
-                    'end_quantity': 'غير متوفر',
+                    'message': (
+                        'تعذر تحميل سجل الحركة مؤقتًا؛ تم عرض الرصيد الحالي المتاح.'
+                        if history_load_failed and has_live_qty else
+                        'تعذر تحميل سجل الحركة مؤقتًا.'
+                        if history_load_failed else
+                        'رصيد حالي متوفر في المخزن.'
+                        if has_live_qty else
+                        'لا يوجد رصيد حالي أو سجل تاريخي متاح لهذا الصنف.'
+                    ),
+                    'start_quantity': live_qty,
+                    'end_quantity': live_qty,
                     'total_decrease_in_period': 0.0,
                     'total_increase_in_period': 0.0,
                     'daily_sales_average': 0.0,
                     'suggested_restock_quantity': 0,
-                    'suggested_restock_message': 'لا توجد بيانات تاريخية كافية. ننصح بتوريد كمية بناءً على توقعاتك.'
+                    'suggested_restock_message': 'الرصيد المباشر مأخوذ من أحدث رفع للمخزن.'
                 }
                 continue
 
             numeric_records = []
             for rec in records:
-                try:
-                    numeric_qty = float(rec.quantity)
-                    numeric_records.append({'date': rec.record_date, 'quantity': numeric_qty})
-                except (ValueError, TypeError):
-                    numeric_records.append({'date': rec.record_date, 'quantity': 0.0})
-
-            if len(numeric_records) < 1:
-                 reports_data[product_name_for_report] = {
-                    'message': 'لا توجد بيانات كمية رقمية صالحة لهذا الصنف لتوليد التقرير.',
-                    'start_quantity': 'غير متوفر',
-                    'end_quantity': 'غير متوفر',
-                    'total_decrease_in_period': 0.0,
-                    'total_increase_in_period': 0.0,
-                    'daily_sales_average': 0.0,
-                    'suggested_restock_quantity': 0,
-                    'suggested_restock_message': 'لا توجد بيانات كمية رقمية صالحة. ننصح بتوريد كمية بناءً على توقعاتك.'
-                }
-                 continue
+                numeric_records.append({
+                    'date': rec.record_date,
+                    'quantity': whole_stock_units(rec.quantity),
+                })
 
             numeric_records.sort(key=lambda x: x['date'])
 
-            total_increase_in_period = 0.0
-            total_decrease_in_period = 0.0
-
-            if len(numeric_records) > 1:
-                for i in range(1, len(numeric_records)):
-                    diff = numeric_records[i]['quantity'] - numeric_records[i-1]['quantity']
-                    if diff > 0:
-                        total_increase_in_period += diff
-                    elif diff < 0:
-                        total_decrease_in_period += abs(diff)
-
-            current_stock = numeric_records[-1]['quantity']
-
-            daily_sales_average = total_decrease_in_period / report_days_count if report_days_count > 0 else 0
-
-            quantity_needed_for_next_month = daily_sales_average * 30
-            suggested_restock_calculated = quantity_needed_for_next_month - current_stock
-
-            suggested_restock_value = 0
-            if suggested_restock_calculated <= 0:
-                suggested_restock_message = "المخزون الحالي يكفي، لا حاجة للتوريد."
-            else:
-                suggested_restock_value = round(suggested_restock_calculated)
-                suggested_restock_message = f"ننصح بتوريد {suggested_restock_value} وحدة لتغطية استهلاك الشهر القادم."
-
-            # Smart metrics: trend, moving average, forecast, safety stock
-            last_7_days = numeric_records[-7:] if len(numeric_records) >= 7 else numeric_records[:]
-            trend = 0.0
-            if len(last_7_days) >= 2:
-                trend = last_7_days[-1]['quantity'] - last_7_days[0]['quantity']
-
-            rolling_window = 7 if len(numeric_records) >= 7 else max(2, len(numeric_records))
-            moving_avg_sales = 0.0
-            if len(numeric_records) >= 2:
-                recent = numeric_records[-rolling_window:]
-                dec_sum = 0.0
-                intervals = 0
-                for i in range(1, len(recent)):
-                    d = recent[i]['quantity'] - recent[i-1]['quantity']
-                    if d < 0:
-                        dec_sum += abs(d)
-                    intervals += 1
-                moving_avg_sales = (dec_sum / intervals) if intervals > 0 else 0.0
-
-            base_avg = moving_avg_sales if moving_avg_sales > 0 else daily_sales_average
-            forecast_30_days = base_avg * 30
-
-            daily_changes = []
-            recent_calc = numeric_records[-8:] if len(numeric_records) >= 8 else numeric_records
-            for i in range(1, len(recent_calc)):
-                change = recent_calc[i]['quantity'] - recent_calc[i-1]['quantity']
-                if change < 0:
-                    daily_changes.append(abs(change))
-            safety_stock = 0.0
-            if len(daily_changes) >= 2:
-                mean_change = sum(daily_changes) / len(daily_changes)
-                variance = sum((x - mean_change) ** 2 for x in daily_changes) / (len(daily_changes) - 1)
-                std_dev = math.sqrt(variance)
-                safety_stock = 1.65 * std_dev * 7
-
-            recommended_restock = max(0, round(forecast_30_days - current_stock + safety_stock))
-            if recommended_restock == 0 and suggested_restock_value > 0:
-                recommended_restock = suggested_restock_value
+            metrics = calculate_stock_metrics(
+                (record['quantity'] for record in numeric_records),
+                report_days_count,
+            )
+            total_increase_in_period = metrics['total_increase']
+            total_decrease_in_period = metrics['total_decrease']
+            daily_sales_average = metrics['daily_consumption']
+            recommended_restock = metrics['recommended_restock']
+            target_coverage_days = metrics['target_coverage_days']
+            suggested_restock_message = (
+                f"ننصح بتوريد {recommended_restock} عبوة لتغطية {target_coverage_days} يوم "
+                "دون تجاوز المنصرف في الفترة المحددة."
+                if recommended_restock > 0 else
+                "المخزون الحالي يكفي، لا حاجة للتوريد."
+            )
 
             reports_data[product_name_for_report] = {
-                'start_quantity': records[0].quantity,
-                'end_quantity': records[-1].quantity,
+                'start_quantity': metrics['quantities'][0],
+                'end_quantity': metrics['current_stock'],
                 'total_decrease_in_period': total_decrease_in_period,
                 'total_increase_in_period': total_increase_in_period,
                 'daily_sales_average': daily_sales_average,
-                'moving_average_sales': moving_avg_sales,
-                'trend_last_7_days': trend,
-                'forecast_next_30_days': forecast_30_days,
-                'safety_stock': safety_stock,
+                'moving_average_sales': daily_sales_average,
+                'trend_last_7_days': metrics['current_stock'] - metrics['quantities'][0],
+                'forecast_next_30_days': metrics['target_stock'],
+                'safety_stock': 0,
                 'suggested_restock_quantity': recommended_restock,
-                'suggested_restock_message': f"ننصح بتوريد {recommended_restock} وحدة لتغطية استهلاك الشهر القادم مع هامش أمان." if recommended_restock > 0 else "المخزون الحالي يكفي، لا حاجة للتوريد.",
+                'suggested_restock_message': suggested_restock_message,
                 'message': None
             }
 
-        # حساب عدد الإشعارات غير المقروءة
-        unread_notifications_count = get_unread_notifications_count(current_user.id)
-        
-        # حساب عدد الرسائل الخاصة غير المقروءة
-        unread_private_messages_count = PrivateMessage.query.filter_by(
-            receiver_id=current_user.id,
-            is_read=False,
-            is_deleted_by_receiver=False
-        ).count()
-        
-        # حساب عدد رسائل المجتمع غير المقروءة
-        unread_community_messages_count = CommunityMessage.query.filter_by(
-            is_read_by_company=False,
-            sender_type='admin'
-        ).count()
-
-        return render_template('company_stock_reports.html',
-                               company=current_user,
-                               reports_data=reports_data,
-                               start_date=start_date.strftime('%Y-%m-%d'),
-                               end_date=end_date.strftime('%Y-%m-%d'),
-                               premium_features_enabled=premium_features_enabled,
-                               premium_message=premium_message,
-                               unread_private_messages_count=unread_private_messages_count,
-                               unread_notifications_count=unread_notifications_count,
-                               unread_community_messages_count=unread_community_messages_count)
+        return _render_stock_reports(reports_data, start_date, end_date)
 
     @app.route('/search')
     @login_required
@@ -9789,22 +10009,96 @@ def register_views(app):
         from models import BlockedProduct, ProductItem
         blocked_products_set = {bp.product_name.lower() for bp in BlockedProduct.query.all()}
         
-        # Get latest data for all products to update favorites
-        all_products_map = {p.name.lower(): p for p in ProductItem.query.all()}
-        
+        # Get latest data for products to update favorites
+        from models import Warehouse, ProductStockHistory
+        # إذا كانت الشركة مرتبطة بمخزن محدد، نأخذ رصيد المنتج من هذا المخزن
+        user_warehouse_id = getattr(current_user, 'warehouse_id', None)
+        if user_warehouse_id:
+            all_products = ProductItem.query.filter_by(warehouse_id=user_warehouse_id).all()
+        else:
+            all_products = db.session.query(ProductItem).outerjoin(
+                Warehouse, ProductItem.warehouse_id == Warehouse.id
+            ).filter(
+                db.or_(Warehouse.is_active == True, Warehouse.id == None, ProductItem.warehouse_id == None)
+            ).all()
+            
+        import re as _re
+
+        def _norm_name(n):
+            """تطبيع الاسم: lowercase + تقليص الفراغات المتعددة."""
+            return _re.sub(r'\s+', ' ', (n or '').strip().lower())
+
+        # تجميع الأصناف حسب الاسم المُطبَّع لاختيار الأحدث والأوفر رصيداً
+        all_products_by_name = {}
+        for p in all_products:
+            if not p.name:
+                continue
+            k = _norm_name(p.name)
+            if k not in all_products_by_name:
+                all_products_by_name[k] = []
+            all_products_by_name[k].append(p)
+
+        def _select_best_item_from_list(items):
+            if not items:
+                return None
+            def _sort_key(item):
+                qty_str = (item.quantity or '').strip()
+                try:
+                    q_val = float(qty_str)
+                except ValueError:
+                    q_val = -1.0
+                is_pos = 1 if q_val > 0 else 0
+                return (is_pos, q_val, item.id or 0)
+            sorted_items = sorted(items, key=_sort_key, reverse=True)
+            return sorted_items[0]
+
+        def _find_best_product(fav_name):
+            """ابحث عن أفضل ProductItem مطابق لاسم المفضلة مع تفضيل الكميات المتاحة."""
+            key = _norm_name(fav_name)
+            # 1. تطابق تام
+            if key in all_products_by_name:
+                return _select_best_item_from_list(all_products_by_name[key])
+            # 2. يبدأ بكلمة البحث أو يحتوي عليها
+            best_candidates = []
+            for norm_k, items in all_products_by_name.items():
+                if norm_k.startswith(key) or key.startswith(norm_k):
+                    best_candidates.extend(items)
+            if best_candidates:
+                return _select_best_item_from_list(best_candidates)
+
+            # 3. fallback: أعلى تقاطع كلمات
+            key_words = set(key.split())
+            best_candidates, best_score = [], 0
+            for norm_k, items in all_products_by_name.items():
+                common = len(key_words & set(norm_k.split()))
+                if common > best_score and common >= max(1, len(key_words) - 1):
+                    best_score = common
+                    best_candidates = items
+            if best_candidates:
+                return _select_best_item_from_list(best_candidates)
+            return None
+
         filtered_favorites = []
         for fp in favorite_products:
-            if fp.product_name.lower() in blocked_products_set:
+            fp_key = _norm_name(fp.product_name)
+            if fp_key in blocked_products_set or (fp.product_name or '').strip().lower() in blocked_products_set:
                 continue
-            
-            # Update quantity and price if available in the main products table
-            product_data = all_products_map.get(fp.product_name.lower())
-            if product_data:
+
+            product_data = _find_best_product(fp.product_name)
+            if product_data and product_data.quantity is not None:
                 fp.current_quantity = product_data.quantity
-                fp.current_price = product_data.price
+                fp.current_price = product_data.price if product_data.price else fp.price
             else:
-                fp.current_quantity = fp.quantity
-                fp.current_price = fp.price
+                stock_hist = ProductStockHistory.query.filter_by(product_name=fp.product_name).order_by(
+                    ProductStockHistory.record_date.desc(), ProductStockHistory.recorded_at.desc()
+                ).first()
+                if stock_hist and stock_hist.quantity is not None:
+                    fp.current_quantity = str(stock_hist.quantity)
+                    fp.current_price = stock_hist.price if stock_hist.price else fp.price
+                else:
+                    fp.current_quantity = fp.quantity
+                    fp.current_price = fp.price
+
                 
             if fp.added_at:
                 fp.added_at_formatted = fp.added_at.replace(tzinfo=pytz.utc).astimezone(CAIRO_TIMEZONE)
@@ -10903,6 +11197,68 @@ def register_views(app):
             current_app.logger.error(f'خطأ في إرسال رسالة من تقرير طلبات توبي: {e}', exc_info=True)
             return jsonify({'success': False, 'error': 'حدث خطأ أثناء إرسال الرسالة'}), 500
 
+    @app.route('/company_presence', methods=['POST'])
+    @login_required
+    def company_presence():
+        """Record a live web-presence signal for the currently open company page."""
+        if session.get('user_type') != 'company' or not isinstance(current_user, Company):
+            return jsonify({'success': False, 'error': 'غير مصرح'}), 403
+
+        try:
+            # Presence is intentionally forced: the browser sends this only
+            # while its tab is visible, once per minute.
+            update_company_client_context(
+                current_user,
+                source_hint='web',
+                commit=True,
+                force=True,
+            )
+            return jsonify({
+                'success': True,
+                'last_seen': current_user.last_client_seen_at.isoformat(),
+            })
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('Unable to update company presence: id=%s', current_user.id)
+            return jsonify({'success': False, 'error': 'تعذر تحديث حالة الظهور'}), 500
+
+    @app.route('/admin/companies_activity_presence')
+    @login_required
+    def companies_activity_presence():
+        """Return live-presence data for the activity report without a page reload."""
+        if session.get('user_type') != 'admin':
+            return jsonify({'success': False, 'error': 'غير مصرح'}), 403
+
+        now_cairo = datetime.now(CAIRO_TIMEZONE)
+        presence_rows = []
+        for company in Company.query.all():
+            try:
+                activity = company_activity_snapshot(company, now=now_cairo)
+                presence_rows.append({
+                    'id': company.id,
+                    'last_activity_formatted': activity.formatted_timestamp,
+                    'activity_source': activity.source,
+                    'time_ago': activity.time_ago,
+                    'activity_class': activity.css_class,
+                    'is_online': activity.is_online,
+                })
+            except Exception:
+                current_app.logger.exception('Unable to calculate presence: id=%s', company.id)
+                presence_rows.append({
+                    'id': company.id,
+                    'last_activity_formatted': None,
+                    'activity_source': None,
+                    'time_ago': None,
+                    'activity_class': 'never',
+                    'is_online': False,
+                })
+
+        return jsonify({
+            'success': True,
+            'online_now_count': sum(row['is_online'] for row in presence_rows),
+            'companies': presence_rows,
+        })
+
     @app.route('/admin/companies_activity_report')
     @login_required
     def companies_activity_report():
@@ -10919,120 +11275,90 @@ def register_views(app):
             companies = Company.query.all()
             app.logger.info(f"عدد الشركات: {len(companies)}")
             
-            # Calculate statistics
+            # Activity is deliberately based only on verifiable events.  In
+            # particular, a created_at value must never masquerade as a login.
             total_companies = len(companies)
             active_today = 0
-            active_this_week = 0
+            active_last_7_days = 0
             inactive_count = 0
-            
+            invalid_activity_count = 0
+            online_now_count = 0
             now_cairo = datetime.now(CAIRO_TIMEZONE)
-            today_start = now_cairo.replace(hour=0, minute=0, second=0, microsecond=0)
-            week_ago = now_cairo - timedelta(days=7)
-            app.logger.info(f"الآن: {now_cairo}")
-            
-            # Prepare company data with activity info
+            now_utc = datetime.utcnow()
+            subscriptions_normalized = False
+
+            # Prepare company data with one shared, auditable definition of
+            # activity for both the table and all summary cards.
             companies_data = []
             for company in companies:
                 try:
-                    # Initialize variables
-                    last_login_cairo = None
-                    last_login_formatted = None
-                    time_ago = None
-                    activity_class = 'time-old'
-                    
-                    # Check if last_login exists, otherwise use created_at
-                    login_date = getattr(company, 'last_login', None) or getattr(company, 'created_at', None)
-                    
-                    if login_date and login_date is not None:
-                        # Simple conversion
-                        try:
-                            # Assume login_date is UTC
-                            if hasattr(login_date, 'replace'):
-                                if login_date.tzinfo is None:
-                                    last_login_cairo = login_date.replace(tzinfo=pytz.utc).astimezone(CAIRO_TIMEZONE)
-                                else:
-                                    last_login_cairo = login_date.astimezone(CAIRO_TIMEZONE)
-                            else:
-                                last_login_cairo = login_date
-                        except:
-                            # Fallback: treat as naive datetime
-                            last_login_cairo = login_date
-                        
-                        # Format the datetime
-                        try:
-                            last_login_formatted = last_login_cairo.strftime('%Y-%m-%d %I:%M %p')
-                        except:
-                            last_login_formatted = str(login_date)
-                        
-                        # Calculate time difference
-                        try:
-                            if last_login_cairo.tzinfo:
-                                time_diff = now_cairo - last_login_cairo
-                            else:
-                                time_diff = now_cairo.replace(tzinfo=None) - last_login_cairo
-                            
-                            days = time_diff.days
-                            
-                            # Determine activity status
-                            if last_login_cairo >= today_start:
-                                active_today += 1
-                                time_ago = 'اليوم'
-                                activity_class = 'time-recent'
-                            elif last_login_cairo >= week_ago:
-                                active_this_week += 1
-                                if days == 1:
-                                    time_ago = 'أمس'
-                                else:
-                                    time_ago = f'منذ {days} أيام'
-                                activity_class = 'time-week'
-                            else:
-                                if days < 30:
-                                    time_ago = f'منذ {days} يوم'
-                                    activity_class = 'time-week'
-                                elif days < 365:
-                                    months = days // 30
-                                    time_ago = f'منذ {months} شهر' if months == 1 else f'منذ {months} أشهر'
-                                    activity_class = 'time-old'
-                                else:
-                                    years = days // 365
-                                    time_ago = f'منذ {years} سنة' if years == 1 else f'منذ {years} سنوات'
-                                    activity_class = 'time-old'
-                        except:
-                            time_ago = 'غير محدد'
-                            activity_class = 'time-old'
-                    else:
+                    activity = company_activity_snapshot(company, now=now_cairo)
+                    subscription = company_subscription_snapshot(company, now=now_utc)
+                    # Persist only flags proven stale by their expiry date,
+                    # after capturing the truthful historical label for this row.
+                    subscriptions_normalized = deactivate_expired_subscription(
+                        company,
+                        now=now_utc,
+                    ) or subscriptions_normalized
+
+                    if activity.is_today:
+                        active_today += 1
+                    if activity.is_in_last_7_days:
+                        # Includes today's companies, because "last 7 days" is
+                        # a rolling period rather than a separate bucket.
+                        active_last_7_days += 1
+                    if activity.is_inactive:
                         inactive_count += 1
-                    
+                    if activity.has_invalid_timestamp:
+                        invalid_activity_count += 1
+                    if activity.is_online:
+                        online_now_count += 1
+
                     companies_data.append({
+                        'id': company.id,
                         'company_name': company.company_name or 'غير محدد',
                         'username': company.username or 'غير محدد',
-                        'last_login': last_login_cairo,
-                        'last_login_formatted': last_login_formatted,
-                        'time_ago': time_ago,
-                        'activity_class': activity_class,
-                        'is_active': getattr(company, 'is_active', False),
-                        'is_premium': getattr(company, 'is_premium', False)
+                        'last_activity': activity.timestamp,
+                        'last_activity_formatted': activity.formatted_timestamp,
+                        'activity_source': activity.source,
+                        'time_ago': activity.time_ago,
+                        'activity_class': activity.css_class,
+                        'is_online': activity.is_online,
+                        'is_active': bool(getattr(company, 'is_active', False)),
+                        'is_premium': subscription.is_active,
+                        'subscription_label': subscription.label,
+                        'subscription_class': subscription.css_class,
                     })
-                except Exception as e:
-                    app.logger.error(f'خطأ في معالجة شركة: {str(e)}')
-                    # Add company with minimal data
+                except Exception:
+                    app.logger.exception('خطأ في معالجة نشاط الشركة: id=%s', company.id)
+                    # A failed row is shown as having no verified activity. It
+                    # is counted as inactive instead of being silently omitted.
+                    inactive_count += 1
                     companies_data.append({
+                        'id': company.id,
                         'company_name': getattr(company, 'company_name', 'غير محدد'),
                         'username': getattr(company, 'username', 'غير محدد'),
-                        'last_login': None,
-                        'last_login_formatted': None,
+                        'last_activity': None,
+                        'last_activity_formatted': None,
+                        'activity_source': None,
                         'time_ago': None,
                         'activity_class': 'time-old',
-                        'is_active': False,
-                        'is_premium': False
+                        'is_online': False,
+                        'is_active': bool(getattr(company, 'is_active', False)),
+                        'is_premium': bool(getattr(company, 'is_premium', False)),
+                        'subscription_label': 'غير محدد',
+                        'subscription_class': 'regular',
                     })
+
+            if subscriptions_normalized:
+                db.session.commit()
             
-            # Sort: companies with login first (most recent), then never logged
+            # Sort: companies with verified activity first (most recent), then no activity.
             def sort_key(x):
-                if x['last_login'] is None:
-                    return (1, 0)  # No login - put last
+                if x['last_activity'] is None:
+                    return (2, 0)  # No verified activity - put last
                 try:
-                    return (0, -x['last_login'].timestamp())
+                    return (0 if x['is_online'] else 1, -x['last_activity'].timestamp())
                 except:
                     return (0, 0)
             
@@ -11048,8 +11374,10 @@ def register_views(app):
                     companies=companies_data,
                     total_companies=total_companies,
                     active_today=active_today,
-                    active_this_week=active_this_week,
-                    inactive_count=inactive_count
+                    active_last_7_days=active_last_7_days,
+                    inactive_count=inactive_count,
+                    invalid_activity_count=invalid_activity_count,
+                    online_now_count=online_now_count
                 )
             except Exception as template_error:
                 app.logger.error(f"Template error: {str(template_error)}")
@@ -11059,8 +11387,10 @@ def register_views(app):
                     companies=companies_data,
                     total_companies=total_companies,
                     active_today=active_today,
-                    active_this_week=active_this_week,
-                    inactive_count=inactive_count
+                    active_last_7_days=active_last_7_days,
+                    inactive_count=inactive_count,
+                    invalid_activity_count=invalid_activity_count,
+                    online_now_count=online_now_count
                 )
             
         except Exception as e:
@@ -11231,4 +11561,3 @@ def register_views(app):
     def test_ai_debug():
         """Debug page for testing AI suggestions functionality"""
         return render_template('test_ai_debug.html')
-

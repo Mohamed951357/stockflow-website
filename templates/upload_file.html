@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>رفع ملف - نظام حجز المواعيد</title>
@@ -683,47 +683,58 @@
         }
 
         const uploadStatusUrl = "{{ url_for('upload_file_status') }}";
-        const processingActive = {{ 'true' if processing_warehouse and processing_warehouse.is_processing else 'false' }};
+        let _pollProcessingActive = {{ 'true' if processing_warehouse and processing_warehouse.is_processing else 'false' }};
+        let _pollReloadedAfterFinish = false;
 
-        if (processingActive) {
-            let pageReloadedAfterFinish = false;
+        // الـ polling يشتغل دايماً كل 5 ثواني — يكتشف المعالجة حتى لو بدأت بعد تحميل الصفحة
+        window.setInterval(async function() {
+            try {
+                const response = await fetch(uploadStatusUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    cache: 'no-store'
+                });
 
-            window.setInterval(async function() {
-                try {
-                    const response = await fetch(uploadStatusUrl, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        cache: 'no-store'
-                    });
+                if (!response.ok) return;
 
-                    if (!response.ok) {
-                        return;
-                    }
+                const data = await response.json();
+                if (!data.success) return;
 
-                    const data = await response.json();
-                    if (!data.success || !data.has_report) {
-                        return;
-                    }
-
-                    if (data.status === 'cancelling') {
-                        const stopButton = document.getElementById('forceStopUploadButton');
-                        if (stopButton) {
-                            stopButton.disabled = true;
-                            stopButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الإيقاف...';
-                        }
-                    }
-
-                    if (!data.is_processing && !pageReloadedAfterFinish) {
-                        pageReloadedAfterFinish = true;
+                // لو المعالجة بدأت من جديد (مثلاً من البريدج) — حدّث البانر
+                if (data.has_report && data.is_processing && !_pollProcessingActive) {
+                    _pollProcessingActive = true;
+                    _pollReloadedAfterFinish = false;
+                    const banner = document.getElementById('processingBanner');
+                    if (!banner) {
+                        // المعالجة بدأت بينما الصفحة مفتوحة — أعد التحميل عشان يظهر البانر
                         window.location.reload();
+                        return;
                     }
-                } catch (error) {
-                    console.error('Upload status polling failed:', error);
                 }
-            }, 5000);
-        }
+
+                if (!data.has_report) return;
+
+                if (data.status === 'cancelling') {
+                    const stopButton = document.getElementById('forceStopUploadButton');
+                    if (stopButton) {
+                        stopButton.disabled = true;
+                        stopButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الإيقاف...';
+                    }
+                }
+
+                // المعالجة انتهت — أعد تحميل الصفحة مرة واحدة فقط
+                if (_pollProcessingActive && !data.is_processing && !_pollReloadedAfterFinish) {
+                    _pollReloadedAfterFinish = true;
+                    window.location.reload();
+                }
+
+                _pollProcessingActive = !!data.is_processing;
+            } catch (error) {
+                console.error('Upload status polling failed:', error);
+            }
+        }, 5000);
     </script>
+
+
 
     <script>
         /* ══════════════════════════════════════════════════════════════

@@ -1182,9 +1182,6 @@
                                     
                                     <div class="mt-2" style="font-size: 0.75rem; color: #adb5bd;">
                                         <i class="fas fa-clock me-1"></i> أضيف: {{ product.added_at_formatted.strftime('%d/%m/%Y') if product.added_at_formatted else '' }}
-                                        {% if product.last_modified_formatted and product.last_modified_formatted != product.added_at_formatted %}
-                                        <i class="fas fa-sync-alt ms-2 me-1"></i> عُدل: {{ product.last_modified_formatted.strftime('%d/%m/%Y') if product.last_modified_formatted else '' }}
-                                        {% endif %}
                                     </div>
                                 </div>
 

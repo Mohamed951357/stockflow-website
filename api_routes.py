@@ -15,7 +15,7 @@ from models import db, Company, ProductStockHistory, Appointment, Notification, 
 from sqlalchemy import or_, and_, desc, func
 from sqlalchemy.exc import OperationalError
 from upload_control import UploadCancelledError, clear_upload_cancel, is_upload_cancel_requested
-from utils import find_company_for_login
+from utils import find_company_for_login, update_company_client_context, issue_user_session_token
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -53,6 +53,11 @@ def _get_erp_processing_stale_minutes():
 # حد أقصى لعدد صفوف سجل المخزون اليومي (لتوفير المساحة)
 _STOCK_HISTORY_MAX_ROWS = int(os.environ.get('STOCK_HISTORY_MAX_ROWS', '300000'))
 _STOCK_HISTORY_KEEP_DAYS = int(os.environ.get('STOCK_HISTORY_KEEP_DAYS', '90'))
+_STOCK_HISTORY_PRUNE_BATCH_SIZE = max(
+    1_000,
+    min(50_000, int(os.environ.get('STOCK_HISTORY_PRUNE_BATCH_SIZE', '10000')))
+)
+_STOCK_HISTORY_PRUNE_LOCK = threading.Lock()
 
 
 def _is_sqlite_lock_error(exc):
@@ -473,7 +478,47 @@ def _iter_chunks(values, chunk_size=400):
         yield sequence[index:index + chunk_size]
 
 
-def _load_latest_daily_stock_history_map(product_names, target_date=None, warehouse_id=None):
+def _is_single_warehouse_legacy_history(warehouse_id):
+    """Return True only while the system still has its one original warehouse.
+
+    Multi-warehouse support was added after stock history already existed in some
+    installations.  Those old rows have ``warehouse_id = NULL``.  Treating them
+    as belonging to the sole warehouse lets a normal sync continue safely until
+    the one-off migration is run, without ever mixing data once a second
+    warehouse exists.
+    """
+    if warehouse_id is None:
+        return False
+
+    try:
+        warehouse_ids = [row[0] for row in db.session.query(Warehouse.id).limit(2).all()]
+        return len(warehouse_ids) == 1 and int(warehouse_ids[0]) == int(warehouse_id)
+    except Exception:
+        # Legacy history is optional fallback data; never allow this check to
+        # interrupt a stock update.
+        db.session.rollback()
+        return False
+
+
+def _apply_history_warehouse_scope(query, warehouse_id, include_legacy_unassigned=False):
+    if warehouse_id is None or not hasattr(ProductStockHistory, 'warehouse_id'):
+        return query
+
+    if include_legacy_unassigned:
+        return query.filter(or_(
+            ProductStockHistory.warehouse_id == warehouse_id,
+            ProductStockHistory.warehouse_id.is_(None)
+        ))
+
+    return query.filter(ProductStockHistory.warehouse_id == warehouse_id)
+
+
+def _load_latest_daily_stock_history_map(
+    product_names,
+    target_date=None,
+    warehouse_id=None,
+    include_legacy_unassigned=False
+):
     target_date = target_date or date.today()
     history_map = {}
 
@@ -485,8 +530,11 @@ def _load_latest_daily_stock_history_map(product_names, target_date=None, wareho
                 ProductStockHistory.product_name.in_(name_chunk)
             )
         )
-        if warehouse_id is not None and hasattr(ProductStockHistory, 'warehouse_id'):
-            query = query.filter(ProductStockHistory.warehouse_id == warehouse_id)
+        query = _apply_history_warehouse_scope(
+            query,
+            warehouse_id,
+            include_legacy_unassigned=include_legacy_unassigned
+        )
 
         rows = query.order_by(
             ProductStockHistory.product_name.asc(),
@@ -500,7 +548,17 @@ def _load_latest_daily_stock_history_map(product_names, target_date=None, wareho
     return history_map
 
 
-def _upsert_daily_stock_history(item_code, product_name, quantity, price=None, discount=None, history_cache=None, record_date=None, warehouse_id=None):
+def _upsert_daily_stock_history(
+    item_code,
+    product_name,
+    quantity,
+    price=None,
+    discount=None,
+    history_cache=None,
+    record_date=None,
+    warehouse_id=None,
+    include_legacy_unassigned=False
+):
     """Keep at most one stock history row per product per day."""
     today = record_date or date.today()
     history_entry = None
@@ -516,8 +574,11 @@ def _upsert_daily_stock_history(item_code, product_name, quantity, price=None, d
                 product_name=product_name,
                 record_date=today
             )
-            if warehouse_id is not None and hasattr(ProductStockHistory, 'warehouse_id'):
-                query = query.filter(ProductStockHistory.warehouse_id == warehouse_id)
+            query = _apply_history_warehouse_scope(
+                query,
+                warehouse_id,
+                include_legacy_unassigned=include_legacy_unassigned
+            )
             history_entry = query.order_by(ProductStockHistory.recorded_at.desc()).first()
         if history_cache is not None and history_entry:
             history_cache[product_name] = history_entry
@@ -554,28 +615,43 @@ def _prune_stock_history_if_needed():
     1. احتفظ فقط بآخر _STOCK_HISTORY_KEEP_DAYS يوم من السجلات.
     2. إذا تخطى إجمالي الصفوف _STOCK_HISTORY_MAX_ROWS، احذف الأقدم حتى
        تعود إلى 80% من الحد الأقصى.
+
+    الحذف محدود بدفعة واحدة في كل تشغيل. هذا مهم لقواعد البيانات القديمة
+    حتى لا يحذف ملايين الصفوف في عملية واحدة أو يعطل التقارير أثناء التنظيف.
     """
     try:
         cutoff_date = (datetime.utcnow() - timedelta(days=_STOCK_HISTORY_KEEP_DAYS)).date()
 
-        # حذف السجلات الأقدم من الحد الزمني
-        deleted_by_date = ProductStockHistory.query.filter(
-            ProductStockHistory.record_date < cutoff_date
-        ).delete(synchronize_session=False)
+        # حذف السجلات الأقدم من الحد الزمني على دفعات صغيرة وقابلة للاستئناف.
+        # نرجع بعد هذه الدفعة حتى لا يجتمع تنظيف العمر والحد الأقصى في نفس الوقت.
+        expired_ids = (
+            db.session.query(ProductStockHistory.id)
+            .filter(ProductStockHistory.record_date < cutoff_date)
+            .order_by(ProductStockHistory.record_date.asc(), ProductStockHistory.id.asc())
+            .limit(_STOCK_HISTORY_PRUNE_BATCH_SIZE)
+            .all()
+        )
+        expired_id_list = [row[0] for row in expired_ids]
+        deleted_by_date = 0
+        if expired_id_list:
+            deleted_by_date = ProductStockHistory.query.filter(
+                ProductStockHistory.id.in_(expired_id_list)
+            ).delete(synchronize_session=False)
 
         if deleted_by_date > 0:
             db.session.commit()
             current_app.logger.info(
-                'Stock history pruner: deleted %d rows older than %s.',
-                deleted_by_date, cutoff_date
+                'Stock history pruner: deleted %d rows older than %s (batch size %d).',
+                deleted_by_date, cutoff_date, _STOCK_HISTORY_PRUNE_BATCH_SIZE
             )
+            return
 
         # فحص الحد الأقصى للصفوف
         total_rows = db.session.query(db.func.count(ProductStockHistory.id)).scalar() or 0
         if total_rows > _STOCK_HISTORY_MAX_ROWS:
             # احتفظ بـ 80% من الحد الأقصى (حذف الأقدم أولاً)
             target_rows = int(_STOCK_HISTORY_MAX_ROWS * 0.8)
-            rows_to_delete = total_rows - target_rows
+            rows_to_delete = min(total_rows - target_rows, _STOCK_HISTORY_PRUNE_BATCH_SIZE)
 
             # نجلب IDs الأقدم ونحذفها
             oldest_ids = (
@@ -592,12 +668,210 @@ def _prune_stock_history_if_needed():
                 ).delete(synchronize_session=False)
                 db.session.commit()
                 current_app.logger.info(
-                    'Stock history pruner: deleted %d rows (cap exceeded: %d > %d).',
-                    len(oldest_id_list), total_rows, _STOCK_HISTORY_MAX_ROWS
+                    'Stock history pruner: deleted %d rows (cap exceeded: %d > %d; batch size %d).',
+                    len(oldest_id_list), total_rows, _STOCK_HISTORY_MAX_ROWS,
+                    _STOCK_HISTORY_PRUNE_BATCH_SIZE
                 )
     except Exception:
         db.session.rollback()
         current_app.logger.exception('Stock history pruner failed (non-fatal).')
+
+
+def _schedule_stock_history_prune(app):
+    """Run history retention after the response, never in the ERP sync request.
+
+    A legacy database can contain millions of rows.  Retention is useful, but a
+    large delete must not turn an otherwise successful stock upload into a 500
+    response at the reverse proxy.
+    """
+    if not _STOCK_HISTORY_PRUNE_LOCK.acquire(blocking=False):
+        return False
+
+    def worker():
+        try:
+            with app.app_context():
+                try:
+                    _prune_stock_history_if_needed()
+                except Exception:
+                    app.logger.exception('Background stock history pruner failed (non-fatal).')
+                finally:
+                    db.session.remove()
+        finally:
+            _STOCK_HISTORY_PRUNE_LOCK.release()
+
+    threading.Thread(
+        target=worker,
+        daemon=True,
+        name=f'stock-history-prune-{int(time.time())}'
+    ).start()
+    return True
+
+
+def _schedule_stock_decrease_notifications(app, stock_decrease_events):
+    """Keep optional customer alerts outside the critical inventory transaction."""
+    if not stock_decrease_events:
+        return
+
+    def worker():
+        with app.app_context():
+            try:
+                for product_name, old_quantity, new_quantity in stock_decrease_events:
+                    _notify_premium_on_stock_decrease(
+                        product_name,
+                        old_quantity,
+                        new_quantity
+                    )
+            except Exception:
+                app.logger.exception('Background stock decrease notification failed (non-fatal).')
+            finally:
+                db.session.remove()
+
+    threading.Thread(
+        target=worker,
+        daemon=True,
+        name=f'stock-decrease-notifications-{int(time.time())}'
+    ).start()
+
+
+def _parse_quantity_float(qty_str):
+    """محاولة تحويل نص الكمية إلى رقم عشري. تُرجع None عند الفشل."""
+    if qty_str is None:
+        return None
+    try:
+        cleaned = str(qty_str).strip().replace(',', '').replace('\u066b', '').replace('\u066c', '')
+        if not cleaned or cleaned in ('-', '—', 'N/A', 'n/a', ''):
+            return None
+        return float(cleaned)
+    except (ValueError, TypeError):
+        return None
+
+
+def _notify_premium_on_stock_decrease(product_name, old_qty_str, new_qty_str):
+    """
+    عند انخفاض رصيد صنف، ينشئ إشعاراً لكل مستخدم مميز
+    أضاف هذا الصنف في قائمة أصنافي (FavoriteProduct).
+    — حد التكرار: إشعار واحد لكل صنف لكل مستخدم كل 24 ساعة.
+    """
+    try:
+        old_qty = _parse_quantity_float(old_qty_str)
+        new_qty = _parse_quantity_float(new_qty_str)
+
+        # لا نُرسل إشعاراً إلا إذا انخفضت الكمية فعلاً
+        if old_qty is None or new_qty is None:
+            return
+        if new_qty >= old_qty:
+            return
+
+        sold_qty = old_qty - new_qty
+        # تنسيق الأرقام: إزالة العلامة العشرية إذا كانت صفراً
+        sold_display = int(sold_qty) if sold_qty == int(sold_qty) else round(sold_qty, 2)
+        remaining_display = int(new_qty) if new_qty == int(new_qty) else round(new_qty, 2)
+
+        # البحث عن المفضلات المطابقة مباشرة من DB. لا نحمّل كل المفضلات لكل
+        # صنف متغير؛ ملف ERP كبير قد يحتوي على آلاف الأصناف في تحديث واحد.
+        target_name_clean = (product_name or '').strip().lower()
+        favorites = FavoriteProduct.query.filter(
+            func.lower(func.trim(FavoriteProduct.product_name)) == target_name_clean
+        ).all()
+
+        if not favorites:
+            return
+
+        company_ids = list({fav.company_id for fav in favorites})
+        now = datetime.utcnow()
+        premium_companies = Company.query.filter(
+            Company.id.in_(company_ids),
+            Company.is_premium == True,
+            Company.is_active == True
+        ).all()
+
+        # الفلترة والتأكد التام أن اشتراك الشركة المميزة سارٍ وغير منتهٍ
+        active_premium_companies = []
+        for comp in premium_companies:
+            if getattr(comp, 'premium_end_date', None) and comp.premium_end_date:
+                if comp.premium_end_date < now:
+                    continue  # اشتراك مميز منتهي الصلاحية
+            active_premium_companies.append(comp)
+
+        if not active_premium_companies:
+            return
+
+        cutoff_24h = now - timedelta(hours=24)
+
+        for company in active_premium_companies:
+            try:
+                # التحقق من عدم إرسال إشعار مشابه خلال الـ 24 ساعة الماضية
+                recent_exists = Notification.query.filter(
+                    Notification.target_type == 'specific',
+                    Notification.target_id == company.id,
+                    Notification.notif_type == 'stock_sold',
+                    Notification.title.contains(product_name),
+                    Notification.created_at >= cutoff_24h
+                ).first()
+
+                if recent_exists:
+                    continue
+
+                notif_title = f'تنبيه مخزون: {product_name}'
+                notif_msg = (
+                    f'تم بيع {sold_display} وحدة من صنف "{product_name}" — '
+                    f'الرصيد المتبقي: {remaining_display} وحدة'
+                )
+
+                notif = Notification(
+                    title=notif_title,
+                    message=notif_msg,
+                    target_type='specific',
+                    target_id=company.id,
+                    notif_type='stock_sold',
+                    created_by=1,
+                    is_read=False,
+                    is_active=True,
+                    created_at=now
+                )
+                db.session.add(notif)
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+                # إرسال إشعار فوري لتطبيق الموبايل (Expo Push Notification)
+                try:
+                    from api_mobile import send_push_notification
+                    send_push_notification(
+                        target_company_id=company.id,
+                        title=notif_title,
+                        body=notif_msg,
+                        data={'type': 'stock_sold', 'product_name': product_name}
+                    )
+                except Exception:
+                    pass
+
+                # إرسال رسالة واتساب من توبي للمستخدم (Toby WhatsApp Notification)
+                try:
+                    if getattr(company, 'phone', None):
+                        from toby_whatsapp import send_toby_whatsapp_stock_notification_async
+                        send_toby_whatsapp_stock_notification_async(
+                            company_phone=company.phone,
+                            company_name=company.company_name,
+                            product_name=product_name,
+                            sold_qty=sold_display,
+                            remaining_qty=remaining_display
+                        )
+                except Exception:
+                    pass
+            except Exception:
+                current_app.logger.exception(
+                    f'Failed to create stock_sold notification for company {company.id}, product "{product_name}".'
+                )
+
+        db.session.flush()  # تسجيل الإشعارات في نفس transaction الـ sync
+
+    except Exception:
+        # الإخفاقات هنا لا يجب أن توقف عملية الـ sync
+        current_app.logger.exception(
+            f'_notify_premium_on_stock_decrease failed for product "{product_name}" (non-fatal).'
+        )
 
 
 def _raise_if_upload_cancel_requested(warehouse_id):
@@ -705,6 +979,7 @@ def _apply_erp_stock_snapshot(items, warehouse_id=None, full_sync=True, assume_p
     processed_names = set()
     processed_item_codes = set()
     normalized_items = []
+    stock_decrease_events = []
     today = date.today()
 
     try:
@@ -744,6 +1019,7 @@ def _apply_erp_stock_snapshot(items, warehouse_id=None, full_sync=True, assume_p
 
         with db.session.no_autoflush:
             existing_products = ProductItem.query.filter_by(warehouse_id=warehouse.id).all()
+        include_legacy_unassigned_history = _is_single_warehouse_legacy_history(warehouse.id)
         products_by_item_code = {
             (product.item_code or '').strip(): product
             for product in existing_products
@@ -761,7 +1037,8 @@ def _apply_erp_stock_snapshot(items, warehouse_id=None, full_sync=True, assume_p
         history_cache = _load_latest_daily_stock_history_map(
             history_names,
             target_date=today,
-            warehouse_id=warehouse.id
+            warehouse_id=warehouse.id,
+            include_legacy_unassigned=include_legacy_unassigned_history
         )
 
         for normalized_item in normalized_items:
@@ -797,6 +1074,8 @@ def _apply_erp_stock_snapshot(items, warehouse_id=None, full_sync=True, assume_p
                     (existing_product.price or '') != price_text or
                     (existing_product.discount or '') != discount_text
                 ):
+                    # حفظ الكمية القديمة قبل التحديث لحساب الفارق
+                    _old_qty_for_notif = existing_product.quantity
                     existing_product.name = name
                     existing_product.item_code = new_item_code
                     existing_product.quantity = quantity_text
@@ -804,6 +1083,9 @@ def _apply_erp_stock_snapshot(items, warehouse_id=None, full_sync=True, assume_p
                     existing_product.discount = discount_text
                     updated_count += 1
                     should_write_history = True
+                    # التنبيه اختياري؛ نؤجله لما بعد حفظ الأرصدة حتى لا يوقف
+                    # برنامج الربط لو تأخر Push أو WhatsApp.
+                    stock_decrease_events.append((name, _old_qty_for_notif, quantity_text))
                 else:
                     skipped_count += 1
 
@@ -840,7 +1122,8 @@ def _apply_erp_stock_snapshot(items, warehouse_id=None, full_sync=True, assume_p
                     discount=discount_text,
                     history_cache=history_cache,
                     record_date=today,
-                    warehouse_id=warehouse.id
+                    warehouse_id=warehouse.id,
+                    include_legacy_unassigned=include_legacy_unassigned_history
                 )
 
         if full_sync:
@@ -877,7 +1160,8 @@ def _apply_erp_stock_snapshot(items, warehouse_id=None, full_sync=True, assume_p
                         discount=product.discount,
                         history_cache=history_cache,
                         record_date=today,
-                        warehouse_id=warehouse.id
+                        warehouse_id=warehouse.id,
+                        include_legacy_unassigned=include_legacy_unassigned_history
                     )
 
         warehouse.is_processing = False
@@ -891,8 +1175,11 @@ def _apply_erp_stock_snapshot(items, warehouse_id=None, full_sync=True, assume_p
         db.session.commit()
         clear_upload_cancel(warehouse.id)
 
-        # تنظيف ذكي لسجل المخزون بعد كل رفع ناجح
-        _prune_stock_history_if_needed()
+        app = current_app._get_current_object()
+        _schedule_stock_decrease_notifications(app, stock_decrease_events)
+        # تنظيف السجل لا يؤثر على نجاح رفع الرصيد، خصوصاً في القواعد القديمة
+        # التي تحتوي على ملايين الصفوف.
+        _schedule_stock_history_prune(app)
 
         return {
             'warehouse_id': warehouse.id,
@@ -949,10 +1236,14 @@ def api_login():
         if user.is_active:
             session['user_type'] = 'company'
             session.permanent = True
+            issue_user_session_token(user)
             login_user(user, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
             
             try:
                 user.last_login = datetime.utcnow()
+                # Keep the verified-activity source current for clients that
+                # still use the legacy /api/login endpoint.
+                update_company_client_context(user, commit=False, force=True)
                 db.session.commit()
             except Exception:
                 db.session.rollback()
@@ -977,7 +1268,15 @@ def api_login():
 @api_bp.route('/logout', methods=['POST'])
 @login_required
 def api_logout():
+    if current_user.is_authenticated:
+        try:
+            if current_user.current_session_token == session.get('session_token'):
+                current_user.current_session_token = None
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
     logout_user()
+    session.pop('session_token', None)
     session.pop('user_type', None)
     return jsonify({'success': True, 'message': 'Logged out successfully'})
 
@@ -1046,16 +1345,39 @@ def get_my_products():
     
     products_data = []
     for fav in favorites:
-        # Get latest stock info
-        stock_record = ProductStockHistory.query.filter_by(product_name=fav.product_name)\
-            .order_by(ProductStockHistory.record_date.desc(), ProductStockHistory.recorded_at.desc()).first()
+        # Get live ProductItem stock info first
+        live_items = ProductItem.query.filter_by(name=fav.product_name).all()
+        if not live_items:
+            live_items = ProductItem.query.filter(ProductItem.name.ilike(f"%{fav.product_name}%")).all()
+            
+        current_stock = None
+        price = fav.price
+        
+        if live_items:
+            def _sort_k(it):
+                try:
+                    qv = float((it.quantity or '').strip())
+                except ValueError:
+                    qv = -1.0
+                return (1 if qv > 0 else 0, qv, it.id or 0)
+            best_item = sorted(live_items, key=_sort_k, reverse=True)[0]
+            current_stock = best_item.quantity
+            if best_item.price:
+                price = best_item.price
+        else:
+            stock_record = ProductStockHistory.query.filter_by(product_name=fav.product_name)\
+                .order_by(ProductStockHistory.record_date.desc(), ProductStockHistory.recorded_at.desc()).first()
+            if stock_record:
+                current_stock = str(stock_record.quantity) if stock_record.quantity is not None else None
+                if stock_record.price:
+                    price = stock_record.price
             
         products_data.append({
             'id': fav.id,
             'product_name': fav.product_name,
-            'quantity': fav.quantity, # This is the quantity the company "has" or "wants"? In FavoriteProduct it seems to be user defined.
-            'current_stock': stock_record.quantity if stock_record else None,
-            'price': stock_record.price if stock_record else fav.price,
+            'quantity': fav.quantity,
+            'current_stock': current_stock,
+            'price': price,
             'notes': fav.notes,
             'last_modified': fav.last_modified.isoformat() if fav.last_modified else None
         })
@@ -1180,11 +1502,12 @@ def erp_stock_sync():
     if not expected_token:
         return jsonify({
             'success': False,
-            'message': 'ERP bridge token is not configured on the server.'
+            'message': 'ERP bridge token is not configured on the server.',
+            'data': {}
         }), 503
 
     if not _read_bridge_token_from_request(expected_token):
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        return jsonify({'success': False, 'message': 'Unauthorized', 'data': {}}), 401
 
     data = request.get_json(silent=True) or {}
 
@@ -1194,7 +1517,8 @@ def erp_stock_sync():
     except (TypeError, ValueError):
         return jsonify({
             'success': False,
-            'message': 'warehouse_id must be an integer.'
+            'message': 'warehouse_id must be an integer.',
+            'data': {}
         }), 400
 
     warehouse_name = str(data.get('warehouse_name') or data.get('warehouse') or '').strip()
@@ -1208,13 +1532,13 @@ def erp_stock_sync():
         )
     except Exception as exc:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Warehouse resolve failed: {exc}'}), 500
+        return jsonify({'success': False, 'message': f'Warehouse resolve failed: {exc}', 'data': {}}), 500
 
     if not target_warehouse:
-        return jsonify({'success': False, 'message': 'Warehouse not found.'}), 404
+        return jsonify({'success': False, 'message': 'Warehouse not found.', 'data': {}}), 404
 
     if not target_warehouse.is_active:
-        return jsonify({'success': False, 'message': 'Warehouse is inactive.'}), 400
+        return jsonify({'success': False, 'message': 'Warehouse is inactive.', 'data': {}}), 400
 
     warehouse_id = target_warehouse.id
 
@@ -1231,7 +1555,14 @@ def erp_stock_sync():
             'message': (
                 f'Update received but skipped (throttled). '
                 f'Next accepted in {_wait_minutes:.1f} min.'
-            )
+            ),
+            'data': {
+                'warehouse_id': warehouse_id,
+                'accepted_processing': False,
+                'is_processing': False,
+                'skipped': True,
+                'reason': 'throttled'
+            }
         }), 200
     # ─────────────────────────────────────────────────────────────────────────
 
@@ -1253,17 +1584,31 @@ def erp_stock_sync():
                 'message': (
                     f'Update received but skipped — warehouse is currently processing. '
                     f'Please wait until current processing finishes.'
-                )
+                ),
+                'data': {
+                    'warehouse_id': warehouse_id,
+                    'accepted_processing': False,
+                    'is_processing': True,
+                    'skipped': True,
+                    'reason': 'processing'
+                }
             }), 200
     except Exception:
-        pass  # Non-fatal: proceed normally if check fails
+        # هذا الفحص مجرد حماية إضافية. لو قاعدة البيانات كانت مشغولة أثناءه
+        # يجب تنظيف الـ session قبل بدء المزامنة الفعلية، وإلا تتحول المشكلة
+        # المؤقتة إلى 500 عند أول استعلام في _apply_erp_stock_snapshot.
+        db.session.rollback()
+        current_app.logger.exception(
+            'Pre-sync warehouse processing check failed; continuing with a clean session.'
+        )
     # ─────────────────────────────────────────────────────────────────────────
 
     items = data.get('items')
     if not isinstance(items, list):
         return jsonify({
             'success': False,
-            'message': 'The request must include an items array.'
+            'message': 'The request must include an items array.',
+            'data': {}
         }), 400
 
     full_sync = _parse_bool(data.get('full_sync'), default=True)
@@ -1288,7 +1633,7 @@ def erp_stock_sync():
             return jsonify({
                 'success': True,
                 'message': 'Stock snapshot accepted and started in the background.',
-                'data': result
+                'data': result or {}
             }), 202
 
         # Default: synchronous apply
@@ -1301,23 +1646,25 @@ def erp_stock_sync():
         return jsonify({
             'success': True,
             'message': 'Stock snapshot applied successfully (sync mode).',
-            'data': result
+            'data': result or {}
         }), 200
     except ValueError as exc:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(exc)}), 400
+        return jsonify({'success': False, 'message': str(exc), 'data': {}}), 400
     except UploadCancelledError as exc:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(exc)}), 409
+        return jsonify({'success': False, 'message': str(exc), 'data': {}}), 409
     except RuntimeError as exc:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(exc)}), 409
+        return jsonify({'success': False, 'message': str(exc), 'data': {}}), 409
     except Exception as exc:
         db.session.rollback()
         return jsonify({
             'success': False,
-            'message': f'Unexpected sync error: {exc}'
+            'message': f'Unexpected sync error: {exc}',
+            'data': {}
         }), 500
+
 
 
 @api_bp.route('/integrations/erp/reset-processing-flag', methods=['POST'])

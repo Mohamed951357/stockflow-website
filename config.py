@@ -7,7 +7,7 @@ class Config:
     # Load SECRET_KEY from environment; do NOT hardcode production secrets in source.
     # If not provided, generate a temporary key for development only.
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
-    _default_sqlite_path = str(Path(__file__).resolve().parent.joinpath('site.db')).replace('\\', '/')
+    _default_sqlite_path = str(Path(__file__).resolve().parent.joinpath('db.sqlite3')).replace('\\', '/')
     _pa_sqlite_path = '/home/Bonuspharma1/db.sqlite3'
     if os.environ.get('DATABASE_URL'):
         SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')

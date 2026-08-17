@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بونص فارما - لوحة الإدارة - {{ system_subtitle }}</title>
@@ -92,10 +92,20 @@
             animation: pulse 2s infinite;
         }
         
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(0.95); }
-            100% { opacity: 1; transform: scale(1); }
+        /* Collapsible Premium Companies Card */
+        .collapsible-card-header {
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.25s ease;
+        }
+        .collapsible-card-header:hover {
+            filter: brightness(0.92);
+        }
+        .collapsible-card-header .toggle-arrow {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .collapsible-card-header[aria-expanded="true"] .toggle-arrow {
+            transform: rotate(180deg);
         }
     </style>
     <link href="{{ url_for('static', filename='css/admin_identity.css') }}" rel="stylesheet">
@@ -467,49 +477,68 @@
 
         {% if current_user.role == 'super' %}
         <div class="col-md-12 mb-4">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-crown me-2"></i>
-                        الشركات ذات الاشتراك المميز (البريميوم)
-                    </h5>
+            <div class="card shadow-sm border-0" style="border-radius: 14px; overflow: hidden;">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3 collapsible-card-header"
+                     id="headingPremiumCompanies" 
+                     data-bs-toggle="collapse" 
+                     data-bs-target="#premiumCompaniesCollapse" 
+                     aria-expanded="false" 
+                     aria-controls="premiumCompaniesCollapse"
+                     title="اضغط للفتح أو الإغلاق">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-crown text-warning fs-5"></i>
+                        <h5 class="mb-0 fw-bold">
+                            الشركات ذات الاشتراك المميز (البريميوم)
+                        </h5>
+                        {% if premium_companies %}
+                        <span class="badge bg-white text-primary fw-bold ms-2 px-2 py-1 rounded-pill" style="font-size: 0.8rem;">
+                            {{ premium_companies|length }} شركة
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small text-white-50 d-none d-sm-inline">اضغط للفتح / الإغلاق</span>
+                        <i class="fas fa-chevron-down toggle-arrow fs-6" id="premiumCollapseArrow"></i>
+                    </div>
                 </div>
-                <div class="card-body">
-                    {% if premium_companies %}
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>اسم الشركة</th>
-                                    <th>تاريخ التفعيل</th>
-                                    <th>تاريخ الانتهاء</th>
-                                    <th>الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for company in premium_companies %}
-                                <tr>
-                                    <td>{{ company.company_name }}</td>
-                                    <td>{{ company.premium_activation_date_formatted }}</td>
-                                    <td>{{ company.premium_end_date_formatted }}</td>
-                                    <td>
-                                        {% if company.is_premium_active %}
-                                        <span class="badge bg-success">نشط</span>
-                                        {% else %}
-                                        <span class="badge bg-danger">منتهي</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div id="premiumCompaniesCollapse" class="collapse" aria-labelledby="headingPremiumCompanies">
+                    <div class="card-body p-0">
+                        {% if premium_companies %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">اسم الشركة</th>
+                                        <th>تاريخ التفعيل</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th class="pe-3">الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for company in premium_companies %}
+                                    <tr>
+                                        <td class="ps-3 fw-semibold">{{ company.company_name }}</td>
+                                        <td>{{ company.premium_activation_date_formatted }}</td>
+                                        <td>{{ company.premium_end_date_formatted }}</td>
+                                        <td class="pe-3">
+                                            {% if company.is_premium_active %}
+                                            <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>نشط</span>
+                                            {% else %}
+                                            <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>منتهي</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="far fa-star fa-3x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">لا توجد شركات مشتركة في باقة البريميوم حالياً.</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="text-center py-3">
-                        <i class="far fa-star fa-3x text-muted mb-2"></i>
-                        <p class="text-muted">لا توجد شركات مشتركة في باقة البريميوم حالياً.</p>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -665,6 +694,23 @@
 
         // بدء التحديث التلقائي كل ثانية واحدة لضمان استجابة فائقة السرعة
         setInterval(pollInviteCode, 1000);
+
+        // التحكم في انزلاق سهم بطاقة الشركات ذات الاشتراك المميز
+        document.addEventListener('DOMContentLoaded', function() {
+            const premiumCollapseEl = document.getElementById('premiumCompaniesCollapse');
+            const headingPremium = document.getElementById('headingPremiumCompanies');
+            const arrow = document.getElementById('premiumCollapseArrow');
+            if (premiumCollapseEl && headingPremium && arrow) {
+                premiumCollapseEl.addEventListener('show.bs.collapse', function () {
+                    headingPremium.setAttribute('aria-expanded', 'true');
+                    arrow.style.transform = 'rotate(180deg)';
+                });
+                premiumCollapseEl.addEventListener('hide.bs.collapse', function () {
+                    headingPremium.setAttribute('aria-expanded', 'false');
+                    arrow.style.transform = 'rotate(0deg)';
+                });
+            }
+        });
     </script>
 </body>
 

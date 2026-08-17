@@ -95,6 +95,7 @@ class Company(UserMixin, db.Model):
     bio = db.Column(db.Text, nullable=True)                          # نبذة عن الشركة
     cover_photo_url = db.Column(db.String(500), nullable=True)       # صورة الغلاف
     # ------------------------------------
+    current_session_token = db.Column(db.String(100), nullable=True) # رمز الجلسة النشطة الوحيدة
 
     # Method مطلوب لـ Flask-Login لعمل خاصية "تذكرني"
     def get_id(self):
@@ -116,6 +117,30 @@ class Company(UserMixin, db.Model):
     deactivation_reason = db.Column(db.Text, nullable=True)
     deactivated_at = db.Column(db.DateTime, nullable=True)
 
+    @property
+    def is_premium_active(self):
+        """Returns True if the company has an active, non-expired premium or trial subscription."""
+        try:
+            from company_subscription import company_subscription_snapshot
+            return company_subscription_snapshot(self).is_active
+        except Exception:
+            now = datetime.utcnow()
+            if self.is_premium and (not self.premium_end_date or self.premium_end_date > now):
+                return True
+            if self.premium_trial_active and self.premium_trial_end and self.premium_trial_end > now:
+                return True
+            return False
+
+    @property
+    def is_verified(self):
+        """Verification badge (علامة التوثيق) is granted ONLY to active, unexpired subscribers or official STOCK FLOW."""
+        name = (getattr(self, 'company_name', '') or '').strip().upper()
+        uname = (getattr(self, 'username', '') or '').strip().upper()
+        if name == 'STOCK FLOW' or uname == 'STOCK FLOW':
+            return True
+        return bool(self.is_premium_active)
+
+
 
 class Admin(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -129,6 +154,7 @@ class Admin(UserMixin, db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('admin.id'), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     last_login = db.Column(db.DateTime, nullable=True)
+    current_session_token = db.Column(db.String(100), nullable=True) # رمز الجلسة النشطة الوحيدة
     
     # ربط الأدمن بالمخزن
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouse.id'), nullable=True)
@@ -160,6 +186,7 @@ class ProductItem(db.Model):
 class ProductStockHistory(db.Model):
     __table_args__ = (
         db.Index('ix_product_stock_history_record_date_product_name_recorded_at', 'record_date', 'product_name', 'recorded_at'),
+        db.Index('ix_product_stock_history_product_name_record_date', 'product_name', 'record_date'),
         db.Index('ix_product_stock_history_warehouse_date_name', 'warehouse_id', 'record_date', 'product_name'),
     )
     id = db.Column(db.Integer, primary_key=True)
@@ -707,3 +734,25 @@ class CommunityPollVote(db.Model):
     __table_args__ = (
         db.UniqueConstraint('poll_id', 'voter_id', name='_poll_voter_uc'),
     )
+
+
+class PhoneVerificationRequest(db.Model):
+    """طلبات التحقق من رقم الهاتف عبر واتساب وتوبي لتسجيل الشركات"""
+    __tablename__ = 'phone_verification_request'
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(32), unique=True, nullable=False, index=True)
+    phone = db.Column(db.String(50), nullable=False, index=True)
+    verified_phone = db.Column(db.String(50), nullable=True)
+    status = db.Column(db.String(30), default='pending')  # pending, verified_new, verified_existing, expired
+    is_verified = db.Column(db.Boolean, default=False)
+    phone_is_new = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    verified_at = db.Column(db.DateTime, nullable=True)
+    expires_at = db.Column(db.DateTime, nullable=True)
+
+    def is_expired(self):
+        if not self.expires_at:
+            return False
+        return datetime.utcnow() > self.expires_at
+

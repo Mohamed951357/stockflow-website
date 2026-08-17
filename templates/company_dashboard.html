@@ -3724,7 +3724,7 @@
                                             <div class="ramadan-text-wrapper" style="filter: none !important; position: relative; display: inline-block;">
                                                 <h2 class="premium-text mb-1" style="position: relative; z-index: 10005; filter: none !important; text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important; display: inline-flex; align-items: center; gap: 8px;">
                                                     رمضان كريم يا {{ company.company_name }}
-                                                    {% if company.is_premium and premium_features_enabled %}
+                                                    {% if company.is_verified and premium_features_enabled %}
                                                     <i class="fas fa-check-circle verified-badge" style="position: relative !important; top: 0 !important; left: 0 !important; transform: none !important; margin: 0 !important; z-index: 10006 !important;" title="شركة موثقة (STOCKFLOW PLUS)"></i>
                                                     {% endif %}
                                                 </h2>
@@ -3787,17 +3787,17 @@
                                         </div>
                                         <div>
                                             <h2
-                                                class="{% if company.is_premium and premium_features_enabled %}premium-text{% endif %} mb-1">
-                                                مرحباً بك، {{ company.company_name }} {% if company.is_premium and
+                                                class="{% if company.is_verified and premium_features_enabled %}premium-text{% endif %} mb-1">
+                                                مرحباً بك، {{ company.company_name }} {% if company.is_verified and
                                                 premium_features_enabled %}<i class="fas fa-check-circle verified-badge"
                                                     title="شركة موثقة (STOCKFLOW PLUS)"></i>{% endif %}</h2>
                                             {% if is_on_trial %}
                                             <p
-                                                class="mb-0 {% if company.is_premium and premium_features_enabled %}premium-text{% endif %}">
+                                                class="mb-0 {% if company.is_verified and premium_features_enabled %}premium-text{% endif %}">
                                                 لديك تجربة مميزة مجانيه جارية — باقي لك ({{ trial_days_left }}) يوم.</p>
                                             {% else %}
                                             <p
-                                                class="mb-0 {% if company.is_premium and premium_features_enabled %}premium-text{% endif %}">
+                                                class="mb-0 {% if company.is_verified and premium_features_enabled %}premium-text{% endif %}">
                                                 نظام ستوك فلو يتيح لك الآن متابعة أرصدة الشركة الخاصه بكم بسهوله
                                                 وفعاليه.</p>
                                             {% endif %}
@@ -4250,7 +4250,7 @@
                                 <div class="flex-grow-1 min-w-0">
                                     <div class="fw-bold text-dark text-truncate" style="font-size: 0.93rem;">
                                         {{ latest_community_post.company_name }}
-                                        {% if latest_community_post.is_premium %}
+                                        {% if latest_community_post.is_verified or latest_community_post.is_premium %}
                                         <i class="fas fa-check-circle text-primary ms-1" style="font-size: 0.85rem;" title="شركة موثقة"></i>
                                         {% endif %}
                                     </div>
@@ -5082,7 +5082,7 @@
             if (owner) {
                 const name = story.company_name || 'STOCK FLOW';
                 owner.textContent = name;
-                if (story.is_premium) {
+                if (story.is_verified || story.is_premium) {
                     const spacer = document.createTextNode(' ');
                     const icon = document.createElement('i');
                     icon.className = 'fas fa-check-circle';
@@ -5161,7 +5161,7 @@
             if (owner) {
                 const name = status.company_name || '';
                 owner.textContent = name;
-                if (status.is_premium) {
+                if (status.is_verified || status.is_premium) {
                     const spacer = document.createTextNode(' ');
                     const icon = document.createElement('i');
                     icon.className = 'fas fa-check-circle';

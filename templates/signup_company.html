@@ -439,6 +439,86 @@
         display: none !important;
     }
 
+    .wa-verify-btn {
+        width: 100%;
+        height: 42px;
+        background: linear-gradient(135deg, #25D366, #128C7E);
+        color: white;
+        border-radius: var(--r-pill);
+        border: none;
+        font-family: 'Cairo', sans-serif;
+        font-size: .88rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all .3s var(--ease);
+        box-shadow: 0 4px 14px rgba(37,211,102,.28);
+    }
+    .wa-verify-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(37,211,102,.42);
+        background: linear-gradient(135deg, #1fa855, #0f7569);
+    }
+    .wa-verify-btn.verified {
+        background: #10B981 !important;
+        box-shadow: 0 4px 14px rgba(16,185,129,.3) !important;
+        cursor: default;
+    }
+    .wa-verify-btn.loading {
+        background: #4B5563 !important;
+        cursor: wait;
+    }
+    .phone-input-row {
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .phone-input-row .fbox {
+        flex: 1;
+        min-width: 0;
+    }
+    .phone-input-row .wa-verify-btn {
+        width: auto;
+        height: auto;
+        min-width: 112px;
+        padding: 0 13px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    .verify-badge {
+        border-radius: 12px;
+        padding: 9px 13px;
+        font-size: .84rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: alertIn .4s ease;
+        margin-top: 6px;
+    }
+    .verify-badge-success {
+        background: rgba(16,185,129,.1);
+        color: #065f46;
+        border: 1.5px solid rgba(16,185,129,.3);
+    }
+    .verify-badge-warning {
+        background: rgba(245,158,11,.1);
+        color: #92400e;
+        border: 1.5px solid rgba(245,158,11,.3);
+    }
+    .verify-badge-info {
+        background: rgba(18,67,196,.08);
+        color: #1e40af;
+        border: 1.5px solid rgba(18,67,196,.25);
+    }
+    .fade-collapse {
+        transition: all .4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+
     .wa-ball {
         width:60px;
         height:60px;
@@ -475,6 +555,12 @@
         .about-btn,
         .wa-float {
             display:none !important;
+        }
+        .phone-input-row { gap:6px; }
+        .phone-input-row .wa-verify-btn {
+            min-width: 104px;
+            padding: 0 10px;
+            font-size: .78rem;
         }
     }
     @media(max-width:420px){
@@ -579,8 +665,6 @@
                         <div class="ficon"><i class="fas fa-building"></i></div>
                         <input class="finput" id="company_name" name="company_name" type="text" placeholder="اكتب اسم الشركة" required>
                     </div>
-                </div>
-
                 <div class="fgroup">
                     <label class="flabel" for="email">البريد الإلكتروني</label>
                     <div class="fbox">
@@ -589,26 +673,36 @@
                     </div>
                 </div>
 
-                <div class="fgroup">
-                    <label class="flabel" for="phone">رقم الهاتف</label>
-                    <div class="fbox">
-                        <div class="ficon"><i class="fas fa-phone"></i></div>
-                        <input class="finput" id="phone" name="phone" type="tel" placeholder="مثال: 010xxxxxxxx" pattern="01[0-9]{9}" minlength="11" maxlength="11" inputmode="numeric" required>
+                <div class="fgroup" id="phoneGroup">
+                    <label class="flabel" for="phone">رقم الهاتف (واتساب)</label>
+                    <div class="phone-input-row">
+                        <div class="fbox">
+                            <div class="ficon"><i class="fas fa-phone"></i></div>
+                            <input class="finput" id="phone" name="phone" type="tel" placeholder="مثال: 010xxxxxxxx" pattern="01[0-9]{9}" minlength="11" maxlength="11" inputmode="numeric" required>
+                        </div>
+                        <button type="button" class="wa-verify-btn" id="btnVerifyPhone" onclick="startWhatsAppVerification()" title="تأكيد رقم الهاتف عبر واتساب" aria-label="تأكيد رقم الهاتف عبر واتساب">
+                            <i class="fab fa-whatsapp" style="font-size: 1.15rem;"></i>
+                            <span id="btnVerifyText">تأكيد الرقم</span>
+                        </button>
                     </div>
-                    <div class="help-text">يجب أن يتكون من أحد عشر رقمًا ويبدأ بـ صفر واحد.</div>
+
+                    <!-- زر تأكيد الرقم عبر واتساب وتخطي كود الدعوة -->
+                    <div id="verifyStatusBox" style="display:none;"></div>
+
+                    <input type="hidden" id="verification_code" name="verification_code" value="">
                 </div>
 
-                <div class="fgroup">
+                <div class="fgroup fade-collapse" id="inviteCodeGroup" style="display:none;">
                     <label class="flabel" for="invite_code">كود الدعوة</label>
                     <div class="fbox">
                         <div class="ficon"><i class="fas fa-ticket-alt"></i></div>
-                        <input class="finput" id="invite_code" name="invite_code" type="text" placeholder="اكتب كود الدعوة" required>
+                        <input class="finput" id="invite_code" name="invite_code" type="text" placeholder="اكتب كود الدعوة">
                     </div>
-                    <div class="help-text warn">مطلوب للتسجيل. احصل عليه من الإدارة.</div>
+                    <div class="help-text warn" id="inviteCodeHelp">مطلوب للتسجيل إذا لم يتم تأكيد رقم هاتف جديد عبر واتساب.</div>
                 </div>
 
                 <div class="btn-gap" style="margin-top:1.2rem">
-                    <button class="ubtn ubtn-login" type="submit">
+                    <button class="ubtn ubtn-login" type="submit" id="btnSubmitSignup">
                         <i class="fas fa-user-plus"></i>
                         إنشاء الحساب
                     </button>
@@ -665,8 +759,192 @@
     });
 
     const inviteCodeFromUrl = new URLSearchParams(window.location.search).get('invite_code');
+    const inviteRequired = new URLSearchParams(window.location.search).get('invite_required') === '1';
     if (inviteCodeFromUrl) {
         document.getElementById('invite_code').value = inviteCodeFromUrl;
+    }
+
+    function showInviteCode() {
+        const inviteGroup = document.getElementById('inviteCodeGroup');
+        const inviteInput = document.getElementById('invite_code');
+
+        inviteGroup.style.display = 'block';
+        inviteGroup.style.opacity = '1';
+        inviteGroup.style.maxHeight = '200px';
+        inviteGroup.style.margin = '';
+        inviteGroup.style.padding = '';
+        inviteInput.required = true;
+        inviteInput.focus();
+    }
+
+    const inviteCodeNeeded = Array.from(document.querySelectorAll('.alert-danger'))
+        .some(alert => alert.textContent.includes('كود الدعوة'));
+    if (inviteRequired || inviteCodeNeeded) {
+        showInviteCode();
+    }
+
+    // --- WhatsApp Verification Flow ---
+    let pollInterval = null;
+    let currentVerifyCode = null;
+
+    async function startWhatsAppVerification() {
+        const phoneInput = document.getElementById('phone');
+        const phoneVal = phoneInput.value.trim();
+        const btn = document.getElementById('btnVerifyPhone');
+        const btnText = document.getElementById('btnVerifyText');
+        const statusBox = document.getElementById('verifyStatusBox');
+
+        if (!phoneVal || phoneVal.length !== 11 || !phoneVal.startsWith('01')) {
+            alert('يرجى كتابة رقم هاتف مصري صحيح مكون من 11 رقماً ويبدأ بـ 01 أولاً.');
+            phoneInput.focus();
+            return;
+        }
+
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تجهيز كود التحقق...';
+
+        try {
+            const res = await fetch('/api/phone_verification/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phoneVal })
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.message || 'حدث خطأ أثناء إنشاء كود التحقق.');
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                btnText.textContent = 'تأكيد الرقم';
+                return;
+            }
+
+            currentVerifyCode = data.code;
+            document.getElementById('verification_code').value = data.code;
+
+            // Open WhatsApp with pre-filled message
+            window.open(data.whatsapp_url, '_blank');
+
+            // Update UI to waiting state
+            btn.classList.remove('loading');
+            btn.style.background = '#2563EB';
+            btnText.innerHTML = '<i class="fas fa-paper-plane"></i> فتح واتساب';
+            btn.disabled = false;
+            btn.onclick = () => window.open(data.whatsapp_url, '_blank');
+
+            statusBox.style.display = 'block';
+            statusBox.className = 'verify-badge verify-badge-info';
+            statusBox.innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>تم فتح واتساب! اضغط "إرسال" في المحادثة لتأكيد الرقم تلقائياً (${data.code}).</span>
+            `;
+
+            // Start Polling
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(checkVerificationStatus, 2000);
+
+        } catch (err) {
+            console.error(err);
+            alert('فشل الاتصال بالسيرفر. يرجى المحاولة مرة أخرى.');
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btnText.textContent = 'تأكيد الرقم';
+        }
+    }
+
+    async function checkVerificationStatus() {
+        if (!currentVerifyCode) return;
+
+        try {
+            const res = await fetch(`/api/phone_verification/status?code=${encodeURIComponent(currentVerifyCode)}`);
+            const data = await res.json();
+
+            if (data.success && data.verified) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+
+                const btn = document.getElementById('btnVerifyPhone');
+                const btnText = document.getElementById('btnVerifyText');
+                const statusBox = document.getElementById('verifyStatusBox');
+                const inviteGroup = document.getElementById('inviteCodeGroup');
+                const inviteInput = document.getElementById('invite_code');
+                const phoneInput = document.getElementById('phone');
+
+                phoneInput.readOnly = true;
+                btn.disabled = true;
+
+                if (data.phone_is_new) {
+                    // الرقم جديد تماماً -> إخفاء خانة كود الدعوة!
+                    btn.className = 'wa-verify-btn verified';
+                    btnText.innerHTML = '<i class="fas fa-check-circle"></i> تم التأكيد';
+
+                    statusBox.className = 'verify-badge verify-badge-success';
+                    statusBox.innerHTML = `
+                        <i class="fas fa-badge-check" style="font-size:1.1rem;"></i>
+                        <span>🎉 رائع! تم التحقق من رقمك بنجاح. أنت غير مطالب بكود دعوة!</span>
+                    `;
+
+                    // إخفاء خانة كود الدعوة بنعومة
+                    inviteGroup.style.opacity = '0';
+                    inviteGroup.style.maxHeight = '0';
+                    inviteGroup.style.margin = '0';
+                    inviteGroup.style.padding = '0';
+                    setTimeout(() => {
+                        inviteGroup.style.display = 'none';
+                    }, 400);
+
+                    inviteInput.required = false;
+                    inviteInput.value = '';
+
+                } else {
+                    // الرقم مسجل مسبقاً -> كود الدعوة إجباري
+                    btn.className = 'wa-verify-btn';
+                    btn.style.background = '#F59E0B';
+                    btnText.innerHTML = '<i class="fas fa-info-circle"></i> تم التأكيد';
+
+                    statusBox.className = 'verify-badge verify-badge-warning';
+                    statusBox.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>⚠️ هذا الرقم مسجل بالفعل بحساب سابق. يجب إدخال كود الدعوة لإتمام التسجيل.</span>
+                    `;
+
+                    showInviteCode();
+                }
+            } else if (data.status === 'phone_mismatch') {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                const btn = document.getElementById('btnVerifyPhone');
+                const btnText = document.getElementById('btnVerifyText');
+                const statusBox = document.getElementById('verifyStatusBox');
+                const phoneInput = document.getElementById('phone');
+
+                phoneInput.readOnly = false;
+                btn.disabled = false;
+                btn.className = 'wa-verify-btn';
+                btn.style.background = '#EF4444';
+                btnText.innerHTML = '<i class="fas fa-exclamation-triangle"></i> أعد المحاولة';
+                btn.onclick = startWhatsAppVerification;
+
+                statusBox.style.display = 'block';
+                statusBox.className = 'verify-badge verify-badge-warning';
+                statusBox.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>⚠️ رقم الواتساب الذي أرسلت منه لا يطابق الرقم المدخل في الاستمارة. يرجى كتابة رقم هاتفك الصحيح والضغط على التأكيد مجدداً.</span>
+                `;
+                showInviteCode();
+            } else if (data.status === 'expired') {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                const statusBox = document.getElementById('verifyStatusBox');
+                statusBox.className = 'verify-badge verify-badge-warning';
+                statusBox.innerHTML = '<span>انتهت صلاحية كود التحقق. يمكنك المحاولة مرة أخرى أو إدخال كود الدعوة.</span>';
+                document.getElementById('btnVerifyPhone').disabled = false;
+                showInviteCode();
+            }
+        } catch (e) {
+            console.error('Polling error:', e);
+        }
     }
 
     !function(){

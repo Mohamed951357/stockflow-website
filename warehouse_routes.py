@@ -552,7 +552,10 @@ def register_warehouse_routes(app):
     def api_search():
         """البحث عن الأصناف مع دعم المخازن والبحث التقريبي"""
         try:
-            search_term = request.json.get('search_term', '').strip()
+            # لا نفترض أن المتصفح أرسل JSON صالحاً؛ خطأ الواجهة أو طلب قديم
+            # يجب أن يرجع 400 واضحاً بدلاً من 500.
+            payload = request.get_json(silent=True) or {}
+            search_term = str(payload.get('search_term') or '').strip()
             
             if not search_term or len(search_term) < 2:
                 return jsonify({'success': False, 'error': 'يجب إدخال كلمة بحث على الأقل'}), 400
@@ -575,11 +578,14 @@ def register_warehouse_routes(app):
             if session.get('user_type') == 'admin' and current_user.role == 'warehouse_admin':
                 query = ProductItem.query.filter_by(warehouse_id=current_user.warehouse_id)
             else:
-                # إذا كان المستخدم شركة، ابحث في جميع الأصناف
-                query = ProductItem.query
+                # إذا كان المستخدم شركة، ابحث في الأصناف التابعة للمخازن النشطة
+                query = db.session.query(ProductItem).outerjoin(
+                    Warehouse, ProductItem.warehouse_id == Warehouse.id
+                ).filter(
+                    db.or_(Warehouse.is_active == True, Warehouse.id == None, ProductItem.warehouse_id == None)
+                )
             
             # الحصول على جميع المنتجات للمطابقة التقريبية
-            # ملاحظة: إذا كانت قاعدة البيانات كبيرة جداً، قد نحتاج لتحسين هذا
             all_products = query.all()
             
             if not all_products:
@@ -591,7 +597,7 @@ def register_warehouse_routes(app):
                 })
 
             # استخراج أسماء المنتجات للمطابقة
-            product_names = [p.name for p in all_products]
+            product_names = [p.name for p in all_products if p.name]
             
             # خوارزمية بحث محسّنة — بالأولوية:
             # 1. مطابقة تامة → 2. يبدأ بكلمة البحث → 3. يحتوي على كلمة البحث → 4. WRatio ≥ 80
@@ -617,7 +623,7 @@ def register_warehouse_routes(app):
                 if s >= 80:
                     scored[name] = s
 
-            top_names = sorted(scored.keys(), key=lambda n: scored[n], reverse=True)[:5]
+            top_names = sorted(scored.keys(), key=lambda n: scored[n], reverse=True)[:10]
 
             # تحويل النتائج إلى قائمة من الكائنات
             final_results = []
@@ -625,7 +631,18 @@ def register_warehouse_routes(app):
 
             for name in top_names:
                 products_with_name = [p for p in all_products if p.name == name]
-                for p in products_with_name:
+                
+                # ترتيب الأصناف ذات الاسم الواحد: الأفضلية للكميات الموجبة المتاحة ثم الأحدث
+                def _sort_prod(prod):
+                    try:
+                        q_val = float((prod.quantity or '').strip())
+                    except ValueError:
+                        q_val = -1.0
+                    return (1 if q_val > 0 else 0, q_val, prod.id or 0)
+
+                sorted_products_with_name = sorted(products_with_name, key=_sort_prod, reverse=True)
+
+                for p in sorted_products_with_name:
                     if p.id not in seen_ids:
                         final_results.append({
                             'id': p.id,
@@ -637,43 +654,54 @@ def register_warehouse_routes(app):
                         })
                         seen_ids.add(p.id)
 
-                if len(final_results) >= 5:
-                    final_results = final_results[:5]
+                if len(final_results) >= 10:
+                    final_results = final_results[:10]
                     break
             
             # تسجيل البحث إذا كان المستخدم شركة وتحديث عداد البحثات
             if session.get('user_type') == 'company':
-                result_warehouse_ids = {
-                    result.get('warehouse_id')
-                    for result in final_results
-                    if result.get('warehouse_id') is not None
-                }
-                search_warehouse_id = next(iter(result_warehouse_ids)) if len(result_warehouse_ids) == 1 else None
+                # عرض النتيجة لا يعتمد على سجل البحث. إذا كانت SQLite مشغولة
+                # للحظات بسبب مزامنة الأرصدة، لا نحرم الشركة من نتيجة صحيحة.
+                updated_monthly_count = int(current_user.monthly_search_count or 0)
+                updated_total_count = 0
+                search_log_saved = False
+                try:
+                    result_warehouse_ids = {
+                        result.get('warehouse_id')
+                        for result in final_results
+                        if result.get('warehouse_id') is not None
+                    }
+                    search_warehouse_id = (
+                        next(iter(result_warehouse_ids))
+                        if len(result_warehouse_ids) == 1 else None
+                    )
 
-                # تسجيل لوج البحث
-                search_log = SearchLog(
-                    company_id=current_user.id,
-                    warehouse_id=search_warehouse_id,
-                    search_term=search_term,
-                    results_count=len(final_results)
-                )
-                db.session.add(search_log)
-                db.session.commit()
-                
-                # حساب العدادات المحدثة لإعادتها للواجهة
-                now = datetime.utcnow()
-                start_of_month = datetime(now.year, now.month, 1)
-                
-                updated_monthly_count = db.session.query(func.count(SearchLog.id)).filter(
-                    SearchLog.company_id == current_user.id,
-                    SearchLog.search_date >= start_of_month
-                ).scalar() or 0
-                
-                updated_total_count = db.session.query(func.count(SearchLog.id)).filter_by(company_id=current_user.id).scalar() or 0
-                
-                # تحديث العداد في موديل الشركة أيضاً لضمان المزامنة
-                current_user.monthly_search_count = updated_monthly_count
-                db.session.commit()
+                    db.session.add(SearchLog(
+                        company_id=current_user.id,
+                        warehouse_id=search_warehouse_id,
+                        search_term=search_term,
+                        results_count=len(final_results)
+                    ))
+                    db.session.flush()
+
+                    now = datetime.utcnow()
+                    start_of_month = datetime(now.year, now.month, 1)
+                    updated_monthly_count = db.session.query(func.count(SearchLog.id)).filter(
+                        SearchLog.company_id == current_user.id,
+                        SearchLog.search_date >= start_of_month
+                    ).scalar() or 0
+                    updated_total_count = db.session.query(func.count(SearchLog.id)).filter_by(
+                        company_id=current_user.id
+                    ).scalar() or 0
+
+                    current_user.monthly_search_count = updated_monthly_count
+                    db.session.commit()
+                    search_log_saved = True
+                except Exception:
+                    db.session.rollback()
+                    current_app.logger.exception(
+                        'Search results returned, but recording the company search failed.'
+                    )
                 
                 return jsonify({
                     'success': True,
@@ -681,7 +709,8 @@ def register_warehouse_routes(app):
                     'count': len(final_results),
                     'results': final_results,
                     'updated_monthly_count': updated_monthly_count,
-                    'updated_total_count': updated_total_count
+                    'updated_total_count': updated_total_count,
+                    'search_log_saved': search_log_saved
                 })
             
             return jsonify({
@@ -1089,8 +1118,20 @@ def register_warehouse_routes(app):
         if current_user.role == 'warehouse_admin':
             target_warehouse = Warehouse.query.get(current_user.warehouse_id)
             warehouses_list = [target_warehouse] if target_warehouse else []
+            # تنظيف أي معالجة عالقة قبل عرض الصفحة (لمنع البانر من الظهور بعد انتهاء المعالجة)
+            if target_warehouse and target_warehouse.is_processing:
+                try:
+                    if _clear_stale_processing_if_needed(target_warehouse):
+                        target_warehouse = Warehouse.query.get(target_warehouse.id)
+                except Exception:
+                    pass
         else:
             warehouses_list = Warehouse.query.filter_by(is_active=True).all()
+            # تنظيف أي معالجة عالقة لكل المخازن قبل عرض الصفحة
+            try:
+                _clear_stale_processing_flags()
+            except Exception:
+                pass
             # للسوبر أدمن: أي مخزن في معالجة أو آخر واحد اتحدّث
             target_warehouse = Warehouse.query.filter_by(is_processing=True).first()
             if not target_warehouse:

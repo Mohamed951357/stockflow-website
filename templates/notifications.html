@@ -654,29 +654,27 @@
         h2 {
             position: relative;
             display: inline-block;
+            padding-bottom: 8px;
         }
 
         h2::after {
             content: '';
             position: absolute;
-            bottom: -5px;
+            bottom: 0;
             left: 0;
-            width: 60px;
+            width: 0;
             height: 3px;
             background: var(--primary-gradient);
             border-radius: 3px;
-            animation: lineExpand 2s ease-in-out infinite;
+            animation: titleLineExpand 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        @keyframes lineExpand {
-
-            0%,
-            100% {
-                width: 60px;
+        @keyframes titleLineExpand {
+            from {
+                width: 0;
             }
-
-            50% {
-                width: 100px;
+            to {
+                width: 100%;
             }
         }
 
@@ -1086,6 +1084,12 @@
             color: #0891b2;
         }
 
+        .notification-card__icon--stock-sold {
+            background: linear-gradient(135deg, #fff7ed, #fef3c7);
+            color: #d97706;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.15);
+        }
+
         .notification-card__content {
             min-width: 0;
             flex: 1 1 auto;
@@ -1312,7 +1316,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="notifications-page-header">
-                    <h2 class="notifications-page-title">
+                    <h2 class="notifications-page-title page-title visible">
                         <i class="fas fa-bell"></i>
                         إدارة الإشعارات
                     </h2>
@@ -1472,14 +1476,52 @@
 
                         <!-- الإشعارات العادية -->
                         {% if notifications %}
+                        {%- set stock_notifications = notifications | selectattr('notif_type', 'equalto', 'stock_sold') | list %}
+                        {%- set general_notifications = notifications | rejectattr('notif_type', 'equalto', 'stock_sold') | list %}
+
+                        <!-- إشعارات المخزون (قائمة أصنافي) -->
+                        {% if stock_notifications %}
+                        <div class="col-12 mb-3 mt-2">
+                            <h6 class="mb-0" style="color: #d97706; display:flex; align-items:center; gap:.5rem;">
+                                <span style="background:linear-gradient(135deg,#fff7ed,#fef3c7);color:#d97706;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;">
+                                    <i class="fas fa-boxes"></i>
+                                </span>
+                                إشعارات المخزون — قائمة أصنافي ({{ stock_notifications|length }})
+                            </h6>
+                        </div>
+
+                        {% for notification in stock_notifications %}
+                        <div class="col-12">
+                            <article class="notification-card {{ 'notification-card--unread' if not notification.is_read else '' }}">
+                                {% if not notification.is_read %}
+                                <span class="read-indicator" style="background:#d97706;" aria-label="إشعار غير مقروء"></span>
+                                {% endif %}
+                                <span class="notification-card__icon notification-card__icon--stock-sold" aria-hidden="true">
+                                    <i class="fas fa-boxes"></i>
+                                </span>
+                                <div class="notification-card__content">
+                                    <h3 class="notification-card__title" style="color:#92400e;">{{ notification.title }}</h3>
+                                    <p class="notification-card__message">{{ notification.message }}</p>
+                                    <div class="notification-card__meta">
+                                        <span><i class="fas fa-clock"></i>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else 'غير محدد' }}</span>
+                                        <span style="color:#d97706;"><i class="fas fa-star me-1"></i>حساب مميز</span>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- الإشعارات العامة -->
+                        {% if general_notifications %}
                         <div class="col-12 mb-3 mt-2">
                             <h6 class="text-info mb-0">
                                 <i class="fas fa-bell me-2"></i>
-                                الإشعارات العامة ({{ notifications|length }})
+                                الإشعارات العامة ({{ general_notifications|length }})
                             </h6>
                         </div>
-                        
-                        {% for notification in notifications %}
+
+                        {% for notification in general_notifications %}
                         <div class="col-12">
                             <div class="notification-card {{ 'notification-card--unread' if not notification.is_read else '' }}">
                                 {% if not notification.is_read %}
@@ -1500,6 +1542,7 @@
                             </div>
                         </div>
                         {% endfor %}
+                        {% endif %}
                         {% endif %}
 
                     {% else %}

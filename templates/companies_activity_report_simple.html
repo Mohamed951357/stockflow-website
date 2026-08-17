@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقرير نشاط الشركات - لوحة الإدارة</title>
@@ -154,19 +154,32 @@
                 <p>نشطة اليوم</p>
             </div>
             <div class="stat-card">
+                <i class="fas fa-circle" style="font-size: 2rem; color: #0891b2;"></i>
+                <h3>{{ online_now_count }}</h3>
+                <p>متصلة الآن</p>
+            </div>
+            <div class="stat-card">
                 <i class="fas fa-calendar-week" style="font-size: 2rem; color: #ffc107;"></i>
-                <h3>{{ active_this_week }}</h3>
-                <p>نشطة هذا الأسبوع</p>
+                <h3>{{ active_last_7_days }}</h3>
+                <p>نشطة خلال آخر 7 أيام</p>
             </div>
             <div class="stat-card">
                 <i class="fas fa-clock" style="font-size: 2rem; color: #dc3545;"></i>
                 <h3>{{ inactive_count }}</h3>
-                <p>غير نشطة</p>
+                <p>خاملة أو بلا نشاط موثق</p>
             </div>
         </div>
 
         <!-- Companies Table -->
         <div class="table-container">
+            <p class="small text-muted mb-3">
+                آخر ظهور موثق = آخر تسجيل دخول ناجح أو استخدام مصادق عليه للمنصة. «متصل الآن» تعني وصول إشارة حضور خلال آخر دقيقتين.
+            </p>
+            {% if invalid_activity_count %}
+            <div class="alert alert-warning py-2" role="alert">
+                توجد {{ invalid_activity_count }} سجلات نشاط بتاريخ مستقبلي لم تُحتسب ضمن الشركات النشطة.
+            </div>
+            {% endif %}
             <h4 class="mb-3">
                 <i class="fas fa-list me-2"></i>
                 قائمة الشركات وآخر نشاط
@@ -177,9 +190,10 @@
                         <tr>
                             <th>اسم الشركة</th>
                             <th>اسم المستخدم</th>
-                            <th>آخر تسجيل دخول</th>
+                            <th>الحضور الآن</th>
+                            <th>آخر ظهور موثق</th>
                             <th>منذ</th>
-                            <th>الحالة</th>
+                            <th>حالة الحساب</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -187,7 +201,19 @@
                         <tr>
                             <td><strong>{{ company.company_name }}</strong></td>
                             <td>{{ company.username }}</td>
-                            <td>{{ company.last_login_formatted or 'لم يسجل دخول' }}</td>
+                            <td>
+                                {% if company.is_online %}
+                                <span class="badge badge-success"><i class="fas fa-circle me-1"></i>متصل الآن</span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="fas fa-circle-notch me-1"></i>غير متصل</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ company.last_activity_formatted or 'لا يوجد ظهور موثق' }}
+                                {% if company.activity_source %}
+                                <div class="text-muted small">{{ company.activity_source }}</div>
+                                {% endif %}
+                            </td>
                             <td>{{ company.time_ago or '--' }}</td>
                             <td>
                                 {% if company.is_active %}

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    {% include \'_pwa_meta.html\' %}
+    {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقرير نشاط الشركات - لوحة الإدارة</title>
@@ -167,6 +167,10 @@
             background: var(--gradient-danger);
         }
 
+        .stat-card.online::before {
+            background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
+        }
+
         .stat-icon {
             width: 60px;
             height: 60px;
@@ -193,6 +197,10 @@
 
         .stat-icon.inactive {
             background: var(--gradient-danger);
+        }
+
+        .stat-icon.online {
+            background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
         }
 
         .stat-number {
@@ -404,6 +412,26 @@
             color: #991b1b;
         }
 
+        .presence-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .presence-badge.online {
+            background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
+            color: #155e75;
+        }
+
+        .presence-badge.offline {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #475569;
+        }
+
         .subscription-badge {
             padding: 0.5rem 1rem;
             border-radius: 20px;
@@ -417,6 +445,16 @@
         .subscription-badge.premium {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             color: #92400e;
+        }
+
+        .subscription-badge.trial {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+        }
+
+        .subscription-badge.expired {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
         }
 
         .subscription-badge.regular {
@@ -590,24 +628,39 @@
                 <div class="stat-number">{{ active_today }}</div>
                 <div class="stat-label">نشطة اليوم</div>
             </div>
+            <div class="stat-card online">
+                <div class="stat-icon online">
+                    <i class="fas fa-circle"></i>
+                </div>
+                <div class="stat-number" id="onlineNowCount">{{ online_now_count }}</div>
+                <div class="stat-label">متصلة الآن</div>
+            </div>
             <div class="stat-card active-week">
                 <div class="stat-icon active-week">
                     <i class="fas fa-calendar-week"></i>
                 </div>
-                <div class="stat-number">{{ active_this_week }}</div>
-                <div class="stat-label">نشطة هذا الأسبوع</div>
+                <div class="stat-number">{{ active_last_7_days }}</div>
+                <div class="stat-label">نشطة خلال آخر 7 أيام</div>
             </div>
             <div class="stat-card inactive">
                 <div class="stat-icon inactive">
                     <i class="fas fa-clock"></i>
                 </div>
                 <div class="stat-number">{{ inactive_count }}</div>
-                <div class="stat-label">غير نشطة</div>
+                <div class="stat-label">خاملة أو بلا نشاط موثق</div>
             </div>
         </div>
 
         <!-- Search and Controls -->
         <div class="controls-section">
+            <div class="small text-muted mb-3">
+                آخر ظهور موثق = آخر تسجيل دخول ناجح أو استخدام مصادق عليه للمنصة. «متصل الآن» تعني وصول إشارة حضور خلال آخر دقيقتين.
+            </div>
+            {% if invalid_activity_count %}
+            <div class="alert alert-warning py-2" role="alert">
+                توجد {{ invalid_activity_count }} سجلات نشاط بتاريخ مستقبلي؛ لم تُحتسب ضمن الشركات النشطة حتى تصحيح وقت الخادم أو السجل.
+            </div>
+            {% endif %}
             <div class="search-container">
                 <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن شركة بالاسم أو اسم المستخدم..." onkeyup="filterTable()">
                 <i class="fas fa-search search-icon"></i>
@@ -631,15 +684,16 @@
                     <thead>
                         <tr>
                             <th>اسم الشركة</th>
-                            <th>آخر تسجيل دخول</th>
+                            <th>الحضور الآن</th>
+                            <th>آخر ظهور موثق</th>
                             <th>منذ</th>
-                            <th>الحالة</th>
+                            <th>حالة الحساب</th>
                             <th>الاشتراك</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for company in companies %}
-                        <tr>
+                        <tr data-company-id="{{ company.id }}">
                             <td>
                                 <div class="company-info">
                                     <div class="company-name">{{ company.company_name }}</div>
@@ -647,25 +701,21 @@
                                 </div>
                             </td>
                             <td>
+                                <span class="presence-badge {% if company.is_online %}online{% else %}offline{% endif %}" data-presence-badge>
+                                    <i class="fas {% if company.is_online %}fa-circle{% else %}fa-circle-notch{% endif %} me-1"></i>
+                                    <span data-presence-label>{% if company.is_online %}متصل الآن{% else %}غير متصل{% endif %}</span>
+                                </span>
+                            </td>
+                            <td>
                                 <div class="last-login">
-                                    {% if company.last_login %}
-                                        <div class="login-time">{{ company.last_login_formatted }}</div>
-                                    {% else %}
-                                        <div class="text-muted">لم يسجل دخول</div>
-                                    {% endif %}
+                                    <div class="login-time" data-last-activity>{{ company.last_activity_formatted or 'لا يوجد ظهور موثق' }}</div>
+                                    <div class="company-username" data-activity-source>{{ company.activity_source or '' }}</div>
                                 </div>
                             </td>
                             <td>
-                                {% if company.last_login %}
-                                    <span class="time-badge {{ company.activity_class }}">
-                                        {{ company.time_ago }}
-                                    </span>
-                                {% else %}
-                                    <span class="time-badge never">
-                                        <i class="fas fa-times-circle me-1"></i>
-                                        لم يسجل أبداً
-                                    </span>
-                                {% endif %}
+                                <span class="time-badge {{ company.activity_class if company.last_activity else 'never' }}" data-time-ago>
+                                    {{ company.time_ago or 'لا يوجد ظهور موثق' }}
+                                </span>
                             </td>
                             <td>
                                 {% if company.is_active %}
@@ -681,17 +731,10 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if company.is_premium %}
-                                    <span class="subscription-badge premium">
-                                        <i class="fas fa-star me-1"></i>
-                                        بريميوم
-                                    </span>
-                                {% else %}
-                                    <span class="subscription-badge regular">
-                                        <i class="fas fa-user me-1"></i>
-                                        عادي
-                                    </span>
-                                {% endif %}
+                                <span class="subscription-badge {{ company.subscription_class }}">
+                                    <i class="fas {% if company.subscription_class == 'premium' %}fa-star{% elif company.subscription_class == 'trial' %}fa-hourglass-half{% elif company.subscription_class == 'expired' %}fa-clock{% else %}fa-user{% endif %} me-1"></i>
+                                    {{ company.subscription_label }}
+                                </span>
                             </td>
                         </tr>
                         {% endfor %}
@@ -705,6 +748,48 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
+        const companyPresenceEndpoint = {{ url_for('companies_activity_presence')|tojson }};
+
+        function setPresenceBadge(row, isOnline) {
+            const badge = row.querySelector('[data-presence-badge]');
+            const label = row.querySelector('[data-presence-label]');
+            if (!badge || !label) return;
+
+            badge.classList.toggle('online', isOnline);
+            badge.classList.toggle('offline', !isOnline);
+            const icon = badge.querySelector('i');
+            if (icon) icon.className = `fas ${isOnline ? 'fa-circle' : 'fa-circle-notch'} me-1`;
+            label.textContent = isOnline ? 'متصل الآن' : 'غير متصل';
+        }
+
+        function refreshCompanyPresence() {
+            fetch(companyPresenceEndpoint, { credentials: 'same-origin' })
+                .then(response => response.ok ? response.json() : null)
+                .then(data => {
+                    if (!data || !data.success) return;
+
+                    const onlineCount = document.getElementById('onlineNowCount');
+                    if (onlineCount) onlineCount.textContent = data.online_now_count;
+
+                    data.companies.forEach(company => {
+                        const row = document.querySelector(`[data-company-id="${company.id}"]`);
+                        if (!row) return;
+
+                        setPresenceBadge(row, company.is_online);
+                        const lastActivity = row.querySelector('[data-last-activity]');
+                        const source = row.querySelector('[data-activity-source]');
+                        const timeAgo = row.querySelector('[data-time-ago]');
+                        if (lastActivity) lastActivity.textContent = company.last_activity_formatted || 'لا يوجد ظهور موثق';
+                        if (source) source.textContent = company.activity_source || '';
+                        if (timeAgo) {
+                            timeAgo.textContent = company.time_ago || 'لا يوجد ظهور موثق';
+                            timeAgo.className = `time-badge ${company.activity_class || 'never'}`;
+                        }
+                    });
+                })
+                .catch(() => {});
+        }
+
         // Search Filter with enhanced functionality
         function filterTable() {
             const input = document.getElementById('searchInput');
@@ -754,7 +839,8 @@
             // Set column widths
             ws['!cols'] = [
                 {wch: 25}, // Company name
-                {wch: 20}, // Last login
+                {wch: 14}, // Live presence
+                {wch: 20}, // Last seen
                 {wch: 15}, // Time ago
                 {wch: 12}, // Status
                 {wch: 12}  // Subscription
@@ -806,6 +892,8 @@
 
             // Initialize companies count
             updateCompaniesCount({{ companies|length }});
+            refreshCompanyPresence();
+            setInterval(refreshCompanyPresence, 30000);
         });
 
         // Add keyboard shortcuts

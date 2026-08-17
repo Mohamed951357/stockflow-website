@@ -10,7 +10,7 @@ import math
 import re
 from urllib.parse import quote, urlencode
 from html import escape
-import requests # NEW: ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ¥ط·آ·ط¢آ±ط·آ·ط¢آ³ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ¥ط·آ·ط¢آ´ط·آ·ط¢آ¹ط·آ·ط¢آ§ط·آ·ط¢آ±ط·آ·ط¢آ§ط·آ·ط¹آ¾ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸ط¸آ¾ط·آ¸ط«â€ ط·آ·ط¢آ±ط·آ¸ط¸آ¹ط·آ·ط¢آ©
+import requests
 
 try:
     from google.oauth2 import id_token
@@ -19,7 +19,7 @@ try:
 except ImportError:
     GOOGLE_AUTH_AVAILABLE = False
 
-# Web Client ID (from Google Cloud Console ط£آ¢أ¢â‚¬آ أ¢â‚¬â„¢ OAuth 2.0 ط£آ¢أ¢â‚¬آ أ¢â‚¬â„¢ Web Client)
+# Web Client ID (from Google Cloud Console -> OAuth 2.0 -> Web Client)
 GOOGLE_WEB_CLIENT_ID = '873268136156-i4oug6tmlp0mo0r8v7omn25e1f7431m2.apps.googleusercontent.com'
 
 from sqlalchemy import or_, and_, not_, desc, func, extract
@@ -31,6 +31,7 @@ from utils import (
     find_company_for_login,
     normalize_company_name,
     update_company_client_context,
+    issue_user_session_token,
 )
 
 from models import (
@@ -40,9 +41,11 @@ from models import (
     PrivateMessage, PrivateMessageEditLog, 
     CompanyStatus, CompanyStatusView, CompanyStatusReaction,
     ProductReminder, Survey, SurveyQuestion, SurveyResponse, SurveyAnswer, BlockedProduct, SearchLog, AdImage,
-    CompanySurveyStatus, AdStory, ProductReportRequest, CompanyFollow, MessageBlock
+    CompanySurveyStatus, AdStory, ProductReportRequest, CompanyFollow, MessageBlock,
+    PhoneVerificationRequest
 )
 from messaging_warmup_bot import message_visible_to_user
+from stock_report_metrics import calculate_stock_metrics, whole_stock_units
 
 api_mobile_bp = Blueprint('api_mobile', __name__, url_prefix='/api/mobile')
 
@@ -121,7 +124,7 @@ def send_push_notification(target_company_id, title, body, data=None):
         "body": _repair_mojibake_text(body),
         "priority": "high",
         "sound": "default",
-        "channelId": "stockflow_alerts_v4",
+        "channelId": "stockflow_alerts_v5",
         "data": data or {}
     }
     
@@ -466,6 +469,7 @@ def login():
         if user.is_active:
             session['user_type'] = 'company'
             session.permanent = True
+            issue_user_session_token(user)
             login_user(user, remember=remember_me, duration=timedelta(days=30) if remember_me else None)
             try:
                 user.last_login = datetime.utcnow()
@@ -484,7 +488,8 @@ def login():
                     'email': user.email,
                     'phone': user.phone,
                     'avatar': user.avatar,
-                    'is_premium': user.is_premium
+                    'is_premium': bool(getattr(user, 'is_premium_active', False)),
+                    'is_verified': bool(getattr(user, 'is_verified', False))
                 }
             })
         else:
@@ -507,6 +512,7 @@ def signup_company_api():
     email = (data.get('email') or '').strip()
     phone = (data.get('phone') or '').strip()
     invite_code = (data.get('invite_code') or '').strip()
+    verification_code = (data.get('verification_code') or '').strip().upper()
 
     # التحقق من الحقول الإلزامية
     if not username or not password or not company_name or not phone:
@@ -522,16 +528,32 @@ def signup_company_api():
     if not _re.match(r'^01\d{9}$', phone):
         return jsonify({'success': False, 'message': 'رقم الهاتف يجب أن يتكون من 11 رقم ويبدأ بـ 01.'}), 400
 
-    # التحقق من كود الدعوة
-    current_setting = SystemSetting.query.filter_by(setting_key='invite_code').first()
-    current_code = (current_setting.setting_value if current_setting else '') or ''
+    # التحقق من كود الدعوة أو توثيق واتساب
+    is_whatsapp_exempt = False
+    match_kind = None
 
-    if not current_code:
-        return jsonify({'success': False, 'message': 'لم يتم إعداد كود دعوة من قبل الإدارة. يرجى التواصل معهم.'}), 400
+    if verification_code:
+        ver_req = PhoneVerificationRequest.query.filter_by(code=verification_code, is_verified=True).first()
+        if ver_req and not ver_req.is_expired() and ver_req.phone_is_new:
+            p_digits = ''.join(c for c in phone if c.isdigit())
+            req_p_digits = ''.join(c for c in ver_req.phone if c.isdigit())
+            v_req_p_digits = ''.join(c for c in (ver_req.verified_phone or '') if c.isdigit())
+            if p_digits.endswith(req_p_digits[-9:]) or (v_req_p_digits and p_digits.endswith(v_req_p_digits[-9:])):
+                is_whatsapp_exempt = True
 
-    match_kind = resolve_invite_code_match(invite_code)
-    if not match_kind:
-        return jsonify({'success': False, 'message': 'كود الدعوة غير صحيح أو تم استخدامه مسبقاً.'}), 400
+    if not is_whatsapp_exempt:
+        current_setting = SystemSetting.query.filter_by(setting_key='invite_code').first()
+        current_code = (current_setting.setting_value if current_setting else '') or ''
+
+        if not current_code:
+            return jsonify({'success': False, 'message': 'لم يتم إعداد كود دعوة من قبل الإدارة. يرجى التواصل معهم أو تأكيد رقمك عبر واتساب.'}), 400
+
+        if not invite_code:
+            return jsonify({'success': False, 'message': 'كود الدعوة مطلوب لإتمام التسجيل. يرجى إدخال الكود أو تأكيد رقم جديد عبر واتساب.'}), 400
+
+        match_kind = resolve_invite_code_match(invite_code)
+        if not match_kind:
+            return jsonify({'success': False, 'message': 'كود الدعوة غير صحيح أو تم استخدامه مسبقاً.'}), 400
 
     # اسم المستخدم مسموح يتكرر، لكن اسم الشركة نفسه لا يتكرر.
     if company_name_exists(company_name):
@@ -540,6 +562,8 @@ def signup_company_api():
     try:
         from views import _create_company_with_sequence_recovery
         hashed_password = generate_password_hash(password)
+        code_record_value = invite_code if invite_code else (f'WA_VERIFIED:{verification_code}' if is_whatsapp_exempt else 'DIRECT')
+
         new_company = _create_company_with_sequence_recovery(
             username=username,
             password=hashed_password,
@@ -547,10 +571,11 @@ def signup_company_api():
             email=email if email else None,
             phone=phone if phone else None,
             is_active=True,
-            invite_code_used=invite_code,
+            invite_code_used=code_record_value,
             created_at=datetime.utcnow()
         )
-        apply_invite_code_consumed(match_kind)
+        if match_kind:
+            apply_invite_code_consumed(match_kind)
         db.session.commit()
         ensure_following_official_account(new_company)
 
@@ -563,6 +588,106 @@ def signup_company_api():
         return jsonify({'success': False, 'message': f'حدث خطأ أثناء التسجيل: {str(e)}'}), 500
 
 
+
+
+
+@api_mobile_bp.route('/phone_verification/create', methods=['POST'])
+def phone_verification_create_mobile():
+    import random
+    from datetime import datetime, timedelta
+    from urllib.parse import quote
+
+    data = request.get_json() or {}
+    phone = (data.get('phone') or '').strip()
+
+    if not phone:
+        return jsonify({'success': False, 'message': 'يرجى إدخال رقم الهاتف أولاً.'}), 400
+
+    phone_digits = ''.join(c for c in phone if c.isdigit())
+    if len(phone_digits) < 10:
+        return jsonify({'success': False, 'message': 'رقم الهاتف غير صحيح.'}), 400
+
+    rand_num = random.randint(100000, 999999)
+    code = f"SF-{rand_num}"
+
+    while PhoneVerificationRequest.query.filter_by(code=code).first():
+        rand_num = random.randint(100000, 999999)
+        code = f"SF-{rand_num}"
+
+    toby_phone = "201554077727"
+    wa_msg = f"تأكيد رقم ستوك فلو: {code}"
+    wa_url = f"https://wa.me/{toby_phone}?text={quote(wa_msg)}"
+
+    ver_req = PhoneVerificationRequest(
+        code=code,
+        phone=phone_digits,
+        status='pending',
+        is_verified=False,
+        phone_is_new=True,
+        expires_at=datetime.utcnow() + timedelta(minutes=15)
+    )
+    db.session.add(ver_req)
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'}), 500
+
+    return jsonify({
+        'success': True,
+        'code': code,
+        'whatsapp_url': wa_url,
+        'message': 'تم إنشاء كود التحقق بنجاح.'
+    })
+
+
+@api_mobile_bp.route('/phone_verification/status', methods=['GET'])
+def phone_verification_status_mobile():
+    code = (request.args.get('code') or '').strip().upper()
+    if not code:
+        return jsonify({'success': False, 'message': 'كود التحقق مطلوب.'}), 400
+
+    ver_req = PhoneVerificationRequest.query.filter_by(code=code).first()
+    if not ver_req:
+        return jsonify({'success': False, 'message': 'كود التحقق غير موجود.'}), 404
+
+    if ver_req.is_expired():
+        ver_req.status = 'expired'
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return jsonify({
+            'success': True,
+            'verified': False,
+            'status': 'expired',
+            'message': 'انتهت صلاحية كود التحقق. يرجى طلب كود جديد.'
+        })
+
+    if ver_req.status == 'phone_mismatch':
+        return jsonify({
+            'success': True,
+            'verified': False,
+            'status': 'phone_mismatch',
+            'message': 'رقم الواتساب الذي ترسل منه لا يطابق الرقم المدخل في صفحة التسجيل.'
+        })
+
+    if ver_req.is_verified:
+        return jsonify({
+            'success': True,
+            'verified': True,
+            'status': ver_req.status,
+            'phone_is_new': ver_req.phone_is_new,
+            'verified_phone': ver_req.verified_phone,
+            'message': 'تم تأكيد الرقم بنجاح! رقمك جديد ولا يتطلب كود دعوة.' if ver_req.phone_is_new else 'تم تأكيد الرقم! هذا الرقم مسجل لحساب سابق، كود الدعوة مطلوب.'
+        })
+
+    return jsonify({
+        'success': True,
+        'verified': False,
+        'status': ver_req.status,
+        'message': 'في انتظار إرسال الرسالة لتوبي على واتساب...'
+    })
 
 
 @api_mobile_bp.route('/forgot_password', methods=['POST'])
@@ -706,7 +831,15 @@ def change_password_forced():
 @api_mobile_bp.route('/logout', methods=['POST'])
 @login_required
 def logout():
+    if current_user.is_authenticated:
+        try:
+            if current_user.current_session_token == session.get('session_token'):
+                current_user.current_session_token = None
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
     logout_user()
+    session.pop('session_token', None)
     session.pop('user_type', None)
     return jsonify({'success': True, 'message': 'ط·آ·ط¹آ¾ط·آ¸أ¢â‚¬آ¦ ط·آ·ط¹آ¾ط·آ·ط¢آ³ط·آ·ط¢آ¬ط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬â€چ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ®ط·آ·ط¢آ±ط·آ¸ط«â€ ط·آ·ط¢آ¬ ط·آ·ط¢آ¨ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ¬ط·آ·ط¢آ§ط·آ·ط¢آ­.'})
 
@@ -839,6 +972,7 @@ def google_signin():
                 return jsonify({'success': False, 'message': 'ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ­ط·آ·ط¢آ³ط·آ·ط¢آ§ط·آ·ط¢آ¨ ط·آ·ط·â€؛ط·آ¸ط¸آ¹ط·آ·ط¢آ± ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ´ط·آ·ط¢آ·. ط·آ¸ط¸آ¹ط·آ·ط¢آ±ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬آ° ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¹آ¾ط·آ¸ط«â€ ط·آ·ط¢آ§ط·آ·ط¢آµط·آ¸أ¢â‚¬â€چ ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ¹ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ¥ط·آ·ط¢آ¯ط·آ·ط¢آ§ط·آ·ط¢آ±ط·آ·ط¢آ©.'}), 403
                 
             session['user_type'] = 'company'
+            issue_user_session_token(user)
             login_user(user, remember=True, duration=timedelta(days=30))
             session.permanent = True
             
@@ -1034,7 +1168,8 @@ def get_dashboard():
 
     return jsonify({
         'company_name': current_user.company_name,
-        'is_premium': current_user.is_premium,
+        'is_premium': bool(getattr(current_user, 'is_premium_active', False)),
+        'is_verified': bool(getattr(current_user, 'is_verified', False)),
         'unread_notifications': unread_notifications,
         'unread_community': unread_community,
         'unread_messages': unread_messages,
@@ -1058,7 +1193,8 @@ def get_profile():
         'email': current_user.email,
         'phone': current_user.phone,
         'avatar': current_user.avatar,
-        'is_premium': current_user.is_premium,
+        'is_premium': bool(getattr(current_user, 'is_premium_active', False)),
+        'is_verified': bool(getattr(current_user, 'is_verified', False)),
         'premium_end_date': current_user.premium_end_date.isoformat() if current_user.premium_end_date else None,
         'created_at': current_user.created_at.isoformat() if current_user.created_at else None,
         # ط·آ·ط¢آ­ط·آ¸أ¢â‚¬ع‘ط·آ¸ط«â€ ط·آ¸أ¢â‚¬â€چ ط·آ·ط¢آ¬ط·آ·ط¢آ¯ط·آ¸ط¸آ¹ط·آ·ط¢آ¯ط·آ·ط¢آ©
@@ -1344,24 +1480,45 @@ def get_favorites():
     
     # Optimize N+1 query problem by fetching all relevant stock histories in one go
     latest_stocks = {}
+    latest_live_items = {}
     if fav_names:
-        # Fetching all histories for these products, ordered by date descending
+        all_pi = ProductItem.query.filter(ProductItem.name.in_(fav_names)).all()
+        grouped_pi = {}
+        for pi in all_pi:
+            grouped_pi.setdefault(pi.name, []).append(pi)
+            
+        def _sort_k(it):
+            try:
+                qv = float((it.quantity or '').strip())
+            except ValueError:
+                qv = -1.0
+            return (1 if qv > 0 else 0, qv, it.id or 0)
+
+        for p_name, pi_list in grouped_pi.items():
+            latest_live_items[p_name] = sorted(pi_list, key=_sort_k, reverse=True)[0]
+
         all_stocks = ProductStockHistory.query.filter(ProductStockHistory.product_name.in_(fav_names)).order_by(ProductStockHistory.record_date.desc(), ProductStockHistory.recorded_at.desc()).all()
-        # Keep only the first (latest) record for each product
         for stock in all_stocks:
             if stock.product_name not in latest_stocks:
                 latest_stocks[stock.product_name] = stock
                 
     result = []
     for f in favs:
+        live_pi = latest_live_items.get(f.product_name)
         stock = latest_stocks.get(f.product_name)
+        
+        current_stock = live_pi.quantity if (live_pi and live_pi.quantity is not None) else (str(stock.quantity) if (stock and stock.quantity is not None) else (f.quantity or '0'))
+        price = (live_pi.price if live_pi and live_pi.price else None) or (stock.price if stock and stock.price else None) or (f.price or '0')
+        item_code = (live_pi.item_code if live_pi and live_pi.item_code else None) or (getattr(stock, 'item_code', None) if stock else None)
+        discount = (live_pi.discount if live_pi and live_pi.discount else None) or (getattr(stock, 'discount', None) if stock else None)
+
         result.append({
             'id': f.id,
             'product_name': f.product_name,
-            'current_stock': stock.quantity if stock else (f.quantity or '0'),
-            'price': stock.price if stock else (f.price or '0'),
-            'item_code': getattr(stock, 'item_code', None) if stock else None,
-            'discount': getattr(stock, 'discount', None) if stock else None,
+            'current_stock': current_stock,
+            'price': price,
+            'item_code': item_code,
+            'discount': discount,
             'notes': f.notes or '',
             'added_at': f.added_at.strftime('%d/%m/%Y') if f.added_at else ''
         })
@@ -1411,10 +1568,19 @@ def get_balance_report():
             ProductStockHistory.product_name.in_(fav_names),
             ProductStockHistory.record_date >= start_date,
             ProductStockHistory.record_date <= end_date
-        ).order_by(ProductStockHistory.record_date).all()
+        ).order_by(
+            ProductStockHistory.product_name,
+            ProductStockHistory.record_date,
+            ProductStockHistory.recorded_at.desc(),
+            ProductStockHistory.id.desc(),
+        ).all()
         
         for r in all_records:
-            records_by_product[r.product_name].append(r)
+            product_records = records_by_product[r.product_name]
+            # Keep the latest same-day snapshot. Mixing several warehouses for
+            # the same product causes false stock changes and inflated advice.
+            if not product_records or product_records[-1].record_date != r.record_date:
+                product_records.append(r)
 
     for fav in favorites:
         product_name = fav.product_name
@@ -1437,11 +1603,10 @@ def get_balance_report():
 
         numeric_records = []
         for rec in records:
-            try:
-                qty = pack_qty(rec.quantity)
-                numeric_records.append({'date': rec.record_date.isoformat(), 'quantity': qty})
-            except Exception:
-                numeric_records.append({'date': rec.record_date.isoformat(), 'quantity': 0.0})
+            numeric_records.append({
+                'date': rec.record_date.isoformat(),
+                'quantity': whole_stock_units(rec.quantity),
+            })
 
         # ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ ط·آ¸أ¢â‚¬آ¦ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ·ط·آ¸أ¢â‚¬ع‘ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¹آ¾ط·آ¸أ¢â‚¬ع‘ط·آ·ط¢آ±ط·آ¸ط¸آ¹ط·آ·ط¢آ± (ط·آ·ط¢آ¹ط·آ·ط¢آ¨ط·آ¸ط«â€ ط·آ·ط¢آ§ط·آ·ط¹آ¾ ط·آ¸ط¦â€™ط·آ·ط¢آ§ط·آ¸أ¢â‚¬آ¦ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ©) ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬ط£آ¢أ¢â‚¬â€Œأ¢â€ڑآ¬
         # ط·آ·ط¢آ¨ط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬آ  ط·آ·ط¢آ³ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬â€چط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬آ  ط·آ¸أ¢â‚¬آ¦ط·آ·ط¹آ¾ط·آ·ط¹آ¾ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸ط¸آ¹ط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬آ : ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸ط¸آ¾ط·آ·ط¢آ±ط·آ¸أ¢â‚¬ع‘ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ¸ط«â€ ط·آ·ط¢آ¬ط·آ·ط¢آ¨ = ط·آ·ط¹آ¾ط·آ¸ط«â€ ط·آ·ط¢آ±ط·آ¸ط¸آ¹ط·آ·ط¢آ¯ ط·آ¸أ¢â‚¬آ¦ط·آ¸أ¢â‚¬آ  ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ¯ط·آ¸ط«â€ ط·آ·ط¢آ¨ ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬â€چط·آ·ط¢آ´ط·آ·ط¢آ±ط·آ¸ط¦â€™ط·آ·ط¢آ© (ط·آ·ط¢آ²ط·آ¸ط¸آ¹ط·آ·ط¢آ§ط·آ·ط¢آ¯ط·آ·ط¢آ© ط·آ·ط¢آ±ط·آ·ط¢آµط·آ¸ط¸آ¹ط·آ·ط¢آ¯)
@@ -1449,22 +1614,19 @@ def get_balance_report():
         # ط·آ¸ط«â€ ط·آ·ط¢آ¹ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ° ط·آ·ط¢آ£ط·آ·ط¢آ³ط·آ·ط¢آ§ط·آ·ط¢آ³ط·آ¸أ¢â‚¬طŒ ط·آ·ط¹آ¾ط·آ¸ط¹ث†ط·آ·ط¢آ¹ط·آ·ط¢آ±ط·آ·ط¢آ¶ ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ¯ط·آ¸ط«â€ ط·آ·ط¢آ¨: ط·آ¸ط¦â€™ط·آ¸أ¢â‚¬آ¦ ط·آ·ط¢آ¹ط·آ·ط¢آ¨ط·آ¸ط«â€ ط·آ·ط¢آ© ط·آ¸ط¸آ¹ط·آ¸ط¹ث†ط·آ¸أ¢â‚¬ع‘ط·آ·ط¹آ¾ط·آ·ط¢آ±ط·آ·ط¢آ­ ط·آ·ط¢آ£ط·آ¸أ¢â‚¬آ  ط·آ¸ط¸آ¹ط·آ·ط¢آ­ط·آ·ط¢آ¶ط·آ·ط¢آ± ط·آ¸أ¢â‚¬â€چط·آ·ط¹آ¾ط·آ·ط·â€؛ط·آ·ط¢آ·ط·آ¸ط¸آ¹ط·آ·ط¢آ© ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ£ط·آ¸ط¸آ¹ط·آ·ط¢آ§ط·آ¸أ¢â‚¬آ¦ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ³ط·آ·ط¹آ¾ط·آ¸أ¢â‚¬طŒط·آ·ط¢آ¯ط·آ¸ط¸آ¾ط·آ·ط¢آ©.
         supply_packs = 0.0   # ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬آ¦ط·آ¸ط«â€ ط·آ·ط¢آ¹ ط·آ·ط¹آ¾ط·آ¸ط«â€ ط·آ·ط¢آ±ط·آ¸ط¸آ¹ط·آ·ط¢آ¯ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ¯ط·آ¸ط«â€ ط·آ·ط¢آ¨ ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬â€چط·آ·ط¢آ´ط·آ·ط¢آ±ط·آ¸ط¦â€™ط·آ·ط¢آ© (ط·آ·ط¢آ²ط·آ¸ط¸آ¹ط·آ·ط¢آ§ط·آ·ط¢آ¯ط·آ·ط¢آ§ط·آ·ط¹آ¾ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ±ط·آ·ط¢آµط·آ¸ط¸آ¹ط·آ·ط¢آ¯ ط·آ·ط¢آ¨ط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬آ  ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ³ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ§ط·آ·ط¹آ¾)
         consumption_packs = 0.0  # ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬آ¦ط·آ¸ط«â€ ط·آ·ط¢آ¹ ط·آ·ط¢آµط·آ·ط¢آ±ط·آ¸ط¸آ¾ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ´ط·آ·ط¢آ±ط·آ¸ط¦â€™ط·آ·ط¢آ© (ط·آ¸أ¢â‚¬آ ط·آ¸أ¢â‚¬ع‘ط·آ·ط¢آµط·آ·ط¢آ§ط·آ¸أ¢â‚¬آ  ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ±ط·آ·ط¢آµط·آ¸ط¸آ¹ط·آ·ط¢آ¯ ط·آ·ط¢آ¨ط·آ¸ط¸آ¹ط·آ¸أ¢â‚¬آ  ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ³ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ§ط·آ·ط¹آ¾)
-        for i in range(1, len(numeric_records)):
-            diff = numeric_records[i]['quantity'] - numeric_records[i - 1]['quantity']
-            if diff > 0:
-                supply_packs += diff
-            elif diff < 0:
-                consumption_packs += abs(diff)
-
-        start_p = int(pack_qty(numeric_records[0]['quantity']))
-        end_p = int(pack_qty(numeric_records[-1]['quantity']))
+        metrics = calculate_stock_metrics(
+            (record['quantity'] for record in numeric_records),
+            report_days_count,
+        )
+        start_p = metrics['quantities'][0]
+        end_p = metrics['current_stock']
         net_change = end_p - start_p  # ط·آ¸أ¢â‚¬آ¦ط·آ¸ط«â€ ط·آ·ط¢آ¬ط·آ·ط¢آ¨ = ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ±ط·آ·ط¢آµط·آ¸ط¸آ¹ط·آ·ط¢آ¯ ط·آ·ط¢آ²ط·آ·ط¢آ§ط·آ·ط¢آ¯ ط·آ·ط¢آµط·آ·ط¢آ§ط·آ¸ط¸آ¾ط·آ¸ط¸آ¹ط·آ·ط¢آ§ط·آ¸أ¢â‚¬آ¹ ط·آ¸ط¸آ¾ط·آ¸ط¸آ¹ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸ط¸آ¾ط·آ·ط¹آ¾ط·آ·ط¢آ±ط·آ·ط¢آ©
 
-        supply_packs = int(pack_qty(supply_packs))
-        consumption_packs = int(pack_qty(consumption_packs))
+        supply_packs = metrics['total_increase']
+        consumption_packs = metrics['total_decrease']
 
         # ط·آ¸أ¢â‚¬آ¦ط·آ·ط¹آ¾ط·آ¸ط«â€ ط·آ·ط¢آ³ط·آ·ط¢آ· ط·آ·ط¢آµط·آ·ط¢آ±ط·آ¸ط¸آ¾ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ´ط·آ·ط¢آ±ط·آ¸ط¦â€™ط·آ·ط¢آ© ط·آ¸ط¸آ¹ط·آ¸ط«â€ ط·آ¸أ¢â‚¬آ¦ط·آ¸ط¸آ¹ط·آ·ط¢آ§ط·آ¸أ¢â‚¬آ¹ = ط·آ·ط¢آ¥ط·آ·ط¢آ¬ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ¸ط¸آ¹ ط·آ·ط¢آµط·آ·ط¢آ±ط·آ¸ط¸آ¾ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ´ط·آ·ط¢آ±ط·آ¸ط¦â€™ط·آ·ط¢آ© ط·آ£ط¢آ· ط·آ·ط¢آ¹ط·آ·ط¢آ¯ط·آ·ط¢آ¯ ط·آ·ط¢آ£ط·آ¸ط¸آ¹ط·آ·ط¢آ§ط·آ¸أ¢â‚¬آ¦ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¹آ¾ط·آ¸أ¢â‚¬ع‘ط·آ·ط¢آ±ط·آ¸ط¸آ¹ط·آ·ط¢آ±
-        adc = int(pack_qty(consumption_packs / float(report_days_count))) if report_days_count else 0
+        adc = metrics['daily_consumption']
 
         # ط·آ·ط¹آ¾ط·آ·ط·â€؛ط·آ·ط¢آ·ط·آ¸ط¸آ¹ط·آ·ط¢آ© ط·آ·ط¢آ±ط·آ·ط¢آµط·آ¸ط¸آ¹ط·آ·ط¢آ¯ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ´ط·آ·ط¢آ±ط·آ¸ط¦â€™ط·آ·ط¢آ© ط·آ·ط¢آ¨ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ£ط·آ¸ط¸آ¹ط·آ·ط¢آ§ط·آ¸أ¢â‚¬آ¦ ط·آ·ط¢آ¹ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ¯ ط·آ¸أ¢â‚¬آ ط·آ¸ط¸آ¾ط·آ·ط¢آ³ ط·آ¸أ¢â‚¬آ¦ط·آ·ط¹آ¾ط·آ¸ط«â€ ط·آ·ط¢آ³ط·آ·ط¢آ· ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آµط·آ·ط¢آ±ط·آ¸ط¸آ¾
         days_of_cover = None
@@ -1498,9 +1660,8 @@ def get_balance_report():
             health_ar = 'تغطية جيدة وتتناسب مع معدل الاستهلاك'
 
         # ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ§ ط·آ¸ط¸آ¹ط·آ¸ط¹ث†ط·آ·ط¢آ¹ط·آ·ط¢آ±ط·آ·ط¢آ¶ ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ¦ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ¯ط·آ¸ط«â€ ط·آ·ط¢آ¨: ط·آ·ط¢آ¹ط·آ·ط¢آ¨ط·آ¸ط«â€ ط·آ·ط¢آ§ط·آ·ط¹آ¾ ط·آ¸ط¸آ¹ط·آ¸ط¹ث†ط·آ¸أ¢â‚¬ع‘ط·آ·ط¹آ¾ط·آ·ط¢آ±ط·آ·ط¢آ­ ط·آ·ط¢آ¥ط·آ·ط¢آ­ط·آ·ط¢آ¶ط·آ·ط¢آ§ط·آ·ط¢آ±ط·آ¸أ¢â‚¬طŒط·آ·ط¢آ§ ط·آ·ط¢آ¨ط·آ¸أ¢â‚¬آ ط·آ·ط¢آ§ط·آ·ط·إ’ط·آ¸أ¢â‚¬آ¹ ط·آ·ط¢آ¹ط·آ¸أ¢â‚¬â€چط·آ¸أ¢â‚¬آ° ط·آ·ط¢آµط·آ·ط¢آ±ط·آ¸ط¸آ¾ ط·آ·ط¢آ§ط·آ¸أ¢â‚¬â€چط·آ·ط¢آ´ط·آ·ط¢آ±ط·آ¸ط¦â€™ط·آ·ط¢آ© (ط·آ¸أ¢â‚¬طŒط·آ·ط¢آ¯ط·آ¸ط¸آ¾ ط·آ·ط¹آ¾ط·آ·ط·â€؛ط·آ·ط¢آ·ط·آ¸ط¸آ¹ط·آ·ط¢آ© 14 ط·آ¸ط¸آ¹ط·آ¸ط«â€ ط·آ¸أ¢â‚¬آ¦ط·آ·ط¢آ§ط·آ¸أ¢â‚¬آ¹)
-        target_days = 14
-        need_for_target = int(math.ceil(adc * target_days)) if adc > 0 else 0
-        reorder_packs = max(0, need_for_target - end_p)
+        target_days = metrics['target_coverage_days']
+        reorder_packs = metrics['recommended_restock']
         reorder_note_ar = (
             f'بناءً على معدل الاستهلاك الحالي: يحتاج لتوريد {reorder_packs} عبوة لتغطية استهلاك {target_days} يوم.'
             if adc > 0
@@ -1803,8 +1964,8 @@ def get_community_suggestions():
                 'id': c.id,
                 'company_name': c.company_name,
                 'avatar': getattr(c, 'avatar', 'default-male'),
-                'is_verified': getattr(c, 'is_verified', False),
-                'is_premium': getattr(c, 'is_premium', False),
+                'is_verified': bool(getattr(c, 'is_verified', False)),
+                'is_premium': bool(getattr(c, 'is_premium_active', False)),
             })
             
         return jsonify({'success': True, 'suggestions': data})
@@ -1945,7 +2106,7 @@ def get_posts():
         _co = p.company
         _co_name = getattr(_co, 'company_name', 'شركة محذوفة') if _co else 'شركة محذوفة'
         _co_avatar = getattr(_co, 'avatar', 'default-male') if _co else 'default-male'
-        _co_premium = getattr(_co, 'is_premium', False) if _co else False
+        _co_premium = getattr(_co, 'is_premium_active', False) if _co else False
         _co_verified = getattr(_co, 'is_verified', False) if _co else False
 
         data.append({
@@ -2051,8 +2212,8 @@ def create_post():
         'is_mine': True,
         'is_anonymous': p.is_anonymous,
         'is_pinned': p.is_pinned,
-        'is_premium': getattr(p.company, 'is_premium', False) if not p.is_anonymous else False,
-        'is_verified': getattr(p.company, 'is_verified', False) if not p.is_anonymous else False,
+        'is_premium': bool(getattr(p.company, 'is_premium_active', False)) if not p.is_anonymous else False,
+        'is_verified': bool(getattr(p.company, 'is_verified', False)) if not p.is_anonymous else False,
         'last_comment': None,
         'media_file_ids': media_file_ids,
         'media_types': media_types,
@@ -2446,7 +2607,8 @@ def get_conversations():
                     'last_message': m.message[:50],
                     'last_message_time': (m.sent_at.isoformat() + 'Z') if m.sent_at else None,
                     'unread_count': unread,
-                    'is_premium': other.is_premium if not is_anon else False,
+                    'is_premium': bool(getattr(other, 'is_premium_active', False)) if not is_anon else False,
+                    'is_verified': bool(getattr(other, 'is_verified', False)) if not is_anon else False,
                     'is_official': is_official if not is_anon else False,
                     'is_anonymous': is_anon
                 }
@@ -2517,7 +2679,8 @@ def get_conversation(other_id):
         'id': other.id,
         'company_name': display_name,
         'avatar': display_avatar,
-        'is_premium': other.is_premium if not is_anon_param else False,
+        'is_premium': bool(getattr(other, 'is_premium_active', False)) if not is_anon_param else False,
+        'is_verified': bool(getattr(other, 'is_verified', False)) if not is_anon_param else False,
         'is_official': (other.company_name.upper() == 'STOCK FLOW' or other.username.upper() == 'STOCK FLOW') if not is_anon_param else False,
         'is_anonymous': is_anon_param,
     })
@@ -2716,6 +2879,8 @@ def get_available_companies():
             'id': company.id,
             'company_name': company.company_name,
             'avatar': company.avatar or '',
+            'is_premium': bool(getattr(company, 'is_premium_active', False)),
+            'is_verified': bool(getattr(company, 'is_verified', False)),
             'last_seen': last_seen_iso,
             'is_online': is_online
         })
@@ -2756,7 +2921,9 @@ def get_notifications():
                 'message': _repair_mojibake_text(n.message or ''),
                 'created_at': created_at_val,
                 'is_read': is_read,
-                'type': 'system'
+                'type': 'system',
+                'notif_type': getattr(n, 'notif_type', None) or 'system',
+                'notification_type': getattr(n, 'notif_type', None) or 'system',
             })
         except Exception as e:
             print(f"Error processing notification {getattr(n, 'id', 'unknown')}: {e}")
@@ -3029,8 +3196,8 @@ def get_company_community_profile(company_id):
             'company_name': company.company_name,
             'avatar': company.avatar,
             'is_anonymous': False,
-            'is_verified': getattr(company, 'is_premium', False),
-            'is_premium': getattr(company, 'is_premium', False),
+            'is_verified': bool(getattr(company, 'is_verified', False)),
+            'is_premium': bool(getattr(company, 'is_premium_active', False)),
             'media_file_ids': _cp_fids,
             'media_types': _cp_types,
             'media_preview_urls': _cp_previews,
@@ -3043,8 +3210,9 @@ def get_company_community_profile(company_id):
         'profile': {
             'id': company.id,
             'company_name': company.company_name,
-            'avatar': company.avatar or 'ط¸â€¹ط¹ط›ط¹ث†ط¢آ¢',
-            'is_premium': getattr(company, 'is_premium', False),
+            'avatar': company.avatar or '',
+            'is_premium': bool(getattr(company, 'is_premium_active', False)),
+            'is_verified': bool(getattr(company, 'is_verified', False)),
             'created_at': company.created_at.isoformat() if company.created_at else None,
             'followers_count': followers_count,
             'following_count': following_count,

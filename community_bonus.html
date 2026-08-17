@@ -1274,7 +1274,7 @@
                         <div class="post-meta-mobile">
                             <div class="company-name-mobile">
                                 ${displayName}
-                                ${post.is_premium ? '<i class="fas fa-check-circle verification-badge" title="حساب موثق"></i>' : ''}
+                                ${(post.is_verified || post.is_premium) ? '<i class="fas fa-check-circle verification-badge" title="حساب موثق"></i>' : ''}
                             </div>
                             <div class="post-time-mobile">${formatTimeAgo(post.created_at)}</div>
                         </div>

@@ -1011,14 +1011,14 @@
             <div class="profile-info">
                 <h1 class="profile-name">
                     {{ company.company_name }}
-                    {% if company.is_premium or company.company_name == 'STOCK FLOW' %}
+                    {% if company.is_verified %}
                     <i class="fas fa-check-circle verified-badge" title="تم التحقق"></i>
                     {% endif %}
                 </h1>
                 <div class="profile-bio">
                     {{ company.email }}
                 </div>
-                {% if company.is_premium %}
+                {% if company.is_premium_active %}
                 <div class="premium-badge">
                     <i class="fas fa-crown"></i> عضوية مميزة
                 </div>
@@ -1073,7 +1073,7 @@
                     <div class="card-header-fb">
                         <h2 class="card-title-fb">حالة الاشتراك</h2>
                     </div>
-                    {% if company.is_premium %}
+                    {% if company.is_premium_active %}
                     <div class="text-center text-success mb-2">
                         <i class="fas fa-check-circle fa-3x mb-2"></i>
                         <h4>اشتراكك نشط</h4>
@@ -1245,7 +1245,7 @@
                                 <h5 class="mb-0 fw-bold">الاشتراك المميز (Premium)</h5>
                             </div>
                             
-                            {% if company.is_premium %}
+                            {% if company.is_premium_active %}
                             <div class="alert alert-success d-flex align-items-center border-0 rounded-3 py-3">
                                 <i class="fas fa-check-circle fs-4 me-3"></i>
                                 <div>

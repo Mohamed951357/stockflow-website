@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقرير حالة اتصالات السيلز</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#0F1420;
+    --panel:#161D2C;
+    --panel2:#1B2334;
+    --line:#2A3348;
+    --text:#EDEAE0;
+    --muted:#8A93A8;
+    --muted2:#5D6A85;
+    --red:#E1583D;
+    --red-dim:rgba(225,88,61,.14);
+    --gold:#E3B23C;
+    --gold-dim:rgba(227,178,60,.14);
+    --violet:#7C86EC;
+    --violet-dim:rgba(124,134,236,.14);
+    --green:#39BE8E;
+    --green-dim:rgba(57,190,142,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:'IBM Plex Sans Arabic',sans-serif;
+    overflow-x:hidden;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(124,134,236,.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(225,88,61,.08), transparent 60%);
+  }
+  .font-display{font-family:'Cairo',sans-serif;}
+  ::selection{background:var(--gold);color:var(--ink);}
+
+  /* ---------- top scan line (build feel) ---------- */
+  .scanline{
+    position:fixed; top:0; right:0; left:0; height:2px; z-index:999;
+    background:linear-gradient(90deg, var(--red), var(--gold), var(--violet), var(--green));
+    background-size:300% 100%;
+    animation:scanmove 6s linear infinite;
+    opacity:.85;
+  }
+  @keyframes scanmove{0%{background-position:0% 0;}100%{background-position:300% 0;}}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  /* ---------- reveal ---------- */
+  .reveal{opacity:0; transform:translateY(26px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1);}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  /* ---------- header ---------- */
+  header{padding:38px 0 10px;}
+  .eyebrow{
+    display:flex; align-items:center; gap:10px;
+    font-size:13px; color:var(--muted); letter-spacing:.5px;
+  }
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px var(--green-dim); animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  /* ---------- hero ---------- */
+  .hero{
+    display:grid; grid-template-columns:1.15fr .85fr; gap:48px;
+    align-items:center; padding:34px 0 60px; border-bottom:1px solid var(--line);
+  }
+  .hero h1{
+    font-family:'Cairo',sans-serif; font-weight:900; font-size:44px; line-height:1.25;
+    letter-spacing:-.5px; margin:14px 0 18px;
+  }
+  .hero h1 span{color:var(--gold);}
+  .hero p{color:var(--muted); font-size:16.5px; line-height:1.9; max-width:52ch;}
+  .hero-meta{display:flex; gap:26px; margin-top:26px; flex-wrap:wrap;}
+  .hero-meta div{font-size:13px; color:var(--muted2);}
+  .hero-meta b{display:block; color:var(--text); font-family:'Cairo',sans-serif; font-size:20px; font-weight:800;}
+
+  /* ---------- gauge (signature element) ---------- */
+  .gauge-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:22px;
+    padding:30px; display:flex; flex-direction:column; align-items:center;
+    position:relative; overflow:hidden;
+  }
+  .gauge-card::before{
+    content:''; position:absolute; inset:0;
+    background:conic-gradient(from 180deg, transparent, rgba(255,255,255,.04), transparent 30%);
+    animation:sweep 4s linear infinite;
+  }
+  @keyframes sweep{to{transform:rotate(360deg);}}
+  .gauge-wrap{position:relative; width:230px; height:230px;}
+  .gauge-wrap svg{width:100%; height:100%; transform:rotate(-90deg);}
+  .gauge-track{fill:none; stroke:var(--line); stroke-width:14;}
+  .gauge-fill{fill:none; stroke:url(#gaugeGrad); stroke-width:14; stroke-linecap:round;
+    stroke-dasharray:628; stroke-dashoffset:628; transition:stroke-dashoffset 1.8s cubic-bezier(.2,.8,.2,1) .3s;}
+  .gauge-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .gauge-center .num{font-family:'Cairo',sans-serif; font-weight:900; font-size:46px;}
+  .gauge-center .lbl{font-size:12.5px; color:var(--muted); margin-top:4px;}
+  .gauge-legend{display:flex; gap:18px; margin-top:20px; font-size:12.5px; color:var(--muted); z-index:1;}
+  .gauge-legend span{display:flex; align-items:center; gap:6px;}
+  .gauge-legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  /* ---------- section titles ---------- */
+  .section{padding:64px 0;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:30px; gap:16px; flex-wrap:wrap;}
+  .section-head h2{font-family:'Cairo',sans-serif; font-weight:800; font-size:26px;}
+  .section-head p{color:var(--muted); font-size:14px; max-width:46ch;}
+
+  /* ---------- KPI grid ---------- */
+  .kpi-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:14px;}
+  .kpi{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px 18px;
+    position:relative; overflow:hidden; transition:transform .25s ease, border-color .25s ease;
+  }
+  .kpi:hover{transform:translateY(-4px); border-color:var(--muted2);}
+  .kpi .bar{position:absolute; right:0; top:0; bottom:0; width:4px;}
+  .kpi .kval{font-family:'Cairo',sans-serif; font-weight:900; font-size:30px; letter-spacing:-.5px;}
+  .kpi .ksub{font-size:12px; color:var(--muted); margin-top:2px;}
+  .kpi .klabel{font-size:13px; color:var(--text); margin-top:10px; font-weight:600;}
+  .k-red .bar{background:var(--red);} .k-red .kval{color:var(--red);}
+  .k-gold .bar{background:var(--gold);} .k-gold .kval{color:var(--gold);}
+  .k-violet .bar{background:var(--violet);} .k-violet .kval{color:var(--violet);}
+  .k-green .bar{background:var(--green);} .k-green .kval{color:var(--green);}
+  .k-plain .bar{background:var(--muted2);} .k-plain .kval{color:var(--text);}
+
+  /* ---------- charts row ---------- */
+  .charts-row{display:grid; grid-template-columns:1.4fr 1fr; gap:20px;}
+  .panel-box{background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:26px;}
+  .panel-box h3{font-family:'Cairo',sans-serif; font-size:16px; font-weight:700; margin-bottom:4px;}
+  .panel-box .cap{font-size:12.5px; color:var(--muted); margin-bottom:18px;}
+  .chart-holder{position:relative; height:320px;}
+
+  /* ---------- agent table ---------- */
+  .agent-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  .agent-table th{
+    text-align:right; font-family:'Cairo',sans-serif; font-weight:700; font-size:12px;
+    color:var(--muted); padding:10px 12px; border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  .agent-table td{padding:14px 12px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  .agent-table tr:last-child td{border-bottom:none;}
+  .agent-name{font-weight:700; font-family:'Cairo',sans-serif; display:flex; align-items:center; gap:10px;}
+  .avatar{
+    width:32px;height:32px;border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-family:'Cairo',sans-serif; font-weight:800; font-size:13px; color:var(--ink); flex-shrink:0;
+  }
+  .mini-bar{width:100%; height:7px; border-radius:5px; background:var(--line); overflow:hidden;}
+  .mini-bar i{display:block; height:100%; border-radius:5px; width:0; transition:width 1.2s cubic-bezier(.2,.8,.2,1);}
+  .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:600;}
+  .badge-red{background:var(--red-dim); color:var(--red);}
+  .badge-gold{background:var(--gold-dim); color:var(--gold);}
+  .badge-green{background:var(--green-dim); color:var(--green);}
+  .num-cell{font-family:'Cairo',sans-serif; font-weight:700;}
+
+  /* ---------- action list ---------- */
+  .actions{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  .action-card{
+    background:var(--panel); border:1px solid var(--line); border-right:3px solid var(--gold);
+    border-radius:14px; padding:20px;
+  }
+  .action-card b{font-family:'Cairo',sans-serif; display:block; margin-bottom:8px; font-size:14.5px;}
+  .action-card p{color:var(--muted); font-size:13px; line-height:1.8;}
+  .action-card .tag{font-size:11px; color:var(--gold); font-weight:700; margin-bottom:8px; display:block;}
+
+  footer{padding:40px 0 60px; border-top:1px solid var(--line); text-align:center; color:var(--muted2); font-size:12.5px;}
+
+  /* ---------- reassign banner ---------- */
+  .reassign-banner{
+    display:flex; align-items:center; gap:0;
+    background:var(--panel); border:1px solid var(--violet); border-radius:18px;
+    overflow:hidden; box-shadow:0 0 40px rgba(124,134,236,.12);
+  }
+  .rb-item{flex:1; padding:26px 28px; display:flex; flex-direction:column; gap:6px; align-items:center;}
+  .rb-divider{width:1px; height:70px; background:var(--line);}
+  .rb-num{font-family:'Cairo',sans-serif; font-weight:900; font-size:40px; color:var(--violet);}
+  .rb-pct{color:var(--gold);}
+  .rb-lbl{font-size:13px; color:var(--muted); text-align:center;}
+
+  /* ---------- note box ---------- */
+  .note-box{
+    background:var(--panel2); border:1px solid var(--line); border-right:3px solid var(--violet);
+    border-radius:12px; padding:16px 20px; font-size:13.5px; color:var(--muted); line-height:1.85;
+  }
+  .note-box b{color:var(--text);}
+
+  @media(max-width:980px){
+    .reassign-banner{flex-direction:column;}
+    .rb-divider{width:80%; height:1px;}
+  }
+
+  @media(max-width:980px){
+    .hero{grid-template-columns:1fr;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .charts-row{grid-template-columns:1fr;}
+    .actions{grid-template-columns:1fr;}
+    .hero h1{font-size:32px;}
+    .agent-table{font-size:12px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div class="wrap">
+
+  <header class="reveal in">
+    <div class="eyebrow"><span class="dot"></span> تقرير تشغيلي — تم إنشاؤه تلقائيًا من 7 ملفات نتائج · 14 يوليو 2026</div>
+  </header>
+
+  <section class="hero">
+    <div class="reveal in">
+      <div class="eyebrow" style="margin-bottom:10px;">مراجعة حملة الاتصال بالعملاء</div>
+      <h1 class="font-display">صورة كاملة لحالة <span>1,266</span> عميل<br>على مستوى 7 مندوبين سيلز</h1>
+      <p>مراجعة شاملة لنتائج الاتصال بالعملاء توضح مين شغال تمام، ومين محتاج تدخل — أرقام غلط، عملاء واقفين، وأكواد اتحطت على سيلز غلط، عشان الإدارة تاخد قرار سريع.</p>
+      <div class="hero-meta">
+        <div><b id="mTotal">0</b>إجمالي العملاء</div>
+        <div><b id="mAgents">0</b>مندوب سيلز</div>
+        <div><b id="mVip">0</b>عميل مهم (VIP)</div>
+      </div>
+    </div>
+
+    <div class="gauge-card reveal in">
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 220 220">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#39BE8E"/>
+              <stop offset="100%" stop-color="#7C86EC"/>
+            </linearGradient>
+          </defs>
+          <circle class="gauge-track" cx="110" cy="110" r="100"/>
+          <circle id="gaugeFill" class="gauge-fill" cx="110" cy="110" r="100"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="num" id="gaugePct">0%</div>
+          <div class="lbl">عملاء بدون مشاكل</div>
+        </div>
+      </div>
+      <div class="gauge-legend">
+        <span><i style="background:var(--green)"></i> سليم / تم التحقق</span>
+        <span><i style="background:var(--red)"></i> يحتاج متابعة</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= KPIs ================= -->
+  <section class="section">
+    <div class="section-head reveal">
+      <h2 class="font-display">الأرقام الرئيسية</h2>
+      <p>ملخص سريع لأهم المؤشرات اللي محتاجة قرار من الإدارة</p>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi k-plain reveal"><div class="bar"></div>
+        <div class="kval" data-count="1266">0</div>
+        <div class="ksub">100%</div>
+        <div class="klabel">إجمالي العملاء</div>
+      </div>
+      <div class="kpi k-red reveal"><div class="bar"></div>
+        <div class="kval" data-count="694">0</div>
+        <div class="ksub">55% من العملاء</div>
+        <div class="klabel">عملاء بيهم مشكلة</div>
+      </div>
+      <div class="kpi k-gold reveal"><div class="bar"></div>
+        <div class="kval" data-count="851">0</div>
+        <div class="ksub">67% من العملاء</div>
+        <div class="klabel">أرقام هاتف غلط / ناقصة</div>
+      </div>
+      <div class="kpi k-violet reveal"><div class="bar"></div>
+        <div class="kval" data-count="127">0</div>
+        <div class="ksub">10% من إجمالي العملاء</div>
+        <div class="klabel">محتاجين إعادة تسكين على سيلز</div>
+      </div>
+      <div class="kpi k-green reveal"><div class="bar"></div>
+        <div class="kval" data-count="141">0</div>
+        <div class="ksub">11% من العملاء</div>
+        <div class="klabel">عملاء مهمين (VIP)</div>
+      </div>
+      <div class="kpi k-plain reveal"><div class="bar"></div>
+        <div class="kval" data-count="855">0</div>
+        <div class="ksub">235 متخطى · 176 غير مكتمل</div>
+        <div class="klabel">تم إنجاز مراجعتهم</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Charts ================= -->
+  <section class="section">
+    <div class="section-head reveal">
+      <h2 class="font-display">الأداء حسب المندوب</h2>
+      <p>عدد العملاء اللي كل مندوب راجعهم، وقد إيه فيهم مشاكل</p>
+    </div>
+    <div class="charts-row">
+      <div class="panel-box reveal">
+        <h3 class="font-display">عدد العملاء لكل مندوب: كله مقابل فيه مشكلة</h3>
+        <div class="cap">الشريط الفاتح = إجمالي العملاء · الشريط الملوّن = عملاء محتاجين متابعة</div>
+        <div class="chart-holder"><canvas id="agentBar"></canvas></div>
+      </div>
+      <div class="panel-box reveal">
+        <h3 class="font-display">تصنيف الحالات على مستوى كل الملفات</h3>
+        <div class="cap">توزيع كل الملاحظات المسجلة على العملاء</div>
+        <div class="chart-holder"><canvas id="issueDonut"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Agent table ================= -->
+  <section class="section">
+    <div class="section-head reveal">
+      <h2 class="font-display">تفاصيل كل مندوب</h2>
+      <p>نسبة المشاكل ونسبة الأرقام الناقصة لكل مندوب على حدة</p>
+    </div>
+    <div class="panel-box reveal" style="overflow-x:auto;">
+      <table class="agent-table">
+        <thead>
+          <tr>
+            <th>المندوب</th>
+            <th>إجمالي العملاء</th>
+            <th>أرقام ناقصة/غلط</th>
+            <th>عملاء بيهم مشكلة</th>
+            <th>عملاء مهمين</th>
+            <th>حالة الإنجاز</th>
+          </tr>
+        </thead>
+        <tbody id="agentTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= Reassignment Section ================= -->
+  <section class="section">
+    <div class="section-head reveal">
+      <h2 class="font-display">⚠️ عملاء محتاجين إعادة تسكين على السيلز الصح</h2>
+      <p>كل عميل مكتوب عليه "مش معايا" أو "مش تبعي" يعني إنه اتحط غلط — لازم ينقل للسيلز المسؤول عنه</p>
+    </div>
+
+    <!-- summary banner -->
+    <div class="reassign-banner reveal">
+      <div class="rb-item">
+        <span class="rb-num" id="rbTotal">0</span>
+        <span class="rb-lbl">إجمالي العملاء المغلوط تسكينهم</span>
+      </div>
+      <div class="rb-divider"></div>
+      <div class="rb-item">
+        <span class="rb-num rb-pct" id="rbPct">0%</span>
+        <span class="rb-lbl">من إجمالي 1,266 عميل</span>
+      </div>
+      <div class="rb-divider"></div>
+      <div class="rb-item">
+        <span class="rb-num" style="color:var(--red)" id="rbWorst">0</span>
+        <span class="rb-lbl">أعلى تركيز عند خالد مسعود (38%)</span>
+      </div>
+    </div>
+
+    <!-- per-agent breakdown -->
+    <div class="panel-box reveal" style="overflow-x:auto; margin-top:20px;">
+      <table class="agent-table">
+        <thead>
+          <tr>
+            <th>المندوب</th>
+            <th>عدد العملاء الكلي</th>
+            <th>محتاجين إعادة تسكين</th>
+            <th>النسبة من قائمته</th>
+            <th>مستوى الخطورة</th>
+          </tr>
+        </thead>
+        <tbody id="reassignTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- explanation note -->
+    <div class="note-box reveal" style="margin-top:16px;">
+      <b>📌 ملاحظة:</b> هؤلاء العملاء موجودون فعلاً في قوائم السيلز الحاليين — لكن السيلز نفسه كتب "مش تبعي" أو "مش معايا"، يعني هو بيُقر إن العميل ده مش تبعه وإن في خطأ في التسكين الأصلي. الحل: مراجعة كود كل عميل وتحويله للسيلز الصح.
+    </div>
+  </section>
+
+  <!-- ================= Actions ================= -->
+  <section class="section">
+    <div class="section-head reveal">
+      <h2 class="font-display">إيه اللي محتاج نتحرك فيه دلوقتي</h2>
+      <p>ثلاث نقاط لو الإدارة عايزة تبدأ بيهم</p>
+    </div>
+    <div class="actions">
+      <div class="action-card reveal">
+        <span class="tag">أولوية عالية</span>
+        <b>استكمال بيانات هناء ومحمد الأشلم</b>
+        <p>100% من عملاء هناء و83% من عملاء محمد الأشلم لسه من غير رقم هاتف موثق أو حالتهم غير مكتملة — محتاجين جولة اتصال تانية قبل أي تقييم.</p>
+      </div>
+      <div class="action-card reveal">
+        <span class="tag">إعادة تسكين فورية</span>
+        <b>127 عميل محتاجين ينتقلوا لسيلز تاني</b>
+        <p>خالد مسعود عنده 68 عميل (38% من قائمته) وأحمد عمر 24 عميل (37%) — كلهم مكتوب عليهم "مش معايا" أو "مش تبعي". لازم تراجع كود كل واحد وتنقله للسيلز المسؤول.</p>
+      </div>
+      <div class="action-card reveal">
+        <span class="tag">متابعة عملاء</span>
+        <b>204 عميل واقف أو مش بيرد</b>
+        <p>عند أحمد عمر وخالد مسعود بالذات — غالبًا بسبب الخصومات. ممكن تدخل من الإدارة يرجّع جزء كبير منهم للطلب العادي.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="reveal">
+    تقرير مُولّد من بيانات 7 ملفات إكسل بتاريخ 14 يوليو 2026 — للاستخدام الداخلي لإدارة المبيعات
+  </footer>
+
+</div>
+
+<script>
+const AGENTS = [
+  {name:"أحمد عبدالسلام", total:293, missing:273, problem:95, vip:78, done:293, skipped:0, incomplete:0, color:"#E1583D"},
+  {name:"أحمد عمر",        total:65,  missing:29,  problem:38, vip:0,  done:64,  skipped:1,   incomplete:0, color:"#E3B23C"},
+  {name:"خالد مسعود",      total:178, missing:82,  problem:82, vip:3,  done:178, skipped:0,   incomplete:0, color:"#7C86EC"},
+  {name:"محمد الأشلم",     total:312, missing:260, problem:260,vip:41, done:104, skipped:208, incomplete:0, color:"#E1583D"},
+  {name:"محمود شرارة",     total:17,  missing:2,   problem:5,  vip:4,  done:17,  skipped:0,   incomplete:0, color:"#39BE8E"},
+  {name:"نهال",            total:199, missing:0,   problem:12, vip:15, done:199, skipped:0,   incomplete:0, color:"#39BE8E"},
+  {name:"هناء محمد خضر",   total:202, missing:202, problem:202,vip:0,  done:0,   skipped:26,  incomplete:176, color:"#E1583D"},
+];
+
+const OVERALL = { total:1266, problem:694, wrongPhone:851, wrongCode:127, vip:141 };
+
+const REASSIGN = [
+  {name:"أحمد عبدالسلام", total:293, count:26},
+  {name:"أحمد عمر",        total:65,  count:24},
+  {name:"خالد مسعود",      total:178, count:68},
+  {name:"محمد الأشلم",     total:312, count:9},
+  {name:"محمود شرارة",     total:17,  count:0},
+  {name:"نهال",            total:199, count:0},
+  {name:"هناء محمد خضر",   total:202, count:0},
+];
+
+/* ---------------- counters ---------------- */
+function animateCount(el, target, duration=1400){
+  const start=performance.now();
+  function tick(now){
+    const p=Math.min((now-start)/duration,1);
+    const eased=1-Math.pow(1-p,3);
+    el.textContent = Math.round(eased*target).toLocaleString('en-US');
+    if(p<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ---------------- reveal on scroll ---------------- */
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    }
+  });
+},{threshold:.15});
+document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+
+/* ---------------- hero meta + gauge ---------------- */
+window.addEventListener('DOMContentLoaded', ()=>{
+  animateCount(document.getElementById('mTotal'), OVERALL.total);
+  animateCount(document.getElementById('mAgents'), AGENTS.length, 900);
+  animateCount(document.getElementById('mVip'), OVERALL.vip, 1200);
+
+  const cleanPct = Math.round((1-OVERALL.problem/OVERALL.total)*100);
+  const circumference = 628;
+  const offset = circumference - (cleanPct/100)*circumference;
+  setTimeout(()=>{
+    document.getElementById('gaugeFill').style.strokeDashoffset = offset;
+  }, 250);
+  animateCount(document.getElementById('gaugePct'), cleanPct, 1800);
+  // suffix %
+  const gp = document.getElementById('gaugePct');
+  const obs = setInterval(()=>{
+    if(!gp.textContent.includes('%')) gp.textContent = gp.textContent + '%';
+  },100);
+  setTimeout(()=>clearInterval(obs), 2200);
+
+  // KPI counters
+  document.querySelectorAll('.kval[data-count]').forEach((el,i)=>{
+    setTimeout(()=>animateCount(el, parseInt(el.dataset.count), 1300), i*90);
+  });
+
+  // Agent table
+  const tbody = document.getElementById('agentTableBody');
+  AGENTS.forEach((a,i)=>{
+    const missingPct = Math.round(a.missing/a.total*100);
+    const problemPct = Math.round(a.problem/a.total*100);
+    const donePct = Math.round(a.done/a.total*100);
+    const statusBadge = donePct===100
+      ? `<span class="badge badge-green">مكتمل بالكامل</span>`
+      : donePct===0
+      ? `<span class="badge badge-red">لم يبدأ</span>`
+      : `<span class="badge badge-gold">${donePct}% مكتمل</span>`;
+    const initials = a.name.trim().split(' ').slice(0,2).map(w=>w[0]).join('');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="agent-name"><span class="avatar" style="background:${a.color}">${initials}</span>${a.name}</div></td>
+      <td class="num-cell">${a.total.toLocaleString('en-US')}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="mini-bar" style="width:70px;"><i id="mb-missing-${i}" style="background:var(--gold)"></i></div>
+          <span style="font-size:12px;color:var(--muted)">${missingPct}%</span>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="mini-bar" style="width:70px;"><i id="mb-problem-${i}" style="background:var(--red)"></i></div>
+          <span style="font-size:12px;color:var(--muted)">${problemPct}%</span>
+        </div>
+      </td>
+      <td class="num-cell">${a.vip}</td>
+      <td>${statusBadge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const tableObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        AGENTS.forEach((a,i)=>{
+          const missingPct = Math.round(a.missing/a.total*100);
+          const problemPct = Math.round(a.problem/a.total*100);
+          setTimeout(()=>{
+            const m = document.getElementById(`mb-missing-${i}`);
+            const p = document.getElementById(`mb-problem-${i}`);
+            if(m) m.style.width = missingPct+'%';
+            if(p) p.style.width = problemPct+'%';
+          }, i*80);
+        });
+        tableObserver.disconnect();
+      }
+    });
+  },{threshold:.1});
+  tableObserver.observe(document.getElementById('agentTableBody'));
+
+  /* ---------- reassign banner ---------- */
+  const REASSIGN_TOTAL = REASSIGN.reduce((s,a)=>s+a.count,0);
+  const reassignBannerObs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        animateCount(document.getElementById('rbTotal'), REASSIGN_TOTAL, 1200);
+        animateCount(document.getElementById('rbWorst'), 68, 1200);
+        const pctEl = document.getElementById('rbPct');
+        animateCount(pctEl, Math.round(REASSIGN_TOTAL/1266*100), 1200);
+        setTimeout(()=>{ if(!pctEl.textContent.includes('%')) pctEl.textContent += '%'; },1300);
+        reassignBannerObs.disconnect();
+      }
+    });
+  },{threshold:.2});
+  if(document.getElementById('rbTotal')) reassignBannerObs.observe(document.getElementById('rbTotal'));
+
+  /* ---------- reassign table ---------- */
+  const rtBody = document.getElementById('reassignTableBody');
+  if(rtBody){
+    REASSIGN.forEach((a,i)=>{
+      const pct = a.total > 0 ? Math.round(a.count/a.total*100) : 0;
+      let badge = '';
+      if(pct >= 30) badge = '<span class="badge badge-red">خطر عالي</span>';
+      else if(pct >= 10) badge = '<span class="badge badge-gold">متوسط</span>';
+      else if(pct > 0) badge = '<span class="badge" style="background:var(--violet-dim);color:var(--violet)">منخفض</span>';
+      else badge = '<span class="badge badge-green">لا يوجد</span>';
+
+      const initials = a.name.trim().split(' ').slice(0,2).map(w=>w[0]).join('');
+      const clr = pct>=30?'#E1583D': pct>=10?'#E3B23C': pct>0?'#7C86EC':'#39BE8E';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><div class="agent-name">
+          <span class="avatar" style="background:${clr}">${initials}</span>
+          ${a.name}
+        </div></td>
+        <td class="num-cell">${a.total}</td>
+        <td class="num-cell" style="color:${a.count>0?clr:'var(--muted)'};font-size:22px;">${a.count}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="mini-bar" style="width:90px;"><i id="rb-bar-${i}" style="background:${clr}"></i></div>
+            <span style="font-size:13px;font-weight:700;color:${clr}">${pct}%</span>
+          </div>
+        </td>
+        <td>${badge}</td>
+      `;
+      rtBody.appendChild(tr);
+    });
+
+    const rbObs = new IntersectionObserver((entries)=>{
+      entries.forEach(en=>{
+        if(en.isIntersecting){
+          REASSIGN.forEach((a,i)=>{
+            const pct = a.total>0 ? Math.round(a.count/a.total*100):0;
+            setTimeout(()=>{
+              const bar = document.getElementById(`rb-bar-${i}`);
+              if(bar) bar.style.width = pct+'%';
+            }, i*80);
+          });
+          rbObs.disconnect();
+        }
+      });
+    },{threshold:.1});
+    rbObs.observe(rtBody);
+  }
+
+  /* ---------------- charts ---------------- */
+  if (typeof Chart === 'undefined') {
+    // primary CDN failed to load — try a fallback CDN before giving up
+    const fallback = document.createElement('script');
+    fallback.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js';
+    fallback.onload = initCharts;
+    fallback.onerror = () => {
+      document.querySelectorAll('.chart-holder').forEach(h=>{
+        h.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px;">تعذّر تحميل مكتبة الرسوم البيانية</div>';
+      });
+    };
+    document.head.appendChild(fallback);
+  } else {
+    initCharts();
+  }
+});
+
+function initCharts(){
+  Chart.defaults.font.family = "'IBM Plex Sans Arabic', sans-serif";
+  Chart.defaults.color = '#8A93A8';
+
+  const barCtx = document.getElementById('agentBar');
+  new Chart(barCtx, {
+    type:'bar',
+    data:{
+      labels:AGENTS.map(a=>a.name),
+      datasets:[
+        {
+          label:'إجمالي العملاء',
+          data:AGENTS.map(a=>a.total),
+          backgroundColor:'rgba(255,255,255,.08)',
+          borderRadius:6,
+          barPercentage:.75,
+        },
+        {
+          label:'عملاء بهم مشكلة',
+          data:AGENTS.map(a=>a.problem),
+          backgroundColor:AGENTS.map(a=>a.color),
+          borderRadius:6,
+          barPercentage:.75,
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:1600, easing:'easeOutCubic'},
+      plugins:{
+        legend:{position:'top', align:'end', labels:{boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'circle'}},
+        tooltip:{rtl:true, bodyFont:{family:"'IBM Plex Sans Arabic'"}, titleFont:{family:"'Cairo'"}}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11}}},
+        y:{grid:{color:'rgba(255,255,255,.06)'}, beginAtZero:true}
+      }
+    }
+  });
+
+  const donutCtx = document.getElementById('issueDonut');
+  new Chart(donutCtx, {
+    type:'doughnut',
+    data:{
+      labels:['بدون ملاحظات','تم التحقق - سليم','متوقف / لا يستجيب','ملاحظات أخرى','خصومات','أكواد سيلز غلط','أرقام موثقة غلط'],
+      datasets:[{
+        data:[733,180,204,130,5,11,3],
+        backgroundColor:['#2A3348','#39BE8E','#E1583D','#7C86EC','#E3B23C','#EC7CC9','#E38C3C'],
+        borderColor:'#161D2C',
+        borderWidth:3,
+        hoverOffset:8,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      cutout:'62%',
+      animation:{animateRotate:true, animateScale:true, duration:1700, easing:'easeOutCubic'},
+      plugins:{
+        legend:{position:'bottom', labels:{boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'circle', font:{size:11}, padding:12}},
+        tooltip:{rtl:true, bodyFont:{family:"'IBM Plex Sans Arabic'"}}
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
