@@ -3165,6 +3165,33 @@ def register_views(app):
         if total_searches > 0:
             average_results_per_search = db.session.query(func.avg(SearchLog.results_count)).filter_by(company_id=company_id).scalar() or 0.0
 
+        # حساب النسب المئوية والرسومات البيانية
+        search_usage_pct = 100 if getattr(current_user, 'is_premium', False) else min(100, round((monthly_search_count / max(1, monthly_search_limit)) * 100))
+        
+        # نسبة اكتمال الملف التعريفي
+        profile_points = 0
+        if getattr(current_user, 'company_name', None): profile_points += 25
+        if getattr(current_user, 'email', None): profile_points += 25
+        if getattr(current_user, 'phone', None) or getattr(current_user, 'phone_number', None) or getattr(current_user, 'username', None): profile_points += 25
+        if getattr(current_user, 'avatar', None): profile_points += 25
+        profile_completion_pct = max(25, profile_points)
+
+        # نشاط البحث خلال آخر 7 أيام للرسم البياني
+        daily_searches_labels = []
+        daily_searches_data = []
+        arabic_day_names = ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد']
+        for i in range(6, -1, -1):
+            target_day = datetime.utcnow().date() - timedelta(days=i)
+            target_day_start = datetime.combine(target_day, datetime.min.time())
+            target_day_end = datetime.combine(target_day, datetime.max.time())
+            day_count = db.session.query(func.count(SearchLog.id)).filter(
+                SearchLog.company_id == company_id,
+                SearchLog.search_date >= target_day_start,
+                SearchLog.search_date <= target_day_end
+            ).scalar() or 0
+            daily_searches_labels.append(arabic_day_names[target_day.weekday()])
+            daily_searches_data.append(day_count)
+
         # حساب عدد المنشورات الجديدة منذ آخر زيارة للمجتمع
         unread_community_posts_count = 0
         if current_user.last_community_visit:
@@ -3296,6 +3323,10 @@ def register_views(app):
                                premium_message=premium_message,
                                monthly_search_limit=monthly_search_limit,
                                monthly_search_count=monthly_search_count,
+                               search_usage_pct=search_usage_pct,
+                               profile_completion_pct=profile_completion_pct,
+                               daily_searches_labels=daily_searches_labels,
+                               daily_searches_data=daily_searches_data,
                                total_searches=total_searches,
                                unique_search_terms_count=unique_search_terms_count,
                                average_results_per_search=average_results_per_search,

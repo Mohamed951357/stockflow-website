@@ -32,6 +32,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/shimmer.css') }}?v=1.0" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {% if ramadan_theme_enabled %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ramadan_theme.css') }}">
     {% endif %}
@@ -4229,6 +4230,158 @@
 
         </div>
 
+        <!-- قسم مركز الإحصائيات والمؤشرات البيانية -->
+        <div class="analytics-hub-section mt-4">
+            <!-- الهيدر الخاص بقسم المؤشرات -->
+            <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="fas fa-chart-pie fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark" style="font-size: 1.05rem;">مركز مؤشرات ونشاط الشركة</h5>
+                        <p class="text-muted small mb-0">تحليل فوري لمعدل البحث، استهلاك الباقة، والتفاعل</p>
+                    </div>
+                </div>
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold small">
+                    <i class="fas fa-sync-alt me-1 fa-spin" style="animation-duration: 6s;"></i> بيانات محدثة
+                </span>
+            </div>
+
+            <!-- شبكة بطاقات المؤشرات والنسب المئوية (KPIs) -->
+            <div class="row g-3 mb-4">
+                <!-- 1. استهلاك البحث الشهري -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 p-3" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted fw-semibold small">استهلاك البحث الشهري</span>
+                            <span class="badge {% if company.is_premium %}bg-success text-white{% elif search_usage_pct > 80 %}bg-danger text-white{% else %}bg-primary bg-opacity-10 text-primary{% endif %} rounded-pill px-2.5 py-1 small fw-bold">
+                                {% if company.is_premium %}غير محدود ♾️{% else %}{{ search_usage_pct }}%{% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="fw-bold mb-0 text-dark counter-value" data-count="{{ monthly_search_count }}">{{ monthly_search_count }}</h3>
+                            <span class="text-muted small">/ {% if company.is_premium %}∞{% else %}{{ monthly_search_limit }}{% endif %} بحث</span>
+                        </div>
+                        <!-- Progress Bar -->
+                        <div class="progress" style="height: 6px; border-radius: 999px; background: #e2e8f0;">
+                            <div class="progress-bar {% if company.is_premium %}bg-success{% elif search_usage_pct > 80 %}bg-danger{% elif search_usage_pct > 50 %}bg-warning{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ search_usage_pct }}%;" aria-valuenow="{{ search_usage_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 small text-muted">
+                            <span>{% if company.is_premium %}باقة PLUS نشطة{% else %}المتبقي: {{ [monthly_search_limit - monthly_search_count, 0]|max }}{% endif %}</span>
+                            <i class="fas fa-search-dollar text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. نسبة اكتمال الملف التعريفي -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 p-3" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted fw-semibold small">اكتمال الملف التعريفي</span>
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-2.5 py-1 small fw-bold">
+                                {{ profile_completion_pct }}%
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="fw-bold mb-0 text-dark">{{ profile_completion_pct }}%</h3>
+                            <span class="text-muted small">جاهزية الحساب</span>
+                        </div>
+                        <!-- Progress Bar -->
+                        <div class="progress" style="height: 6px; border-radius: 999px; background: #e2e8f0;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ profile_completion_pct }}%;" aria-valuenow="{{ profile_completion_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 small text-muted">
+                            <span>{% if profile_completion_pct == 100 %}الملف مكتمل بنجاح{% else %}يمكنك تحديث الأفاتار والبيانات{% endif %}</span>
+                            <i class="fas fa-id-badge text-info"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. إجمالي عمليات البحث ومعدل النتائج -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 p-3" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted fw-semibold small">إجمالي البحثات</span>
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5 py-1 small fw-bold">
+                                كلي
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="fw-bold mb-0 text-success counter-value" data-count="{{ total_searches or 0 }}">{{ total_searches or 0 }}</h3>
+                            <span class="text-muted small">عملية بحث</span>
+                        </div>
+                        <div class="small text-muted mt-auto pt-1 d-flex justify-content-between align-items-center border-top">
+                            <span>متوسط النتائج: <strong>{{ "%.1f"|format(average_results_per_search) }}</strong></span>
+                            <i class="fas fa-boxes text-success"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. المواعيد المحجوزة والانضمام -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 p-3" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted fw-semibold small">المواعيد والتسجيل</span>
+                            <span class="badge bg-warning bg-opacity-10 text-dark rounded-pill px-2.5 py-1 small fw-bold">
+                                {{ booked_appointments_count or 0 }} موعد
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="fw-bold mb-0 text-dark counter-value" data-count="{{ booked_appointments_count or 0 }}">{{ booked_appointments_count or 0 }}</h3>
+                            <span class="text-muted small">حجوزات نشطة</span>
+                        </div>
+                        <div class="small text-muted mt-auto pt-1 d-flex justify-content-between align-items-center border-top">
+                            <span>عضو منذ: <strong>{{ company.created_at.strftime('%Y-%m-%d') }}</strong></span>
+                            <i class="fas fa-calendar-check text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- شبكة الرسوم البيانية (Interactive Visual Charts) -->
+            <div class="row g-3 mb-4">
+                <!-- رسم بياني 1: نشاط البحث الأسبوعي -->
+                <div class="col-12 col-lg-8">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 h-100" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                    <i class="fas fa-chart-line text-primary"></i>
+                                    مخطط نشاط البحث خلال آخر 7 أيام
+                                </h6>
+                                <span class="text-muted small">تتبع يومي لعمليات البحث التي نفذتها الشركة</span>
+                            </div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1.5 rounded-pill small fw-semibold">
+                                آخر 7 أيام
+                            </span>
+                        </div>
+                        <div style="position: relative; height: 230px; width: 100%;">
+                            <canvas id="weeklySearchesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- رسم بياني 2: توزيع نشاط المنصة -->
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 h-100" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                    <i class="fas fa-chart-pie text-success"></i>
+                                    توزيع نشاط المنصة
+                                </h6>
+                                <span class="text-muted small">نسبة التفاعل عبر خدمات STOCKFLOW</span>
+                            </div>
+                        </div>
+                        <div style="position: relative; height: 230px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="platformEngagementChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- قسم آخر ما تم نشره في المجتمع -->
         <div class="row mt-4 mb-2">
             <div class="col-md-12">
@@ -6789,6 +6942,123 @@
     </script>
     {% endif %}
 
+    <!-- Chart.js Initialization for Company Dashboard -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Weekly Searches Trend Chart
+            const weeklyCtx = document.getElementById('weeklySearchesChart');
+            if (weeklyCtx && typeof Chart !== 'undefined') {
+                const labels = {{ daily_searches_labels|default(['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'])|tojson }};
+                const searchData = {{ daily_searches_data|default([0, 0, 0, 0, 0, 0, 0])|tojson }};
+
+                const gradient = weeklyCtx.getContext('2d').createLinearGradient(0, 0, 0, 200);
+                gradient.addColorStop(0, 'rgba(18, 67, 196, 0.35)');
+                gradient.addColorStop(1, 'rgba(18, 67, 196, 0.0)');
+
+                new Chart(weeklyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'عمليات البحث اليومية',
+                            data: searchData,
+                            borderColor: '#1243C4',
+                            backgroundColor: gradient,
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#1243C4',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                rtl: true,
+                                bodyFont: { family: 'Cairo' },
+                                titleFont: { family: 'Cairo' },
+                                callbacks: {
+                                    label: function(context) {
+                                        return ` ${context.parsed.y} عملية بحث`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { family: 'Cairo', size: 11 }, color: '#64748b' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f1f5f9' },
+                                ticks: {
+                                    font: { family: 'Cairo', size: 11 },
+                                    color: '#64748b',
+                                    stepSize: 1,
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Platform Engagement Donut Chart
+            const engCtx = document.getElementById('platformEngagementChart');
+            if (engCtx && typeof Chart !== 'undefined') {
+                const totalSearches = {{ total_searches or 0 }};
+                const totalMessages = {{ unread_private_messages_count or 0 }};
+                const totalAppointments = {{ booked_appointments_count or 0 }};
+                const totalInteractions = {{ unread_community_interactions_count or 0 }};
+
+                // Fallback to minimal distribution if brand new account
+                const dataValues = (totalSearches + totalMessages + totalAppointments + totalInteractions > 0)
+                    ? [totalSearches, totalMessages, totalAppointments, totalInteractions]
+                    : [1, 0, 0, 0];
+
+                new Chart(engCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['البحث', 'الرسائل', 'المواعيد', 'المجتمع'],
+                        datasets: [{
+                            data: dataValues,
+                            backgroundColor: ['#1243C4', '#06b6d4', '#f59e0b', '#10b981'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '72%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { family: 'Cairo', size: 11 },
+                                    boxWidth: 12,
+                                    padding: 12
+                                }
+                            },
+                            tooltip: {
+                                rtl: true,
+                                bodyFont: { family: 'Cairo' },
+                                titleFont: { family: 'Cairo' }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
     </body>
 
 </html>
