@@ -6290,7 +6290,7 @@
         statsElement.innerHTML = statsHTML;
     }
 
-    // دالة عرض الشركات المتواجدة الآن
+    // دالة عرض الشركات المسجلة لدى ستوك فلو
     function showWelcomeOnlineCompanies() {
         const statsElement = document.getElementById('welcomeOnlineCompaniesCarousel');
         const welcomeCard = document.getElementById('welcomeCard');
@@ -6304,11 +6304,11 @@
 
         const statsHTML = `
 <div class="welcome-stats-container">
-    <div class="welcome-stats-title">🏢 الشركات المتواجدة الآن</div>
+    <div class="welcome-stats-title">🏢 الشركات المسجلة لدى ستوك فلو</div>
     <div class="welcome-top-list ${isPremium ? 'premium-list' : ''}">
         <div class="welcome-top-item ${isPremium ? 'premium-item' : ''}" style="justify-content: center; flex-direction: column; gap: 5px;">
-            <div id="onlineCompaniesCountValue" style="font-size: 2rem; font-weight: bold; color: #dc3545;">${initialCount}</div>
-            <div style="font-size: 0.9rem; opacity: 0.8;">شركة نشطة حالياً</div>
+            <div id="onlineCompaniesCountValue" style="font-size: 2rem; font-weight: bold; color: #1243C4;">${initialCount}</div>
+            <div style="font-size: 0.9rem; opacity: 0.85; font-weight: 600;">شركة مسجلة حالياً</div>
         </div>
     </div>
 </div>
