@@ -7163,8 +7163,15 @@ def register_views(app):
                 import traceback
                 traceback.print_exc()
 
-        companies = Company.query.filter_by(is_active=True).all()
-        return render_template('send_notification.html', companies=companies)
+        companies = Company.query.filter_by(is_active=True).order_by(Company.company_name.asc()).all()
+        total_notifications_count = Notification.query.count()
+        active_notifications_count = Notification.query.filter_by(is_active=True).count()
+        return render_template(
+            'send_notification.html',
+            companies=companies,
+            total_notifications_count=total_notifications_count,
+            active_notifications_count=active_notifications_count
+        )
 
     @app.route('/admin_notifications')
     @login_required

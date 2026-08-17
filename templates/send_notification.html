@@ -5,14 +5,21 @@
     {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بونص فارما - إرسال إشعار</title>
+    <title>بونص فارما - إرسال الإشعارات</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            --accent-gradient: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%);
+            --card-radius: 16px;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background-color: #f4f6f9;
             font-family: 'Cairo', sans-serif;
+            color: #2c3e50;
         }
 
         .navbar {
@@ -20,101 +27,214 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .main-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        /* Hero Header */
+        .page-header-card {
             background: white;
+            border-radius: var(--card-radius);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-mini-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .stat-mini-box:hover {
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* Main Form Card */
+        .form-card {
+            background: white;
+            border-radius: var(--card-radius);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
             overflow: hidden;
         }
 
-        .card-header-custom {
-            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
-            color: white;
-            padding: 1.5rem;
-            border-bottom: none;
+        .card-header-styled {
+            background: #ffffff;
+            border-bottom: 1px solid #edf2f7;
+            padding: 1.25rem 1.75rem;
         }
 
-        .form-label {
+        /* Preset Pills */
+        .preset-pill {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            border-radius: 999px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preset-pill:hover {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+            transform: translateY(-1px);
+        }
+
+        /* Form Inputs */
+        .form-label {
+            font-weight: 700;
+            color: #334155;
+            font-size: 0.95rem;
             margin-bottom: 0.5rem;
         }
 
         .form-control, .form-select {
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 0.75rem 1rem;
-            border: 1px solid #ced4da;
-            transition: all 0.3s ease;
+            border: 1.5px solid #e2e8f0;
+            font-size: 0.95rem;
+            transition: all 0.25s ease;
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: #fd7e14;
-            box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            border: none;
-            padding: 0.8rem 2rem;
-            font-weight: 600;
-            border-radius: 10px;
-            transition: transform 0.2s;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
-        }
-
-        .btn-back {
-            background: #e9ecef;
-            color: #495057;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            font-weight: 600;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-
-        .btn-back:hover {
-            background: #dee2e6;
-            color: #212529;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+            background-color: #fff;
         }
 
         .input-group-text {
-            background-color: #f8f9fa;
-            border-radius: 0 10px 10px 0 !important;
-            border: 1px solid #ced4da;
-            color: #6c757d;
+            background-color: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-left: none;
+            border-radius: 0 12px 12px 0 !important;
+            color: #64748b;
         }
 
-        .form-control {
-            border-radius: 10px 0 0 10px !important;
-        }
-        
-        .form-select {
-            border-radius: 10px !important;
+        .form-control-with-icon {
+            border-right: none;
+            border-radius: 12px 0 0 12px !important;
         }
 
-        .notification-preview {
-            background: #f8f9fa;
-            border-radius: 12px;
+        /* Target Select Segmented Options */
+        .target-option-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
             padding: 1rem;
-            border-left: 4px solid #fd7e14;
-            margin-top: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f8fafc;
         }
-    
-        /* --- Mobile Responsiveness Bounds Fix --- */
+
+        .target-option-card:hover {
+            border-color: #cbd5e1;
+            background: #ffffff;
+        }
+
+        .target-option-card.active {
+            border-color: #0d6efd;
+            background: #eff6ff;
+        }
+
+        .target-option-card input[type="radio"] {
+            cursor: pointer;
+        }
+
+        /* Preview Card */
+        .preview-sticky-card {
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: var(--card-radius);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+
+        .notification-live-bubble {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            border-right: 5px solid #0d6efd;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.06);
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .notification-live-bubble.target-specific {
+            border-right-color: #fd7e14;
+        }
+
+        /* Buttons */
+        .btn-send-main {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+            font-weight: 700;
+            border-radius: 12px;
+            padding: 0.85rem 2rem;
+            border: none;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+            transition: all 0.25s ease;
+        }
+
+        .btn-send-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.35);
+            color: white;
+        }
+
+        .btn-send-main:active {
+            transform: translateY(0);
+        }
+
+        .btn-history-link {
+            background: #ffffff;
+            border: 1.5px solid #0d6efd;
+            color: #0d6efd;
+            font-weight: 700;
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-history-link:hover {
+            background: #0d6efd;
+            color: white;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+        }
+
+        /* Mobile bounds safety */
         html, body {
             overflow-x: hidden !important;
             width: 100vw !important;
             max-width: 100vw !important;
-            touch-action: pan-y !important;
-            -webkit-overflow-scrolling: touch !important;
-            overscroll-behavior-x: none !important;
         }
-
     </style>
     <link href="{{ url_for('static', filename='css/admin_identity.css') }}" rel="stylesheet">
 </head>
@@ -122,140 +242,439 @@
 <body>
     {% include '_admin_navbar.html' %}
 
-    <div class="container pb-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="main-card">
-                    <div class="card-header-custom text-center">
-                        <h3 class="mb-0"><i class="fas fa-paper-plane me-2"></i>إرسال إشعار جديد</h3>
-                        <p class="mb-0 mt-2 text-white-50">أرسل تنبيهات وإعلانات للشركات المشتركة في النظام</p>
+    <div class="container py-4">
+        <!-- Header & Fast Actions Bar -->
+        <div class="page-header-card">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-primary px-2.5 py-1.5 rounded-pill" style="font-size: 0.75rem;">لوحة التحكم</span>
+                        <span class="text-muted small"><i class="fas fa-bullhorn text-warning me-1"></i>مركز الإشعارات</span>
                     </div>
-                    <div class="card-body p-4 p-md-5">
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                                {% for category, message in messages %}
-                                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show mb-4" role="alert">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas {{ 'fa-exclamation-circle' if category == 'error' else 'fa-check-circle' }} me-2 fa-lg"></i>
-                                            <div>{{ message }}</div>
-                                        </div>
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                        {% endwith %}
+                    <h3 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="fas fa-paper-plane text-primary"></i>
+                        إرسال الإشعارات والتنبيهات
+                    </h3>
+                    <p class="text-muted small mb-0 mt-1">إرسال وتوجيه الإعلانات والتنبيهات المباشرة إلى الشركات والمستخدمين</p>
+                </div>
+
+                <!-- Action Buttons: Proactive Link to Admin Notifications -->
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('admin_notifications') }}" class="btn btn-history-link shadow-sm" title="عرض كافة الإشعارات المرسلة وسجل العملاء">
+                        <i class="fas fa-inbox fs-5"></i>
+                        <span>سجل كافة الإشعارات</span>
+                        <span class="badge bg-primary text-white ms-1 rounded-pill">{{ total_notifications_count or 0 }}</span>
+                    </a>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light border shadow-sm fw-semibold text-secondary d-flex align-items-center gap-2" style="border-radius: 12px; padding: 0.75rem 1.25rem;">
+                        <i class="fas fa-arrow-right"></i>
+                        <span>لوحة الإدارة</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Mini Cards -->
+            <div class="row g-3 mt-3 pt-3 border-top">
+                <div class="col-6 col-md-4">
+                    <div class="stat-mini-box">
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-5 text-dark">{{ companies|length }}</div>
+                            <div class="text-muted small">الشركات النشطة المتاحة</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="stat-mini-box">
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-5 text-dark">{{ total_notifications_count or 0 }}</div>
+                            <div class="text-muted small">إجمالي الإشعارات المرسلة</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="stat-mini-box">
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="fas fa-broadcast-tower"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-5 text-dark">{{ active_notifications_count or 0 }}</div>
+                            <div class="text-muted small">الإشعارات النشطة حالياً</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm border-0 mb-4" style="border-radius: 14px;" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas {{ 'fa-exclamation-circle text-danger' if category == 'error' else 'fa-check-circle text-success' }} me-2 fa-lg"></i>
+                            <div class="fw-semibold">{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+            <!-- Left/Main Column: Send Form -->
+            <div class="col-lg-7">
+                <div class="form-card">
+                    <div class="card-header-styled d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-envelope-open-text text-primary fs-5"></i>
+                            <h5 class="mb-0 fw-bold">بيانات الإشعار الجديد</h5>
+                        </div>
+                        <span class="text-muted small"><i class="fas fa-asterisk text-danger me-1" style="font-size: 0.6rem;"></i>الحقول مطلوبة</span>
+                    </div>
+
+                    <div class="p-4 p-md-4">
+                        <!-- Quick Templates / Fast Fill Pills -->
+                        <div class="mb-4">
+                            <label class="form-label text-muted small d-block mb-2">
+                                <i class="fas fa-magic text-warning me-1"></i> نماذج جاهزة وسريعة (اضغط للتعبئة الفورية):
+                            </label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="preset-pill" onclick="applyPreset('update')">
+                                    <i class="fas fa-sparkles text-warning"></i> تحديث النظام
+                                </span>
+                                <span class="preset-pill" onclick="applyPreset('alert')">
+                                    <i class="fas fa-exclamation-triangle text-danger"></i> تنبيه هام
+                                </span>
+                                <span class="preset-pill" onclick="applyPreset('maintenance')">
+                                    <i class="fas fa-tools text-primary"></i> صيانة مجدولة
+                                </span>
+                                <span class="preset-pill" onclick="applyPreset('offer')">
+                                    <i class="fas fa-crown text-warning"></i> باقات بلس والمميزات
+                                </span>
+                            </div>
+                        </div>
 
                         <form method="POST" id="notificationForm">
-                            <div class="row g-4">
-                                <div class="col-12">
-                                    <label for="title" class="form-label">عنوان الإشعار</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-heading"></i></span>
-                                        <input type="text" class="form-control" id="title" name="title" placeholder="مثال: تحديث هام في النظام" required>
+                            <!-- Title Input -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="title" class="form-label mb-0">عنوان الإشعار</label>
+                                    <span class="text-muted small" id="titleCharCount">0 / 100</span>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                                    <input type="text" class="form-control form-control-with-icon" id="title" name="title" maxlength="100" placeholder="مثال: تحديث جديد في نظام ستوك فلو" required>
+                                </div>
+                            </div>
+
+                            <!-- Message Textarea -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="message" class="form-label mb-0">نص وتفاصيل الإشعار</label>
+                                    <span class="text-muted small" id="msgCharCount">0 / 500</span>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text align-items-start pt-3"><i class="fas fa-align-right"></i></span>
+                                    <textarea class="form-control form-control-with-icon" id="message" name="message" rows="5" maxlength="500" placeholder="اكتب تفاصيل الرسالة أو التنبيه هنا..." required></textarea>
+                                </div>
+                                <div class="form-text text-muted mt-1 small">
+                                    <i class="fas fa-info-circle me-1 text-primary"></i> سيظهر هذا الإشعار في لوحة تحكم الشركة المستهدفة فور إرساله.
+                                </div>
+                            </div>
+
+                            <!-- Target Type Selector (Segmented Cards) -->
+                            <div class="mb-4">
+                                <label class="form-label mb-2">تحديد الفئة المستهدفة</label>
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <div class="target-option-card active" id="targetCardAll" onclick="selectTargetType('all')">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <input type="radio" class="form-check-input mt-0" name="target_type" id="target_all" value="all" checked>
+                                                <div>
+                                                    <div class="fw-bold text-dark">📢 جميع الشركات</div>
+                                                    <div class="text-muted small">إرسال جماعي لكافة الشركات النشطة</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="target-option-card" id="targetCardSpecific" onclick="selectTargetType('specific')">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <input type="radio" class="form-check-input mt-0" name="target_type" id="target_specific" value="specific">
+                                                <div>
+                                                    <div class="fw-bold text-dark">🎯 شركة محددة</div>
+                                                    <div class="text-muted small">إرسال لشركة واحدة بعينها</div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div class="col-12">
-                                    <label for="message" class="form-label">نص الإشعار</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-align-right"></i></span>
-                                        <textarea class="form-control" id="message" name="message" rows="5" placeholder="اكتب تفاصيل الإشعار هنا..." required></textarea>
-                                    </div>
-                                    <div class="form-text text-muted mt-2">
-                                        <i class="fas fa-info-circle me-1"></i> سيظهر هذا النص في لوحة تحكم الشركات
-                                    </div>
+                            <!-- Specific Company Selector with Quick Search -->
+                            <div class="mb-4" id="target_select_container" style="display: none;">
+                                <label for="target_id" class="form-label">
+                                    <i class="fas fa-search me-1 text-primary"></i> اختر الشركة المستهدفة:
+                                </label>
+                                <div class="mb-2">
+                                    <input type="text" id="companySearchInput" class="form-control form-control-sm" placeholder="🔍 اكتب للبحث في أسماء الشركات...">
+                                </div>
+                                <select class="form-select" id="target_id" name="target_id" size="6" style="border-radius: 12px;">
+                                    <option value="" disabled selected>-- اختر شركة من القائمة --</option>
+                                    {% for company in companies %}
+                                    <option value="{{ company.id }}" data-name="{{ company.company_name }}">{{ company.company_name }} ({{ company.email }})</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text text-muted small mt-1">
+                                    إجمالي الشركات المتاحة: <span class="fw-bold text-primary">{{ companies|length }}</span> شركة
+                                </div>
+                            </div>
+
+                            <!-- Submit & Navigation Buttons -->
+                            <div class="pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div class="d-flex gap-2">
+                                    <button type="reset" class="btn btn-light border text-secondary px-3 py-2 fw-semibold" style="border-radius: 10px;" onclick="resetPreview()">
+                                        <i class="fas fa-undo me-1"></i> تفريغ
+                                    </button>
+                                    <a href="{{ url_for('admin_notifications') }}" class="btn btn-outline-secondary px-3 py-2 fw-semibold" style="border-radius: 10px;">
+                                        <i class="fas fa-list me-1"></i> السجل
+                                    </a>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label for="target_type" class="form-label">المستهدفون</label>
-                                    <select class="form-select" id="target_type" name="target_type" onchange="toggleTargetSelect()" required>
-                                        <option value="all" selected>📢 جميع الشركات</option>
-                                        <option value="specific">🎯 شركة محددة</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-6" id="target_select" style="display: none;">
-                                    <label for="target_id" class="form-label">اختر الشركة</label>
-                                    <select class="form-select" id="target_id" name="target_id">
-                                        <option value="">-- اختر شركة من القائمة --</option>
-                                        {% for company in companies %}
-                                        <option value="{{ company.id }}">{{ company.company_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="col-12 mt-4">
-                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-back">
-                                            <i class="fas fa-arrow-right me-2"></i>عودة للرئيسية
-                                        </a>
-                                        <button type="submit" class="btn btn-submit text-white">
-                                            إرسال الإشعار <i class="fas fa-paper-plane ms-2"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                                <button type="submit" class="btn btn-send-main d-flex align-items-center gap-2" id="submitBtn">
+                                    <span>إرسال الإشعار الآن</span>
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
+            </div>
 
-                <!-- Preview Card -->
-                <div class="main-card mt-4">
-                    <div class="card-body p-4">
-                        <h5 class="card-title text-muted mb-3"><i class="fas fa-eye me-2"></i>معاينة شكل الإشعار</h5>
-                        <div class="notification-preview">
-                            <div class="d-flex align-items-start">
-                                <div class="flex-shrink-0">
-                                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 text-warning">
-                                        <i class="fas fa-bell fa-lg"></i>
-                                    </div>
+            <!-- Right/Sticky Column: Live Preview Card & Best Practices -->
+            <div class="col-lg-5">
+                <div class="preview-sticky-card">
+                    <div class="card-header-styled bg-light d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-eye text-primary"></i>
+                            <h6 class="mb-0 fw-bold">معاينة شكل الإشعار لدى العميل</h6>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1 rounded-pill" style="font-size: 0.75rem;">
+                            <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>مباشر
+                        </span>
+                    </div>
+
+                    <div class="p-4">
+                        <!-- Mock Notification Box -->
+                        <div class="notification-live-bubble" id="previewBubble">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px;">
+                                    <i class="fas fa-bell fa-lg" id="previewIcon"></i>
                                 </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <h5 class="mb-1 fw-bold" id="previewTitle">عنوان الإشعار</h5>
-                                    <p class="mb-0 text-muted" id="previewMessage">نص الإشعار سيظهر هنا...</p>
-                                    <small class="text-muted mt-2 d-block">الآن</small>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                        <h6 class="mb-0 fw-bold text-dark text-truncate" id="previewTitle">عنوان الإشعار يظهر هنا</h6>
+                                        <span class="badge bg-light text-muted border px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">الآن</span>
+                                    </div>
+                                    <p class="mb-2 text-secondary small" id="previewMessage" style="white-space: pre-line; line-height: 1.6;">
+                                        اكتب تفاصيل الإشعار في النموذج لتشاهد كيف سيظهر للشركات والمستخدمين في لوحة تحكمهم.
+                                    </p>
+                                    <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary small fw-semibold" id="previewTargetBadge">
+                                            <i class="fas fa-globe-americas me-1"></i>لجميع الشركات
+                                        </span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">
+                                            <i class="fas fa-shield-alt text-primary me-1"></i>من إدارة النظام
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Direct Navigation to Hidden Notifications Log (Prominent Callout) -->
+                        <div class="card mt-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 14px;">
+                            <div class="card-body p-3 text-center">
+                                <div class="fw-bold text-primary mb-1">
+                                    <i class="fas fa-folder-open me-1"></i> إدارة ومتابعة الإشعارات
+                                </div>
+                                <p class="text-muted small mb-3">
+                                    يمكنك استعراض كافة الإشعارات التي تم إرسالها للعملاء، حذفها، أو تعطيل وتفعيل أي منها.
+                                </p>
+                                <a href="{{ url_for('admin_notifications') }}" class="btn btn-primary btn-sm w-100 fw-bold py-2" style="border-radius: 10px;">
+                                    <i class="fas fa-inbox me-2"></i> فتح سجل إشعارات العملاء كاملة
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Sending Tips Card -->
+                        <div class="card mt-3 border-0 bg-light rounded-3">
+                            <div class="card-body p-3">
+                                <h6 class="fw-bold text-dark mb-2" style="font-size: 0.88rem;">
+                                    <i class="fas fa-lightbulb text-warning me-1"></i> نصائح لإرسال إشعار فعال:
+                                </h6>
+                                <ul class="text-muted small mb-0 ps-3" style="line-height: 1.7;">
+                                    <li>اختر عنواناً واضحاً وموجزاً لا يتجاوز 10 كلمات.</li>
+                                    <li>حدد الشركة المستهدفة بدقة في حال كانت الرسالة خاصة بحساب معين.</li>
+                                    <li>يمكنك إلغاء تفعيل أو حذف الإشعار في أي وقت من سجل الإشعارات.</li>
+                                </ul>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function toggleTargetSelect() {
-            const targetType = document.getElementById('target_type').value;
-            const targetSelect = document.getElementById('target_select');
-            const targetIdInput = document.getElementById('target_id');
-
-            if (targetType === 'specific') {
-                targetSelect.style.display = 'block';
-                targetIdInput.required = true;
-                // Add animation class if needed
-                targetSelect.classList.add('fade-in');
-            } else {
-                targetSelect.style.display = 'none';
-                targetIdInput.required = false;
-                targetIdInput.value = "";
+        // Preset templates
+        const presets = {
+            update: {
+                title: 'تحديث جديد في منصة ستوك فلو 🚀',
+                message: 'نود إعلامكم بإطلاق تحديثات وتحسينات جديدة تشمل سرعة البحث وتطوير واجهات لوحة التحكم لتسهيل إدارة أعمالكم.',
+                icon: 'fa-sparkles',
+                iconColor: '#0d6efd'
+            },
+            alert: {
+                title: 'تنبيه هام بشأن بيانات المخزون ⚠️',
+                message: 'يرجى مراجعة وتحديث أسعار وأرصدة الأصناف الخاصة بكم لضمان دقة التقارير وطلبات العملاء.',
+                icon: 'fa-exclamation-triangle',
+                iconColor: '#dc3545'
+            },
+            maintenance: {
+                title: 'صيانة دورية مجدولة للنظام 🛠️',
+                message: 'سيتم إجراء صيانة دورية للخوادم يوم الجمعة القادم لمدة 30 دقيقة لتحسين كفاءة الخدمة وسرعة الاستجابة.',
+                icon: 'fa-tools',
+                iconColor: '#fd7e14'
+            },
+            offer: {
+                title: 'عرض ترقية باقة STOCKFLOW PLUS المميزة 👑',
+                message: 'استمتع الآن ببحث غير محدود، علامة التوثيق الحصرية، وتقارير تفصيلية متقدمة عبر ترقية حسابكم لباقة بلس.',
+                icon: 'fa-crown',
+                iconColor: '#ffc107'
             }
+        };
+
+        function applyPreset(key) {
+            const p = presets[key];
+            if (!p) return;
+            const titleEl = document.getElementById('title');
+            const msgEl = document.getElementById('message');
+            titleEl.value = p.title;
+            msgEl.value = p.message;
+            updatePreview();
+            titleEl.focus();
         }
 
-        // Live Preview Logic
+        // Target type selector logic
+        function selectTargetType(type) {
+            const allCard = document.getElementById('targetCardAll');
+            const specCard = document.getElementById('targetCardSpecific');
+            const allRadio = document.getElementById('target_all');
+            const specRadio = document.getElementById('target_specific');
+            const selectContainer = document.getElementById('target_select_container');
+            const targetSelect = document.getElementById('target_id');
+
+            if (type === 'all') {
+                allRadio.checked = true;
+                allCard.classList.add('active');
+                specCard.classList.remove('active');
+                selectContainer.style.display = 'none';
+                targetSelect.required = false;
+                targetSelect.value = '';
+            } else {
+                specRadio.checked = true;
+                specCard.classList.add('active');
+                allCard.classList.remove('active');
+                selectContainer.style.display = 'block';
+                targetSelect.required = true;
+            }
+            updatePreview();
+        }
+
+        // Live Company Filter
+        const companySearchInput = document.getElementById('companySearchInput');
+        const targetSelectEl = document.getElementById('target_id');
+        if (companySearchInput && targetSelectEl) {
+            companySearchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                const options = targetSelectEl.options;
+                for (let i = 1; i < options.length; i++) {
+                    const text = options[i].text.toLowerCase();
+                    if (text.includes(query)) {
+                        options[i].style.display = '';
+                    } else {
+                        options[i].style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Live Preview Logic & Character Counting
         const titleInput = document.getElementById('title');
         const messageInput = document.getElementById('message');
         const previewTitle = document.getElementById('previewTitle');
         const previewMessage = document.getElementById('previewMessage');
+        const previewTargetBadge = document.getElementById('previewTargetBadge');
+        const previewBubble = document.getElementById('previewBubble');
+        const titleCharCount = document.getElementById('titleCharCount');
+        const msgCharCount = document.getElementById('msgCharCount');
 
-        titleInput.addEventListener('input', function() {
-            previewTitle.textContent = this.value || 'عنوان الإشعار';
+        function updatePreview() {
+            const titleVal = titleInput.value.trim();
+            const msgVal = messageInput.value.trim();
+            const isSpecific = document.getElementById('target_specific').checked;
+            const targetSelect = document.getElementById('target_id');
+
+            previewTitle.textContent = titleVal || 'عنوان الإشعار يظهر هنا';
+            previewMessage.textContent = msgVal || 'اكتب تفاصيل الإشعار في النموذج لتشاهد كيف سيظهر للشركات والمستخدمين في لوحة تحكمهم.';
+
+            titleCharCount.textContent = `${titleInput.value.length} / 100`;
+            msgCharCount.textContent = `${messageInput.value.length} / 500`;
+
+            if (isSpecific) {
+                const selectedOpt = targetSelect.options[targetSelect.selectedIndex];
+                const companyName = (selectedOpt && selectedOpt.value) ? (selectedOpt.getAttribute('data-name') || selectedOpt.text) : 'شركة محددة';
+                previewTargetBadge.innerHTML = `<i class="fas fa-bullseye me-1"></i>موجه إلى: ${escapeHtml(companyName)}`;
+                previewTargetBadge.className = 'badge bg-warning bg-opacity-10 text-dark small fw-semibold';
+                previewBubble.classList.add('target-specific');
+            } else {
+                previewTargetBadge.innerHTML = '<i class="fas fa-globe-americas me-1"></i>لجميع الشركات';
+                previewTargetBadge.className = 'badge bg-primary bg-opacity-10 text-primary small fw-semibold';
+                previewBubble.classList.remove('target-specific');
+            }
+        }
+
+        function resetPreview() {
+            setTimeout(() => {
+                selectTargetType('all');
+                updatePreview();
+            }, 50);
+        }
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        titleInput.addEventListener('input', updatePreview);
+        messageInput.addEventListener('input', updatePreview);
+        targetSelectEl.addEventListener('change', updatePreview);
+
+        // Form Submit Loading State
+        document.getElementById('notificationForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الإرسال...';
         });
 
-        messageInput.addEventListener('input', function() {
-            previewMessage.textContent = this.value || 'نص الإشعار سيظهر هنا...';
-        });
+        // Initialize on load
+        updatePreview();
     </script>
 </body>
 
