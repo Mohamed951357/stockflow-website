@@ -150,18 +150,36 @@
             }
         }
 
-        /* Welcome Card Carousel Styles */
+        /* Modern Welcome Card Carousel Styles */
         .welcome-card {
             position: relative;
             overflow: hidden;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .welcome-card.premium {
+            background: linear-gradient(135deg, rgba(255, 251, 235, 0.98) 0%, rgba(254, 243, 199, 0.94) 100%);
+            border: 1px solid #fde68a;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.08);
         }
 
         .welcome-card .carousel-item {
-            height: 130px;
+            min-height: 125px;
+            height: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #welcomeStatsCarousel,
-        #welcomeAdhkarCarousel {
+        #welcomeAdhkarCarousel,
+        #welcomeOnlineCompaniesCarousel {
+            width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -175,72 +193,36 @@
             bottom: 0;
             left: 0;
             width: 0%;
-            height: 6px;
-            background: linear-gradient(to bottom, #d2ff52 0%, #91e842 100%);
-            /* Windows 7 Green Style */
+            height: 4px;
+            background: linear-gradient(90deg, #0d6efd 0%, #06b6d4 100%);
             transition: width 0.1s linear;
             z-index: 10;
-            border-bottom-left-radius: 24px;
-            border-bottom-right-radius: 0;
-            box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            overflow: hidden;
-        }
-
-        /* Windows 7 Shimmer Effect */
-        .welcome-progress-bar::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background-image: linear-gradient(-45deg,
-                    rgba(255, 255, 255, 0.2) 25%,
-                    transparent 25%,
-                    transparent 50%,
-                    rgba(255, 255, 255, 0.2) 50%,
-                    rgba(255, 255, 255, 0.2) 75%,
-                    transparent 75%,
-                    transparent);
-            z-index: 1;
-            background-size: 20px 20px;
-            animation: progress-shimmer 2s linear infinite;
-        }
-
-        @keyframes progress-shimmer {
-            0% {
-                background-position: 0 0;
-            }
-
-            100% {
-                background-position: 20px 20px;
-            }
+            border-radius: 0 4px 4px 0;
         }
 
         .welcome-indicators {
             display: flex;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             z-index: 10;
-            margin-top: 5px;
-            margin-bottom: 25px;
+            margin-top: 10px;
+            margin-bottom: 20px;
         }
 
         .welcome-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: rgba(18, 67, 196, 0.4);
-            transition: all 0.3s ease;
+            background-color: rgba(18, 67, 196, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            backdrop-filter: blur(2px);
         }
 
         .welcome-dot.active {
-            width: 24px;
-            border-radius: 4px;
+            width: 26px;
+            border-radius: 999px;
             background: #1243C4;
-            box-shadow: 0 2px 4px rgba(18, 67, 196, 0.3);
+            box-shadow: 0 2px 6px rgba(18, 67, 196, 0.35);
         }
 
         .dark-mode .welcome-dot {
@@ -251,18 +233,96 @@
             background: #ffffff;
         }
 
+        /* Modern Slide Components */
+        .slide-content-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            gap: 8px;
+        }
+
+        .slide-header-badge {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.3rem 0.85rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .podium-grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .podium-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.45rem 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #1e293b;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+        }
+
+        .podium-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .podium-rank-1 { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+        .podium-rank-2 { border-color: #e2e8f0; background: #f8fafc; color: #475569; }
+        .podium-rank-3 { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
+
+        .adhkar-quote-card {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            border-radius: 14px;
+            padding: 0.6rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            line-height: 1.5;
+            max-width: 90%;
+            box-shadow: 0 2px 6px rgba(22, 101, 52, 0.05);
+        }
+
+        .network-stat-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 0.5rem 1.5rem;
+        }
+
         .nagy-brand-card {
             padding: 10px 18px;
             border-radius: 16px;
-            background: transparent;
-            box-shadow: none;
-            border: none;
-            max-width: 420px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            max-width: 440px;
         }
 
         .dark-mode .nagy-brand-card {
-            background: transparent;
-            border: none;
+            background: #1e293b;
+            border-color: #334155;
         }
 
         .nagy-logo-text {
@@ -270,13 +330,16 @@
             letter-spacing: 0.18em;
             font-size: 1.15rem;
             text-transform: uppercase;
-            color: #ffffff;
+            color: #0f172a;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             direction: ltr;
             text-align: center;
-            text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .dark-mode .nagy-logo-text {
+            color: #ffffff;
         }
 
         .nagy-logo-text .reg-mark {
@@ -287,33 +350,30 @@
         }
 
         .nagy-verified {
-            color: #22c55e;
+            color: #10b981;
             font-size: 1rem;
-            text-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
         }
 
         .nagy-tagline {
-            font-size: 0.9rem;
-            color: #f9fafb;
-            text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+            font-size: 0.88rem;
+            color: #475569;
             direction: ltr;
             text-align: center;
         }
 
         .dark-mode .nagy-tagline {
-            color: #f9fafb;
+            color: #cbd5e1;
         }
 
         .nagy-subtext {
-            font-size: 0.86rem;
-            color: #e5e7eb;
-            text-shadow: 0 0 5px rgba(0, 0, 0, 0.65);
+            font-size: 0.84rem;
+            color: #64748b;
             direction: ltr;
             text-align: center;
         }
 
         .dark-mode .nagy-subtext {
-            color: #e5e7eb;
+            color: #94a3b8;
         }
 
         /* Enhanced Carousel Transition */
@@ -6234,31 +6294,36 @@
         // أكثر الشركات نشاطاً
         if (welcomeStatsData.top_companies && welcomeStatsData.top_companies.length > 0) {
             let companiesList = '';
-            // عرض أول 3 شركات فقط
             const topCompanies = welcomeStatsData.top_companies.slice(0, 3);
+            const medals = ['🥇', '🥈', '🥉'];
+            const rankClasses = ['podium-rank-1', 'podium-rank-2', 'podium-rank-3'];
+            
             topCompanies.forEach((company, index) => {
                 companiesList += `
-<div class="welcome-top-item ${isPremium ? 'premium-item' : ''}">
-    <span>${index + 1}. ${company.name}</span>
+<div class="podium-item ${rankClasses[index] || ''}">
+    <span style="font-size: 1.1rem;">${medals[index] || '⭐'}</span>
+    <span style="white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${company.name}</span>
 </div>
 `;
             });
             statsHTML = `
-<div class="welcome-stats-container">
-    <div class="welcome-stats-title">🏆 أكثر الشركات نشاطاً</div>
-    <div class="welcome-top-list ${isPremium ? 'premium-list' : ''}">${companiesList}</div>
+<div class="slide-content-wrap">
+    <div class="slide-header-badge bg-warning bg-opacity-15 text-warning-emphasis">
+        <i class="fas fa-trophy text-warning"></i>
+        <span>أكثر الشركات تفاعلاً وبحثاً اليوم</span>
+    </div>
+    <div class="podium-grid">${companiesList}</div>
 </div>
 `;
         } else {
             // في حالة عدم وجود بيانات
             statsHTML = `
-<div class="welcome-stats-container">
-    <div class="welcome-stats-title">📊 إحصائيات البحث</div>
-    <div class="welcome-stat-row">
-        <div class="welcome-stat-item ${isPremium ? 'premium-item' : ''}">
-            <span class="welcome-stat-label">لا توجد بيانات كافية بعد</span>
-        </div>
+<div class="slide-content-wrap">
+    <div class="slide-header-badge bg-primary bg-opacity-10 text-primary">
+        <i class="fas fa-chart-line"></i>
+        <span>إحصائيات البحث والنشاط</span>
     </div>
+    <div class="text-muted small fw-semibold">جاري رصد نشاط الشركات لحظياً...</div>
 </div>
 `;
         }
@@ -6266,23 +6331,23 @@
         statsElement.innerHTML = statsHTML;
     }
 
-    // دالة عرض الأذكار في Welcome Card باستخدام نفس تصميم الإحصائيات
+    // دالة عرض الأذكار في Welcome Card بتصميم بطاقة روحانية هادئة
     function showWelcomeAdhkar() {
         const statsElement = document.getElementById('welcomeAdhkarCarousel');
-        const welcomeCard = document.getElementById('welcomeCard');
-        const isPremium = welcomeCard && welcomeCard.classList.contains('premium');
-
         if (!statsElement) return;
 
         const adhkarText = getNextAdhkarMessage();
 
         const statsHTML = `
-<div class="welcome-stats-container">
-    <div class="welcome-stats-title">🕋 أذكار اليوم</div>
-    <div class="welcome-top-list ${isPremium ? 'premium-list' : ''}">
-        <div class="welcome-top-item ${isPremium ? 'premium-item' : ''}">
-            <span>${adhkarText}</span>
-        </div>
+<div class="slide-content-wrap">
+    <div class="slide-header-badge bg-success bg-opacity-10 text-success">
+        <i class="fas fa-kaaba"></i>
+        <span>نفحات وأذكار اليوم</span>
+    </div>
+    <div class="adhkar-quote-card">
+        <i class="fas fa-quote-right text-success opacity-50 me-1"></i>
+        <span>${adhkarText}</span>
+        <i class="fas fa-quote-left text-success opacity-50 ms-1"></i>
     </div>
 </div>
 `;
@@ -6293,9 +6358,6 @@
     // دالة عرض الشركات المسجلة لدى ستوك فلو
     function showWelcomeOnlineCompanies() {
         const statsElement = document.getElementById('welcomeOnlineCompaniesCarousel');
-        const welcomeCard = document.getElementById('welcomeCard');
-        const isPremium = welcomeCard && welcomeCard.classList.contains('premium');
-
         if (!statsElement) return;
 
         const initialCount = (typeof welcomeStatsData !== 'undefined' && welcomeStatsData && typeof welcomeStatsData.online_companies_count === 'number')
@@ -6303,12 +6365,21 @@
             : 0;
 
         const statsHTML = `
-<div class="welcome-stats-container">
-    <div class="welcome-stats-title">🏢 الشركات المسجلة لدى ستوك فلو</div>
-    <div class="welcome-top-list ${isPremium ? 'premium-list' : ''}">
-        <div class="welcome-top-item ${isPremium ? 'premium-item' : ''}" style="justify-content: center; flex-direction: column; gap: 5px;">
-            <div id="onlineCompaniesCountValue" style="font-size: 2rem; font-weight: bold; color: #1243C4;">${initialCount}</div>
-            <div style="font-size: 0.9rem; opacity: 0.85; font-weight: 600;">شركة مسجلة حالياً</div>
+<div class="slide-content-wrap">
+    <div class="slide-header-badge bg-primary bg-opacity-10 text-primary">
+        <i class="fas fa-building text-primary"></i>
+        <span>الشركات المسجلة لدى ستوك فلو</span>
+    </div>
+    <div class="network-stat-card">
+        <div class="p-2 rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+            <i class="fas fa-network-wired fa-lg"></i>
+        </div>
+        <div class="text-end">
+            <div class="d-flex align-items-baseline gap-1">
+                <span id="onlineCompaniesCountValue" style="font-size: 1.6rem; font-weight: 800; color: #1243C4; line-height: 1;">${initialCount}</span>
+                <span style="font-size: 0.95rem; font-weight: 700; color: #334155;">شركة مسجلة حالياً</span>
+            </div>
+            <div class="text-muted" style="font-size: 0.75rem; font-weight: 600;">شبكة الربط الأكبر لشركات ومخازن الأدوية</div>
         </div>
     </div>
 </div>
