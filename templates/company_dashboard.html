@@ -4433,48 +4433,6 @@
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card stats-card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-chart-bar me-2 stats-icon"></i>
-                            إحصائيات سريعة
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-md-3 stat-counter">
-                                <h3 class="text-primary counter-value"
-                                    data-count="{{ booked_appointments_count or 0 }}">{{ booked_appointments_count or 0 }}</h3>
-                                <p class="text-muted">المواعيد المحجوزة</p>
-                            </div>
-                            <div class="col-md-3 stat-counter">
-                                <h3 class="text-success counter-value" data-count="{{ total_searches or 0 }}">{{ total_searches or 0 }}</h3>
-                                <p class="text-muted">إجمالي البحثات</p>
-                            </div>
-                            <div class="col-md-3 stat-counter">
-                                {% if company.is_premium and premium_features_enabled %}
-                                <h3 class="text-success animate-infinity" title="اشتراك مميز"><i
-                                        class="fas fa-infinity"></i></h3>
-                                <p class="text-muted">بحث شهري غير محدود</p>
-                                {% else %}
-                                <h3 class="text-info" style="direction: ltr; unicode-bidi: bidi-override;">
-                                    <span class="counter-value" data-count="{{ monthly_search_count }}">{{ monthly_search_count }}</span>
-                                    <span> / {{ monthly_search_limit }}</span>
-                                </h3>
-                                <p class="text-muted">البحثات هذا الشهر</p>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-3">
-                                <h3 class="text-info" style="font-weight: 600;">{{ company.created_at.strftime('%Y-%m-%d') }}</h3>
-                                <p class="text-muted">تاريخ التسجيل</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
     </div>
     </div> <!-- End dashboard-content -->
