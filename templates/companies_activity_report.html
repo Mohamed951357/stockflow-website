@@ -1,738 +1,586 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     {% include '_pwa_meta.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقرير نشاط الشركات - لوحة الإدارة</title>
+    <title>بونص فارما - تقرير نشاط الشركات</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #2563eb;
-            --secondary-color: #64748b;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --info-color: #3b82f6;
-            --light-color: #f8fafc;
-            --dark-color: #1e293b;
-            --gradient-primary: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%);
-            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-        }
-
-        * {
-            box-sizing: border-box;
+            --card-radius: 16px;
+            --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --info-gradient: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
         }
 
         body {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            color: var(--dark-color);
-            line-height: 1.6;
+            background-color: #f4f6f9;
+            font-family: 'Cairo', sans-serif;
+            color: #2c3e50;
         }
 
-        /* Navigation */
         .navbar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: var(--shadow-md);
-            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .navbar-brand {
-            font-weight: 700;
-            color: var(--primary-color) !important;
-            font-size: 1.25rem;
-        }
-
-        .navbar .btn {
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        /* Main Container */
-        .main-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        /* Page Header */
-        .page-header {
+        /* Page Header Card */
+        .page-header-card {
             background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid #e2e8f0;
+            border-radius: var(--card-radius);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 1.5rem;
         }
 
-        .page-header h1 {
-            color: var(--dark-color);
-            font-weight: 700;
-            font-size: 2rem;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .page-header .btn {
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            transition: all 0.3s ease;
-            border: none;
-        }
-
-        .btn-export {
-            background: var(--gradient-success);
-            color: white;
-        }
-
-        .btn-export:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-            color: white;
-        }
-
-        .btn-back {
-            background: var(--gradient-primary);
-            color: white;
-        }
-
-        .btn-back:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-            color: white;
-        }
-
-        /* Statistics Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
+        /* KPI Stat Cards */
+        .kpi-card {
             background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: var(--shadow-md);
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
+            border-radius: 14px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            padding: 1.25rem 1.25rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 4px;
+            cursor: pointer;
+            user-select: none;
             height: 100%;
-            background: var(--gradient-primary);
         }
 
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-xl);
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
         }
 
-        .stat-card.total::before {
-            background: var(--gradient-primary);
+        .kpi-card.active-filter {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+            background: #eff6ff;
         }
 
-        .stat-card.active-today::before {
-            background: var(--gradient-success);
-        }
-
-        .stat-card.active-week::before {
-            background: var(--gradient-warning);
-        }
-
-        .stat-card.inactive::before {
-            background: var(--gradient-danger);
-        }
-
-        .stat-card.online::before {
-            background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
+        .kpi-icon-box {
+            width: 48px;
+            height: 48px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
         }
 
-        .stat-icon.total {
-            background: var(--gradient-primary);
+        .kpi-val {
+            font-size: 1.85rem;
+            font-weight: 800;
+            line-height: 1.2;
+            color: #1e293b;
         }
 
-        .stat-icon.active-today {
-            background: var(--gradient-success);
+        .kpi-lbl {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 0.25rem;
         }
 
-        .stat-icon.active-week {
-            background: var(--gradient-warning);
+        /* Live Ping Dot */
+        .ping-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #10b981;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-ping 2s infinite;
         }
 
-        .stat-icon.inactive {
-            background: var(--gradient-danger);
+        @keyframes pulse-ping {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
         }
 
-        .stat-icon.online {
-            background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: var(--dark-color);
-        }
-
-        .stat-label {
-            color: var(--secondary-color);
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        /* Search and Controls */
-        .controls-section {
+        /* Controls Section */
+        .controls-card {
             background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-md);
-            border: 1px solid #e2e8f0;
+            border-radius: var(--card-radius);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        .search-container {
-            position: relative;
-            max-width: 400px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 1rem 3rem 1rem 1.5rem;
-            border: 2px solid #e2e8f0;
+        .search-input-custom {
             border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            border: 1.5px solid #e2e8f0;
+            padding: 0.7rem 1.25rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .search-input-custom:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+        /* Filter Pills */
+        .filter-tab-pill {
+            border: 1.5px solid #e2e8f0;
             background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 999px;
+            padding: 0.45rem 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .search-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
+        .filter-tab-pill:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
+        .filter-tab-pill.active {
+            background: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+            box-shadow: 0 3px 10px rgba(13, 110, 253, 0.25);
+        }
+
+        /* Table Card */
+        .table-card {
             background: white;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .search-icon {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--secondary-color);
-            font-size: 1.1rem;
-        }
-
-        /* Companies Table */
-        .table-container {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: var(--shadow-md);
-            border: 1px solid #e2e8f0;
+            border-radius: var(--card-radius);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
             overflow: hidden;
         }
 
-        .table-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #f1f5f9;
-        }
-
-        .table-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--dark-color);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .companies-count {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
         .companies-table {
+            margin-bottom: 0;
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
         }
 
-        .companies-table thead {
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-        }
-
-        .companies-table th {
-            padding: 1.25rem 1rem;
-            text-align: right;
-            font-weight: 600;
-            color: var(--dark-color);
-            border-bottom: 2px solid #e2e8f0;
-            font-size: 0.95rem;
+        .companies-table thead th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            font-size: 0.88rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1.5px solid #e2e8f0;
+            white-space: nowrap;
         }
 
         .companies-table tbody tr {
+            transition: background-color 0.15s ease;
             border-bottom: 1px solid #f1f5f9;
-            transition: all 0.3s ease;
         }
 
         .companies-table tbody tr:hover {
-            background: #f8fafc;
-            transform: scale(1.01);
+            background-color: #f8fafc;
         }
 
         .companies-table td {
-            padding: 1.25rem 1rem;
+            padding: 1rem 1.25rem;
             vertical-align: middle;
+            font-size: 0.93rem;
         }
 
-        .company-info {
+        /* Company Avatar Initial Circle */
+        .company-avatar-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
             display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.2);
         }
 
-        .company-name {
-            font-weight: 600;
-            color: var(--dark-color);
-            font-size: 1rem;
+        /* Presence Badges */
+        .presence-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
         }
 
-        .company-username {
-            color: var(--secondary-color);
-            font-size: 0.9rem;
-            font-weight: 500;
+        .presence-pill.online {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
         }
 
-        .last-login {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
+        .presence-pill.offline {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
         }
 
-        .login-time {
-            font-weight: 500;
-            color: var(--dark-color);
-        }
-
-        .time-badge {
-            padding: 0.5rem 0.75rem;
-            border-radius: 20px;
+        /* Time badges */
+        .time-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             font-size: 0.8rem;
             font-weight: 600;
-            text-align: center;
-            min-width: 80px;
+            padding: 0.3rem 0.75rem;
+            border-radius: 8px;
         }
 
-        .time-badge.recent {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        .time-pill.time-recent, .time-pill.recent {
+            background: #ecfdf5;
             color: #065f46;
         }
 
-        .time-badge.today {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        .time-pill.time-today, .time-pill.today {
+            background: #eff6ff;
             color: #1e40af;
         }
 
-        .time-badge.week {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        .time-pill.time-week, .time-pill.week {
+            background: #fffbeb;
             color: #92400e;
         }
 
-        .time-badge.old {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        .time-pill.time-old, .time-pill.old, .time-pill.never {
+            background: #fef2f2;
             color: #991b1b;
         }
 
-        .time-badge.never {
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-            color: var(--secondary-color);
-        }
-
-        .status-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+        /* Subscription Badges */
+        .sub-pill {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 5px;
         }
 
-        .status-badge.active {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: #065f46;
-        }
-
-        .status-badge.inactive {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #991b1b;
-        }
-
-        .presence-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .presence-badge.online {
-            background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
-            color: #155e75;
-        }
-
-        .presence-badge.offline {
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-            color: #475569;
-        }
-
-        .subscription-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .subscription-badge.premium {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        .sub-pill.premium {
+            background: #fef3c7;
             color: #92400e;
+            border: 1px solid #fde68a;
         }
 
-        .subscription-badge.trial {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        .sub-pill.trial {
+            background: #eff6ff;
             color: #1e40af;
+            border: 1px solid #bfdbfe;
         }
 
-        .subscription-badge.expired {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        .sub-pill.expired {
+            background: #fef2f2;
             color: #991b1b;
+            border: 1px solid #fecaca;
         }
 
-        .subscription-badge.regular {
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-            color: var(--secondary-color);
+        .sub-pill.regular {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
         }
 
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        /* Action Buttons */
+        .btn-header-action {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 0.65rem 1.25rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .btn-header-action:hover {
+            transform: translateY(-2px);
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem 0.5rem;
-            }
-
-            .page-header {
-                padding: 1.5rem;
-            }
-
-            .page-header h1 {
-                font-size: 1.5rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .stat-card {
-                padding: 1.5rem;
-            }
-
-            .controls-section {
-                padding: 1.5rem;
-            }
-
-            .table-container {
-                padding: 1.5rem;
-            }
-
-            .companies-table {
-                font-size: 0.9rem;
-            }
-
-            .companies-table th,
-            .companies-table td {
-                padding: 1rem 0.5rem;
-            }
-
-            .table-header {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: flex-start;
-            }
-        }
-
-        /* Print Styles */
-        @media print {
-            .navbar,
-            .btn,
-            .search-container {
-                display: none !important;
-            }
-
-            body {
-                background: white !important;
-            }
-
-            .main-container {
-                padding: 0;
-            }
-
-            .page-header,
-            .stat-card,
-            .controls-section,
-            .table-container {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-        }
-
-        /* Animation for table rows */
-        .companies-table tbody tr {
-            animation: fadeInUp 0.5s ease forwards;
-            opacity: 0;
-        }
-
-        .companies-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
-        .companies-table tbody tr:nth-child(2) { animation-delay: 0.2s; }
-        .companies-table tbody tr:nth-child(3) { animation-delay: 0.3s; }
-        .companies-table tbody tr:nth-child(4) { animation-delay: 0.4s; }
-        .companies-table tbody tr:nth-child(5) { animation-delay: 0.5s; }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    
-        /* --- Mobile Responsiveness Bounds Fix --- */
         html, body {
             overflow-x: hidden !important;
             width: 100vw !important;
             max-width: 100vw !important;
-            touch-action: pan-y !important;
-            -webkit-overflow-scrolling: touch !important;
-            overscroll-behavior-x: none !important;
         }
-
     </style>
     <link href="{{ url_for('static', filename='css/admin_identity.css') }}" rel="stylesheet">
 </head>
+
 <body>
-    <!-- Navigation -->
     {% include '_admin_navbar.html' %}
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <h1>
-                    <i class="fas fa-chart-line me-2"></i>
-                    تقرير نشاط الشركات
-                </h1>
-                <div class="d-flex gap-2">
-                    <button onclick="exportToExcel()" class="btn btn-export">
-                        <i class="fas fa-file-excel me-2"></i>
-                        تصدير Excel
+    <div class="container py-4">
+        <!-- Page Header Bar -->
+        <div class="page-header-card">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-primary px-2.5 py-1.5 rounded-pill" style="font-size: 0.75rem;">تقارير الإدارة</span>
+                        <span class="text-muted small"><i class="fas fa-satellite-dish text-success me-1"></i>رصد حي وموثق</span>
+                    </div>
+                    <h3 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        تقرير نشاط وتسجيل دخول الشركات
+                    </h3>
+                    <p class="text-muted small mb-0 mt-1">
+                        متابعة دقيقة ومحدثة لحالة الحضور اللحظي، آخر استخدام موثق للمنصة، وتفاصيل الاشتراكات.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex flex-wrap gap-2">
+                    <button onclick="exportToExcel()" class="btn btn-success btn-header-action shadow-sm text-white" id="exportBtn" title="تصدير التقرير لملف Excel">
+                        <i class="fas fa-file-excel fs-5"></i>
+                        <span>تصدير Excel</span>
                     </button>
-                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-back">
-                        <i class="fas fa-arrow-left me-2"></i>
-                        رجوع
+                    <button onclick="manualRefresh()" class="btn btn-outline-primary btn-header-action shadow-sm bg-white" id="refreshBtn" title="تحديث بيانات الحضور فوراً">
+                        <i class="fas fa-sync-alt" id="refreshIcon"></i>
+                        <span>تحديث فوري</span>
+                    </button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light border shadow-sm btn-header-action text-secondary">
+                        <i class="fas fa-arrow-right"></i>
+                        <span>لوحة الإدارة</span>
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card total">
-                <div class="stat-icon total">
-                    <i class="fas fa-building"></i>
+        <!-- KPI Metrics Grid (Interactive Filters) -->
+        <div class="row g-3 mb-4">
+            <!-- Total Companies -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="kpi-card" onclick="setQuickFilter('all')" id="kpi-all">
+                    <div class="kpi-icon-box bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="kpi-val">{{ total_companies }}</div>
+                    <div class="kpi-lbl">إجمالي الشركات</div>
                 </div>
-                <div class="stat-number">{{ total_companies }}</div>
-                <div class="stat-label">إجمالي الشركات</div>
             </div>
-            <div class="stat-card active-today">
-                <div class="stat-icon active-today">
-                    <i class="fas fa-calendar-check"></i>
+
+            <!-- Online Now -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="kpi-card" onclick="setQuickFilter('online')" id="kpi-online">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="kpi-icon-box bg-info bg-opacity-10 text-info mb-0">
+                            <i class="fas fa-satellite-dish"></i>
+                        </div>
+                        <span class="ping-dot" title="بث مباشر لحضور الشركات"></span>
+                    </div>
+                    <div class="kpi-val text-info" id="onlineNowCount">{{ online_now_count }}</div>
+                    <div class="kpi-lbl">متصلة الآن</div>
                 </div>
-                <div class="stat-number">{{ active_today }}</div>
-                <div class="stat-label">نشطة اليوم</div>
             </div>
-            <div class="stat-card online">
-                <div class="stat-icon online">
-                    <i class="fas fa-circle"></i>
+
+            <!-- Active Today -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="kpi-card" onclick="setQuickFilter('today')" id="kpi-today">
+                    <div class="kpi-icon-box bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="kpi-val text-success">{{ active_today }}</div>
+                    <div class="kpi-lbl">نشطة اليوم</div>
                 </div>
-                <div class="stat-number" id="onlineNowCount">{{ online_now_count }}</div>
-                <div class="stat-label">متصلة الآن</div>
             </div>
-            <div class="stat-card active-week">
-                <div class="stat-icon active-week">
-                    <i class="fas fa-calendar-week"></i>
+
+            <!-- Active Last 7 Days -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="kpi-card" onclick="setQuickFilter('week')" id="kpi-week">
+                    <div class="kpi-icon-box bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <div class="kpi-val text-warning">{{ active_last_7_days }}</div>
+                    <div class="kpi-lbl">نشطة خلال 7 أيام</div>
                 </div>
-                <div class="stat-number">{{ active_last_7_days }}</div>
-                <div class="stat-label">نشطة خلال آخر 7 أيام</div>
             </div>
-            <div class="stat-card inactive">
-                <div class="stat-icon inactive">
-                    <i class="fas fa-clock"></i>
+
+            <!-- Inactive -->
+            <div class="col-12 col-md-4 col-lg">
+                <div class="kpi-card" onclick="setQuickFilter('inactive')" id="kpi-inactive">
+                    <div class="kpi-icon-box bg-danger bg-opacity-10 text-danger">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="kpi-val text-danger">{{ inactive_count }}</div>
+                    <div class="kpi-lbl">خاملة / بلا نشاط</div>
                 </div>
-                <div class="stat-number">{{ inactive_count }}</div>
-                <div class="stat-label">خاملة أو بلا نشاط موثق</div>
             </div>
         </div>
 
-        <!-- Search and Controls -->
-        <div class="controls-section">
-            <div class="small text-muted mb-3">
-                آخر ظهور موثق = آخر تسجيل دخول ناجح أو استخدام مصادق عليه للمنصة. «متصل الآن» تعني وصول إشارة حضور خلال آخر دقيقتين.
-            </div>
-            {% if invalid_activity_count %}
-            <div class="alert alert-warning py-2" role="alert">
-                توجد {{ invalid_activity_count }} سجلات نشاط بتاريخ مستقبلي؛ لم تُحتسب ضمن الشركات النشطة حتى تصحيح وقت الخادم أو السجل.
-            </div>
-            {% endif %}
-            <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن شركة بالاسم أو اسم المستخدم..." onkeyup="filterTable()">
-                <i class="fas fa-search search-icon"></i>
+        {% if invalid_activity_count %}
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4 py-2 px-3 d-flex align-items-center gap-2" role="alert">
+            <i class="fas fa-exclamation-triangle fa-lg"></i>
+            <span class="small">توجد <strong>{{ invalid_activity_count }}</strong> سجلات نشاط بتاريخ مستقبلي؛ لم تُحتسب ضمن النشط حتى تصحيح وقت السجل.</span>
+        </div>
+        {% endif %}
+
+        <!-- Filter & Search Controls Bar -->
+        <div class="controls-card">
+            <div class="row g-3 align-items-center justify-content-between">
+                <!-- Search Input -->
+                <div class="col-md-5 col-lg-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted" style="border-radius: 0 12px 12px 0; border: 1.5px solid #e2e8f0; border-left: none;">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control search-input-custom border-start-0" style="border-radius: 12px 0 0 12px;" placeholder="ابحث باسم الشركة، البريد، أو اليوزر..." onkeyup="filterTable()">
+                    </div>
+                </div>
+
+                <!-- Segment Filter Tabs -->
+                <div class="col-md-7 col-lg-8">
+                    <div class="d-flex flex-wrap align-items-center justify-content-md-end gap-2">
+                        <span class="filter-tab-pill active" data-filter="all" onclick="setQuickFilter('all')">
+                            <i class="fas fa-list-ul"></i> الكل ({{ total_companies }})
+                        </span>
+                        <span class="filter-tab-pill" data-filter="online" onclick="setQuickFilter('online')">
+                            <span class="ping-dot" style="width: 7px; height: 7px;"></span> متصل الآن
+                        </span>
+                        <span class="filter-tab-pill" data-filter="today" onclick="setQuickFilter('today')">
+                            <i class="fas fa-calendar-check text-success"></i> اليوم
+                        </span>
+                        <span class="filter-tab-pill" data-filter="premium" onclick="setQuickFilter('premium')">
+                            <i class="fas fa-crown text-warning"></i> بريميوم
+                        </span>
+                        <span class="filter-tab-pill" data-filter="inactive" onclick="setQuickFilter('inactive')">
+                            <i class="fas fa-user-clock text-danger"></i> خاملة
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Companies Table -->
-        <div class="table-container">
-            <div class="table-header">
-                <h2 class="table-title">
-                    <i class="fas fa-list me-2"></i>
-                    قائمة الشركات وآخر نشاط
-                </h2>
-                <span class="companies-count">
+        <!-- Main Companies Table Card -->
+        <div class="table-card">
+            <div class="d-flex justify-content-between align-items-center p-3 px-4 border-bottom bg-white">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-building text-primary fs-5"></i>
+                    <h5 class="mb-0 fw-bold text-dark">سجل نشاط الشركات</h5>
+                </div>
+                <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2 rounded-pill" id="companiesCountBadge">
                     عدد الشركات: {{ companies|length }}
                 </span>
             </div>
 
             <div class="table-responsive">
-                <table class="companies-table" id="companiesTable">
+                <table class="table companies-table align-middle" id="companiesTable">
                     <thead>
                         <tr>
-                            <th>اسم الشركة</th>
-                            <th>الحضور الآن</th>
+                            <th class="ps-4">الشركة</th>
+                            <th>حالة الحضور</th>
                             <th>آخر ظهور موثق</th>
-                            <th>منذ</th>
+                            <th>المدة المنقضية</th>
                             <th>حالة الحساب</th>
-                            <th>الاشتراك</th>
+                            <th class="pe-4">باقة الاشتراك</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for company in companies %}
-                        <tr data-company-id="{{ company.id }}">
-                            <td>
-                                <div class="company-info">
-                                    <div class="company-name">{{ company.company_name }}</div>
-                                    <div class="company-username">{{ company.username }}</div>
+                        <tr data-company-id="{{ company.id }}" 
+                            data-online="{{ '1' if company.is_online else '0' }}"
+                            data-activity-class="{{ company.activity_class }}"
+                            data-is-premium="{{ '1' if company.is_premium else '0' }}"
+                            data-is-active="{{ '1' if company.is_active else '0' }}">
+                            
+                            <!-- Company Info -->
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="company-avatar-circle">
+                                        {{ (company.company_name[0] if company.company_name else 'ش')|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark d-flex align-items-center gap-1.5 company-name-text">
+                                            {{ company.company_name }}
+                                            {% if company.is_premium %}
+                                            <i class="fas fa-check-circle text-primary" style="font-size: 0.85rem;" title="شركة موثقة (PLUS)"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-muted small company-username-text">
+                                            <i class="fas fa-at text-muted me-0.5" style="font-size: 0.75rem;"></i>{{ company.username }}
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
+
+                            <!-- Live Presence -->
                             <td>
-                                <span class="presence-badge {% if company.is_online %}online{% else %}offline{% endif %}" data-presence-badge>
-                                    <i class="fas {% if company.is_online %}fa-circle{% else %}fa-circle-notch{% endif %} me-1"></i>
+                                <span class="presence-pill {% if company.is_online %}online{% else %}offline{% endif %}" data-presence-badge>
+                                    <i class="fas {% if company.is_online %}fa-circle text-success{% else %}fa-circle-notch text-muted{% endif %}"></i>
                                     <span data-presence-label>{% if company.is_online %}متصل الآن{% else %}غير متصل{% endif %}</span>
                                 </span>
                             </td>
+
+                            <!-- Last Activity -->
                             <td>
-                                <div class="last-login">
-                                    <div class="login-time" data-last-activity>{{ company.last_activity_formatted or 'لا يوجد ظهور موثق' }}</div>
-                                    <div class="company-username" data-activity-source>{{ company.activity_source or '' }}</div>
+                                <div>
+                                    <div class="fw-semibold text-dark" data-last-activity style="font-size: 0.9rem;">
+                                        {{ company.last_activity_formatted or 'لا يوجد ظهور موثق' }}
+                                    </div>
+                                    {% if company.activity_source %}
+                                    <div class="text-muted small" data-activity-source style="font-size: 0.78rem;">
+                                        <i class="fas fa-fingerprint text-secondary me-1"></i>{{ company.activity_source }}
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted small" data-activity-source></div>
+                                    {% endif %}
                                 </div>
                             </td>
+
+                            <!-- Time Ago -->
                             <td>
-                                <span class="time-badge {{ company.activity_class if company.last_activity else 'never' }}" data-time-ago>
+                                <span class="time-pill {{ company.activity_class if company.last_activity else 'never' }}" data-time-ago>
+                                    <i class="far fa-clock me-1"></i>
                                     {{ company.time_ago or 'لا يوجد ظهور موثق' }}
                                 </span>
                             </td>
+
+                            <!-- Account Status -->
                             <td>
                                 {% if company.is_active %}
-                                    <span class="status-badge active">
-                                        <i class="fas fa-check-circle me-1"></i>
-                                        نشط
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2.5 py-1.5 rounded-pill small">
+                                        <i class="fas fa-check-circle me-1"></i>نشط
                                     </span>
                                 {% else %}
-                                    <span class="status-badge inactive">
-                                        <i class="fas fa-times-circle me-1"></i>
-                                        معطل
+                                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2.5 py-1.5 rounded-pill small">
+                                        <i class="fas fa-times-circle me-1"></i>معطل
                                     </span>
                                 {% endif %}
                             </td>
-                            <td>
-                                <span class="subscription-badge {{ company.subscription_class }}">
-                                    <i class="fas {% if company.subscription_class == 'premium' %}fa-star{% elif company.subscription_class == 'trial' %}fa-hourglass-half{% elif company.subscription_class == 'expired' %}fa-clock{% else %}fa-user{% endif %} me-1"></i>
+
+                            <!-- Subscription Status -->
+                            <td class="pe-4">
+                                <span class="sub-pill {{ company.subscription_class }}">
+                                    <i class="fas {% if company.subscription_class == 'premium' %}fa-crown text-warning{% elif company.subscription_class == 'trial' %}fa-hourglass-half text-primary{% elif company.subscription_class == 'expired' %}fa-clock text-danger{% else %}fa-user text-muted{% endif %}"></i>
                                     {{ company.subscription_label }}
                                 </span>
                             </td>
@@ -740,6 +588,13 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="noResultsState" class="text-center py-5" style="display: none;">
+                <i class="fas fa-search fa-3x text-muted mb-3 opacity-50"></i>
+                <h5 class="fw-bold text-dark">لا توجد شركات تطابق معايير البحث</h5>
+                <p class="text-muted small mb-0">جرب كتابة اسم مختلف أو إعادة ضبط الفلتر.</p>
             </div>
         </div>
     </div>
@@ -749,6 +604,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         const companyPresenceEndpoint = {{ url_for('companies_activity_presence')|tojson }};
+        let currentFilter = 'all';
 
         function setPresenceBadge(row, isOnline) {
             const badge = row.querySelector('[data-presence-badge]');
@@ -758,11 +614,14 @@
             badge.classList.toggle('online', isOnline);
             badge.classList.toggle('offline', !isOnline);
             const icon = badge.querySelector('i');
-            if (icon) icon.className = `fas ${isOnline ? 'fa-circle' : 'fa-circle-notch'} me-1`;
+            if (icon) {
+                icon.className = `fas ${isOnline ? 'fa-circle text-success' : 'fa-circle-notch text-muted'}`;
+            }
             label.textContent = isOnline ? 'متصل الآن' : 'غير متصل';
+            row.setAttribute('data-online', isOnline ? '1' : '0');
         }
 
-        function refreshCompanyPresence() {
+        function refreshCompanyPresence(onComplete) {
             fetch(companyPresenceEndpoint, { credentials: 'same-origin' })
                 .then(response => response.ok ? response.json() : null)
                 .then(data => {
@@ -779,147 +638,145 @@
                         const lastActivity = row.querySelector('[data-last-activity]');
                         const source = row.querySelector('[data-activity-source]');
                         const timeAgo = row.querySelector('[data-time-ago]');
+                        
                         if (lastActivity) lastActivity.textContent = company.last_activity_formatted || 'لا يوجد ظهور موثق';
-                        if (source) source.textContent = company.activity_source || '';
-                        if (timeAgo) {
-                            timeAgo.textContent = company.time_ago || 'لا يوجد ظهور موثق';
-                            timeAgo.className = `time-badge ${company.activity_class || 'never'}`;
+                        if (source) {
+                            source.innerHTML = company.activity_source ? `<i class="fas fa-fingerprint text-secondary me-1"></i>${company.activity_source}` : '';
                         }
+                        if (timeAgo) {
+                            timeAgo.innerHTML = `<i class="far fa-clock me-1"></i>${company.time_ago || 'لا يوجد ظهور موثق'}`;
+                            timeAgo.className = `time-pill ${company.activity_class || 'never'}`;
+                        }
+                        row.setAttribute('data-activity-class', company.activity_class || 'never');
                     });
+
+                    filterTable();
                 })
-                .catch(() => {});
+                .catch(() => {})
+                .finally(() => {
+                    if (typeof onComplete === 'function') onComplete();
+                });
         }
 
-        // Search Filter with enhanced functionality
+        function manualRefresh() {
+            const icon = document.getElementById('refreshIcon');
+            if (icon) icon.classList.add('fa-spin');
+            refreshCompanyPresence(() => {
+                if (icon) icon.classList.remove('fa-spin');
+            });
+        }
+
+        // Quick Filter Selector
+        function setQuickFilter(filter) {
+            currentFilter = filter;
+            
+            // Update filter pill UI
+            document.querySelectorAll('.filter-tab-pill').forEach(pill => {
+                pill.classList.toggle('active', pill.getAttribute('data-filter') === filter);
+            });
+
+            // Update KPI cards UI
+            document.querySelectorAll('.kpi-card').forEach(card => {
+                card.classList.remove('active-filter');
+            });
+            const kpiCard = document.getElementById(`kpi-${filter}`);
+            if (kpiCard) kpiCard.classList.add('active-filter');
+
+            filterTable();
+        }
+
+        // Combined Search & Filter logic
         function filterTable() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
+            const searchVal = (document.getElementById('searchInput').value || '').toLowerCase().trim();
             const table = document.getElementById('companiesTable');
-            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            const tbody = table.querySelector('tbody');
+            const rows = tbody.querySelectorAll('tr');
+            const noResults = document.getElementById('noResultsState');
 
-            let visibleRows = 0;
+            let visibleCount = 0;
 
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const companyName = row.cells[0].textContent.toLowerCase();
-                const username = row.cells[0].querySelector('.company-username').textContent.toLowerCase();
-                
-                if (companyName.includes(filter) || username.includes(filter)) {
+            rows.forEach(row => {
+                const nameText = (row.querySelector('.company-name-text')?.textContent || '').toLowerCase();
+                const usernameText = (row.querySelector('.company-username-text')?.textContent || '').toLowerCase();
+                const matchesSearch = !searchVal || nameText.includes(searchVal) || usernameText.includes(searchVal);
+
+                const isOnline = row.getAttribute('data-online') === '1';
+                const activityClass = row.getAttribute('data-activity-class') || '';
+                const isPremium = row.getAttribute('data-is-premium') === '1';
+
+                let matchesFilter = true;
+                if (currentFilter === 'online') {
+                    matchesFilter = isOnline;
+                } else if (currentFilter === 'today') {
+                    matchesFilter = activityClass.includes('today') || activityClass.includes('recent');
+                } else if (currentFilter === 'week') {
+                    matchesFilter = activityClass.includes('week') || activityClass.includes('today') || activityClass.includes('recent');
+                } else if (currentFilter === 'premium') {
+                    matchesFilter = isPremium;
+                } else if (currentFilter === 'inactive') {
+                    matchesFilter = activityClass.includes('old') || activityClass.includes('never') || !activityClass;
+                }
+
+                if (matchesSearch && matchesFilter) {
                     row.style.display = '';
-                    visibleRows++;
+                    visibleCount++;
                 } else {
                     row.style.display = 'none';
                 }
+            });
+
+            // Update count badge
+            const countBadge = document.getElementById('companiesCountBadge');
+            const total = rows.length;
+            if (countBadge) {
+                countBadge.textContent = (visibleCount === total) 
+                    ? `عدد الشركات: ${total}` 
+                    : `عدد الشركات المعروضة: ${visibleCount} من ${total}`;
             }
 
-            // Update companies count
-            updateCompaniesCount(visibleRows);
-        }
-
-        // Update companies count display
-        function updateCompaniesCount(count) {
-            const countElement = document.querySelector('.companies-count');
-            const totalCompanies = {{ companies|length }};
-            
-            if (count === totalCompanies) {
-                countElement.textContent = `عدد الشركات: ${totalCompanies}`;
-            } else {
-                countElement.textContent = `عدد الشركات: ${count} من ${totalCompanies}`;
+            if (noResults) {
+                noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
             }
         }
 
-        // Export to Excel with enhanced formatting
+        // Export to Excel
         function exportToExcel() {
             const table = document.getElementById('companiesTable');
-            const wb = XLSX.utils.table_to_book(table, {sheet: "تقرير نشاط الشركات"});
+            const exportBtn = document.getElementById('exportBtn');
+            const originalHtml = exportBtn.innerHTML;
             
-            // Add some formatting
-            const ws = wb.Sheets["تقرير نشاط الشركات"];
-            
-            // Set column widths
-            ws['!cols'] = [
-                {wch: 25}, // Company name
-                {wch: 14}, // Live presence
-                {wch: 20}, // Last seen
-                {wch: 15}, // Time ago
-                {wch: 12}, // Status
-                {wch: 12}  // Subscription
-            ];
-            
-            const timestamp = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(wb, `تقرير_نشاط_الشركات_${timestamp}.xlsx`);
+            exportBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري التصدير...';
+            exportBtn.disabled = true;
+
+            setTimeout(() => {
+                try {
+                    const wb = XLSX.utils.table_to_book(table, { sheet: "تقرير نشاط الشركات" });
+                    const ws = wb.Sheets["تقرير نشاط الشركات"];
+                    ws['!cols'] = [
+                        { wch: 28 }, // Company
+                        { wch: 14 }, // Presence
+                        { wch: 22 }, // Last Seen
+                        { wch: 16 }, // Time Ago
+                        { wch: 12 }, // Status
+                        { wch: 14 }  // Subscription
+                    ];
+                    const dateStr = new Date().toISOString().slice(0, 10);
+                    XLSX.writeFile(wb, `تقرير_نشاط_الشركات_${dateStr}.xlsx`);
+                } catch (e) {
+                    console.error('Export error:', e);
+                } finally {
+                    exportBtn.innerHTML = originalHtml;
+                    exportBtn.disabled = false;
+                }
+            }, 300);
         }
 
-        // Auto-hide alerts with animation
         document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                    alert.style.opacity = '0';
-                    alert.style.transform = 'translateY(-10px)';
-                    setTimeout(() => alert.remove(), 500);
-                }, 5000);
-            });
-
-            // Add loading animation to export button
-            const exportBtn = document.querySelector('.btn-export');
-            exportBtn.addEventListener('click', function() {
-                const originalText = this.innerHTML;
-                this.innerHTML = '<span class="loading me-2"></span>جاري التصدير...';
-                this.disabled = true;
-                
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.disabled = false;
-                }, 2000);
-            });
-
-            // Add enter key support for search
-            const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    filterTable();
-                }
-            });
-
-            // Add clear search functionality
-            searchInput.addEventListener('input', function() {
-                if (this.value === '') {
-                    filterTable();
-                }
-            });
-
-            // Initialize companies count
-            updateCompaniesCount({{ companies|length }});
+            // Initial poll and recurring poll every 30 seconds
             refreshCompanyPresence();
             setInterval(refreshCompanyPresence, 30000);
         });
-
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Ctrl + F to focus search
-            if (e.ctrlKey && e.key === 'ف') {
-                e.preventDefault();
-                document.getElementById('searchInput').focus();
-            }
-            
-            // Ctrl + E to export
-            if (e.ctrlKey && e.key === 'ص') {
-                e.preventDefault();
-                exportToExcel();
-            }
-        });
-
-        // Add smooth scrolling for better UX
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
     </script>
 </body>
+
 </html>
