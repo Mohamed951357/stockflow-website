@@ -3798,28 +3798,28 @@
                                             <p class="nagy-subtext mb-0">
                                                 For projects & collaboration: <strong>01554077727</strong>
                                             </p>
-                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div><!-- /#welcomeContent -->
-                        <div class="col-md-2 text-center d-none d-md-flex align-items-center justify-content-center" id="welcomeIconCol">
-                            {% if company.is_premium and premium_features_enabled %}
-                            <i class="fas fa-handshake text-primary" style="font-size: 3.5rem; opacity: 0.7;"></i>
-                            {% else %}
-                            <i class="fas fa-handshake text-primary" style="font-size: 3.5rem; opacity: 0.25;"></i>
-                            {% endif %}
-                        </div>
-                    </div><!-- /.row -->
-
-                    <div class="welcome-indicators w-100" id="welcomeIndicators">
-                        <div class="welcome-dot active" data-bs-target="#welcomeCarousel" data-bs-slide-to="0"></div>
-                        <div class="welcome-dot" data-bs-target="#welcomeCarousel" data-bs-slide-to="1"></div>
-                        <div class="welcome-dot" data-bs-target="#welcomeCarousel" data-bs-slide-to="2"></div>
-                        <div class="welcome-dot" data-bs-target="#welcomeCarousel" data-bs-slide-to="3"></div>
-                        <div class="welcome-dot" data-bs-target="#welcomeCarousel" data-bs-slide-to="4"></div>
+                            </div><!-- /.carousel-inner -->
+                        </div><!-- /#welcomeCarousel -->
+                    </div><!-- /#welcomeContent -->
+                    <div class="col-md-2 text-center d-none d-md-flex align-items-center justify-content-center" id="welcomeIconCol">
+                        {% if company.is_premium and premium_features_enabled %}
+                        <i class="fas fa-handshake text-primary" style="font-size: 3.5rem; opacity: 0.7;"></i>
+                        {% else %}
+                        <i class="fas fa-handshake text-primary" style="font-size: 3.5rem; opacity: 0.25;"></i>
+                        {% endif %}
                     </div>
-                </div><!-- /#welcomeCard -->
+                </div><!-- /.row -->
+
+                <div class="welcome-indicators w-100" id="welcomeIndicators">
+                    <div class="welcome-dot active" data-bs-target="#welcomeCarousel" data-bs-slide-to="0"></div>
+                    <div class="welcome-dot" data-bs-target="#welcomeCarousel" data-bs-slide-to="1"></div>
+                    <div class="welcome-dot" data-bs-target="#welcomeCarousel" data-bs-slide-to="2"></div>
+                    <div class="welcome-dot" data-bs-target="#welcomeCarousel" data-bs-slide-to="3"></div>
+                    <div class="welcome-dot" data-bs-target="#welcomeCarousel" data-bs-slide-to="4"></div>
+                </div>
+            </div><!-- /#welcomeCard -->
 
         {# مساحة إعلانية لصفحة الشركات (نصية) #}
         {% if company_ad_message %}
