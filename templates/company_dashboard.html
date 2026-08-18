@@ -550,23 +550,31 @@
             transform: translateY(0);
         }
 
-        /* إضافة تأثيرات حركية للإحصائيات */
+        /* ===================================================
+           SMOOTH ROLLING NUMBER ANIMATION (نظام رولينج الأرقام)
+           =================================================== */
+        .counter-value,
+        .rolling-number {
+            display: inline-block;
+            font-variant-numeric: tabular-nums;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+            will-change: transform, contents;
+        }
+
+        .counter-value.rolling-active,
+        .rolling-number.rolling-active {
+            display: inline-block;
+            filter: blur(0.15px);
+            transform: scale(1.03);
+            text-shadow: 0 0 10px rgba(18, 67, 196, 0.15);
+        }
+
         .stat-counter {
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .stat-counter:hover {
             transform: translateY(-5px);
-        }
-
-        .counter-value {
-            position: relative;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-
-        .counter-value::after {
-            content: attr(data-suffix);
         }
 
         .animate-infinity {
@@ -4206,7 +4214,7 @@
                             </span>
                         </div>
                         <div class="d-flex align-items-baseline gap-2 mb-2">
-                            <h3 class="fw-bold mb-0 text-dark">{{ profile_completion_pct }}%</h3>
+                            <h3 class="fw-bold mb-0 text-dark counter-value" data-count="{{ profile_completion_pct }}" data-suffix="%">{{ profile_completion_pct }}%</h3>
                             <span class="text-muted small">جاهزية الحساب</span>
                         </div>
                         <!-- Progress Bar -->
@@ -4234,7 +4242,7 @@
                             <span class="text-muted small">عملية بحث</span>
                         </div>
                         <div class="small text-muted mt-auto pt-1 d-flex justify-content-between align-items-center border-top">
-                            <span>متوسط النتائج: <strong>{{ "%.1f"|format(average_results_per_search) }}</strong></span>
+                            <span>متوسط النتائج: <strong class="counter-value" data-count="{{ average_results_per_search }}" data-decimals="1">{{ "%.1f"|format(average_results_per_search) }}</strong></span>
                             <i class="fas fa-boxes text-success"></i>
                         </div>
                     </div>
@@ -4341,8 +4349,8 @@
                                 {{ latest_community_post.content }}
                             </p>
                             <div class="d-flex align-items-center gap-3 text-muted pt-2 border-top" style="font-size: 0.82rem;">
-                                <span><i class="far fa-heart me-1 text-danger"></i> {{ latest_community_post.likes_count }} إعجاب</span>
-                                <span><i class="far fa-comment me-1 text-primary"></i> {{ latest_community_post.comments_count }} تعليق</span>
+                                <span><i class="far fa-heart me-1 text-danger"></i> <span class="counter-value" data-count="{{ latest_community_post.likes_count }}">{{ latest_community_post.likes_count }}</span> إعجاب</span>
+                                <span><i class="far fa-comment me-1 text-primary"></i> <span class="counter-value" data-count="{{ latest_community_post.comments_count }}">{{ latest_community_post.comments_count }}</span> تعليق</span>
                             </div>
                         </div>
                         {% else %}
@@ -6249,32 +6257,17 @@
 
         statsElement.innerHTML = statsHTML;
 
-        function parseNumberFromElement(el) {
-            const text = el.innerText || '';
-            const m = text.match(/\d+/);
-            return m ? parseInt(m[0], 10) : 0;
-        }
-        function animateNumber(el, target) {
-            const start = parseNumberFromElement(el);
-            const diff = target - start;
-            if (diff === 0) return;
-            const duration = 1500;
-            const startTime = performance.now();
-            function step(now) {
-                const t = Math.min(1, (now - startTime) / duration);
-                const value = Math.round(start + diff * t);
-                el.innerText = String(value);
-                if (t < 1) requestAnimationFrame(step);
-            }
-            requestAnimationFrame(step);
-        }
         const el = document.getElementById('onlineCompaniesCountValue');
         if (el) {
             fetch('/stats/company_counts', { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.json())
                 .then(d => {
                     if (d && d.success && typeof d.total_companies === 'number') {
-                        animateNumber(el, d.total_companies);
+                        if (typeof rollNumber === 'function') {
+                            rollNumber(el, d.total_companies, { duration: 1600 });
+                        } else {
+                            el.textContent = d.total_companies;
+                        }
                     }
                 })
                 .catch(() => { });
@@ -6414,39 +6407,90 @@
             }
         })();
 
-        // تفعيل العدادات الرقمية للإحصائيات
-        function animateCounters() {
-            const counters = document.querySelectorAll('.counter-value');
-            
-            counters.forEach(counter => {
-                const target = parseInt(counter.getAttribute('data-count')) || 0;
-                const prefix = counter.getAttribute('data-prefix') || '';
-                const suffix = counter.getAttribute('data-suffix') || '';
-                let currentCount = 0;
-                const steps = 40; // عدد الخطوات
-                const speed = 20; // التأخير بالمللي ثانية
+        // ===================================================
+        // محرك رولينج الأرقام الشامل والسلس (Rolling Odometer Numbers Engine)
+        // ===================================================
+        window.rollNumber = function(el, targetValue, options = {}) {
+            if (!el) return;
+            const duration = options.duration || 1600;
+            const prefix = options.prefix !== undefined ? options.prefix : (el.getAttribute('data-prefix') || '');
+            const suffix = options.suffix !== undefined ? options.suffix : (el.getAttribute('data-suffix') || '');
+            const decimals = options.decimals !== undefined ? options.decimals : (
+                el.getAttribute('data-decimals') !== null ? parseInt(el.getAttribute('data-decimals'), 10) : (targetValue % 1 !== 0 ? 1 : 0)
+            );
+            const startValue = 0;
+            const startTime = performance.now();
 
-                const increment = Math.max(1, Math.ceil(target / steps));
-                
-                const updateCount = () => {
-                    if (currentCount < target) {
-                        currentCount += increment;
-                        if (currentCount > target) currentCount = target;
-                        counter.innerText = prefix + currentCount + suffix;
-                        setTimeout(updateCount, speed);
+            el.classList.add('rolling-active');
+
+            function easeOutExpo(x) {
+                return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+            }
+
+            function step(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easeOutExpo(progress);
+                const current = startValue + (targetValue - startValue) * easedProgress;
+
+                let formatted;
+                if (decimals > 0) {
+                    formatted = current.toFixed(decimals);
+                } else {
+                    formatted = Math.round(current).toLocaleString('en-US');
+                }
+
+                el.textContent = prefix + formatted + suffix;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    el.classList.remove('rolling-active');
+                    if (decimals > 0) {
+                        el.textContent = prefix + targetValue.toFixed(decimals) + suffix;
                     } else {
-                        counter.innerText = prefix + target + suffix;
+                        el.textContent = prefix + Math.round(targetValue).toLocaleString('en-US') + suffix;
                     }
-                };
+                }
+            }
 
-                // البدء من الصفر
-                counter.innerText = prefix + '0' + suffix;
-                updateCount();
-            });
-        }
+            requestAnimationFrame(step);
+        };
 
-        // تفعيل العدادات عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', animateCounters);
+        window.initRollingCounters = function() {
+            const counterElements = document.querySelectorAll('.counter-value, .rolling-number');
+
+            function triggerRoll(el) {
+                if (el.dataset.rolled === 'true') return;
+                el.dataset.rolled = 'true';
+
+                const raw = el.getAttribute('data-count') || el.innerText || '0';
+                const clean = parseFloat(raw.toString().replace(/[^0-9.-]/g, '')) || 0;
+                window.rollNumber(el, clean);
+            }
+
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries, obs) => {
+                    entries.forEach((entry, idx) => {
+                        if (entry.isIntersecting) {
+                            setTimeout(() => {
+                                triggerRoll(entry.target);
+                            }, idx * 60);
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                counterElements.forEach(el => observer.observe(el));
+            } else {
+                counterElements.forEach((el, idx) => {
+                    setTimeout(() => triggerRoll(el), idx * 80);
+                });
+            }
+        };
+
+        // تشغيل الرولينج مباشرة
+        window.initRollingCounters();
 
         // تأثيرات إضافية للبطاقات
 
