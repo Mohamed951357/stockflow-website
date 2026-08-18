@@ -300,33 +300,32 @@
         .podium-grid {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: stretch;
             gap: 6px;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
-            overflow: hidden;
             padding: 0 4px;
         }
 
         .podium-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 3px 6px;
+            border-radius: 9px;
+            padding: 3px 5px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 4px;
-            font-size: 0.76rem;
+            font-size: 0.72rem;
             font-weight: 700;
             color: #1e293b;
             flex: 1 1 0;
             min-width: 0;
-            max-width: 33.33%;
             box-sizing: border-box;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
             text-align: center;
+            min-height: 38px;
         }
 
         .podium-item span:first-child {
@@ -335,12 +334,16 @@
         }
 
         .podium-name {
-            white-space: nowrap;
+            white-space: normal !important;
+            word-break: break-word !important;
+            line-height: 1.15 !important;
+            font-size: 0.72rem !important;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
+            text-align: center;
             max-width: 100%;
-            display: block;
-            font-size: 0.74rem;
         }
 
         .podium-rank-1 { border-color: #fde68a; background: #fffbeb; color: #92400e; }
@@ -3812,19 +3815,19 @@
                                         (monthly_search_limit - monthly_search_count) <= 3 %}
                                         <div class="d-flex align-items-center justify-content-between w-100 h-100 px-2 py-1 gap-2" dir="rtl">
                                             <div class="d-flex align-items-center gap-2 text-end" style="flex: 1; min-width: 0;">
-                                                <div style="width: 42px; height: 42px; border-radius: 12px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; border: 1px solid #fde68a;">
+                                                <div style="width: 38px; height: 38px; border-radius: 10px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; border: 1px solid #fde68a;">
                                                     <i class="fas fa-exclamation-triangle"></i>
                                                 </div>
-                                                <div style="min-width: 0;">
-                                                    <div style="font-size: 0.9rem; font-weight: 800; color: #92400e; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                <div style="min-width: 0; flex: 1;">
+                                                    <div style="font-size: 0.85rem; font-weight: 800; color: #92400e; line-height: 1.2; white-space: normal; word-break: break-word;">
                                                         باقي لك ({{ monthly_search_limit - monthly_search_count }}) بحث هذا الشهر!
                                                     </div>
-                                                    <div style="font-size: 0.76rem; color: #b45309; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                    <div style="font-size: 0.73rem; color: #b45309; line-height: 1.15; white-space: normal; word-break: break-word; margin-top: 2px;">
                                                         اشترك في Stockflow Plus لتفعيل بحث غير محدود
                                                     </div>
                                                 </div>
                                             </div>
-                                            <a href="javascript:void(0)" onclick="openInviteCodeModal()" class="btn btn-warning" style="flex-shrink: 0; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; border-radius: 10px; box-shadow: 0 3px 8px rgba(245,158,11,0.3); white-space: nowrap;">
+                                            <a href="javascript:void(0)" onclick="openInviteCodeModal()" class="btn btn-warning" style="flex-shrink: 0; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; border-radius: 10px; box-shadow: 0 3px 8px rgba(245,158,11,0.3); white-space: nowrap;">
                                                 <i class="fas fa-crown me-1"></i> اشترك الآن
                                             </a>
                                         </div>
