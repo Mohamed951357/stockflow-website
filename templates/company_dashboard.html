@@ -133,17 +133,22 @@
         body.dark-mode .navbar {
             background: linear-gradient(135deg, #020617 0%, #0f172a 100%) !important;
         }
-
-        /* Modern Welcome Card Styles */
         .welcome-card {
             position: relative;
             border-radius: 20px;
             background: #ffffff;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid #e2e8f0;
-            padding: 1.1rem 1.25rem 0.6rem 1.25rem;
-            margin-bottom: 1.25rem;
+            padding: 0.75rem 1rem 0.35rem 1rem !important;
+            margin-bottom: 1rem !important;
             width: 100%;
+            height: 145px !important;
+            min-height: 145px !important;
+            max-height: 145px !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
         }
 
         .welcome-card.premium {
@@ -159,18 +164,27 @@
 
         #welcomeCarousel {
             width: 100%;
+            height: 100px !important;
+            min-height: 100px !important;
+            max-height: 100px !important;
             position: relative;
+            overflow: hidden;
         }
 
         #welcomeCarousel .carousel-inner {
             position: relative;
             width: 100%;
+            height: 100px !important;
+            min-height: 100px !important;
+            max-height: 100px !important;
             overflow: hidden;
-            min-height: 85px;
         }
 
         .welcome-card .carousel-item {
-            min-height: 85px;
+            height: 100px !important;
+            min-height: 100px !important;
+            max-height: 100px !important;
+            overflow: hidden;
             transition: transform 0.6s ease-in-out;
         }
 
@@ -178,23 +192,25 @@
         #welcomeAdhkarCarousel,
         #welcomeOnlineCompaniesCarousel {
             width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 4px 0;
+            padding: 0;
         }
 
         .welcome-progress-bar {
             display: none !important;
         }
+
         .welcome-indicators {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 6px;
-            margin-top: 8px;
+            margin-top: 4px;
             margin-bottom: 2px;
         }
 
@@ -222,54 +238,52 @@
             background: #ffffff;
         }
 
-        /* Modern Slide Components */
+        /* Modern Slide Components - Compact to Fit Fixed Height */
         .slide-content-wrap {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 100%;
-            gap: 8px;
+            height: 100%;
+            gap: 4px;
         }
 
         .slide-header-badge {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
-            padding: 0.3rem 0.85rem;
+            padding: 0.15rem 0.65rem;
             border-radius: 999px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 4px;
+            gap: 5px;
+            margin-bottom: 2px;
         }
 
         .podium-grid {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 6px;
+            flex-wrap: nowrap;
             width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
         }
 
         .podium-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 0.45rem 0.9rem;
-            display: flex;
+            border-radius: 10px;
+            padding: 0.25rem 0.55rem;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.88rem;
+            gap: 4px;
+            font-size: 0.8rem;
             font-weight: 700;
             color: #1e293b;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-            transition: all 0.2s ease;
-        }
-
-        .podium-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
         }
 
         .podium-rank-1 { border-color: #fde68a; background: #fffbeb; color: #92400e; }
@@ -280,32 +294,33 @@
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
             color: #166534;
-            border-radius: 14px;
-            padding: 0.6rem 1.25rem;
-            font-size: 0.95rem;
+            border-radius: 12px;
+            padding: 0.35rem 0.85rem;
+            font-size: 0.85rem;
             font-weight: 700;
-            line-height: 1.5;
-            max-width: 90%;
-            box-shadow: 0 2px 6px rgba(22, 101, 52, 0.05);
+            line-height: 1.4;
+            max-width: 95%;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(22, 101, 52, 0.04);
         }
 
         .network-stat-card {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 8px;
             background: #eff6ff;
             border: 1px solid #bfdbfe;
-            border-radius: 14px;
-            padding: 0.5rem 1.5rem;
+            border-radius: 12px;
+            padding: 0.3rem 0.85rem;
         }
 
         .nagy-brand-card {
-            padding: 10px 18px;
-            border-radius: 16px;
+            padding: 4px 12px;
+            border-radius: 12px;
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
             max-width: 440px;
         }
 
@@ -316,13 +331,13 @@
 
         .nagy-logo-text {
             font-weight: 800;
-            letter-spacing: 0.18em;
-            font-size: 1.15rem;
+            letter-spacing: 0.15em;
+            font-size: 0.95rem;
             text-transform: uppercase;
             color: #0f172a;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             direction: ltr;
             text-align: center;
         }
@@ -332,22 +347,23 @@
         }
 
         .nagy-logo-text .reg-mark {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             vertical-align: top;
-            margin-top: -4px;
+            margin-top: -3px;
             margin-left: 2px;
         }
 
         .nagy-verified {
             color: #10b981;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .nagy-tagline {
-            font-size: 0.88rem;
+            font-size: 0.75rem;
             color: #475569;
             direction: ltr;
             text-align: center;
+            margin-bottom: 1px;
         }
 
         .dark-mode .nagy-tagline {
@@ -355,7 +371,7 @@
         }
 
         .nagy-subtext {
-            font-size: 0.84rem;
+            font-size: 0.72rem;
             color: #64748b;
             direction: ltr;
             text-align: center;
@@ -994,12 +1010,12 @@
         /* Adjustments for responsive mobile layout */
         @media (max-width: 767.98px) {
             body {
-                padding-top: 0px !important;
+                padding-top: 75px !important;
                 background: #f8fafc !important;
             }
 
             .main-content {
-                padding: 0.5rem 0 !important;
+                padding: 0.35rem 0 !important;
             }
 
             .container,
@@ -1023,37 +1039,54 @@
             }
 
             .welcome-card {
-                padding: 0.85rem 0.85rem 0.4rem 0.85rem !important;
+                padding: 0.65rem 0.85rem 0.35rem 0.85rem !important;
                 margin-bottom: 0.85rem !important;
                 border-radius: 16px !important;
                 width: 100% !important;
+                height: 145px !important;
+                min-height: 145px !important;
+                max-height: 145px !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
             }
 
             #welcomeCarousel {
                 width: 100% !important;
+                height: 100px !important;
+                min-height: 100px !important;
+                max-height: 100px !important;
                 position: relative !important;
+                overflow: hidden !important;
             }
 
             #welcomeCarousel .carousel-inner {
                 position: relative !important;
                 width: 100% !important;
+                height: 100px !important;
+                min-height: 100px !important;
+                max-height: 100px !important;
                 overflow: hidden !important;
-                min-height: 85px !important;
             }
 
             .welcome-card .carousel-item {
-                min-height: 85px !important;
+                height: 100px !important;
+                min-height: 100px !important;
+                max-height: 100px !important;
+                overflow: hidden !important;
+                padding: 0 !important;
             }
 
             .welcome-card h2 {
-                font-size: 1rem;
-                margin-bottom: 0.2rem;
+                font-size: 0.95rem;
+                margin-bottom: 0.15rem;
             }
 
             .welcome-card p {
-                font-size: 0.78rem;
+                font-size: 0.76rem;
                 line-height: 1.2;
-                margin-bottom: 0.4rem;
+                margin-bottom: 0.25rem;
             }
 
             .welcome-card .col-md-8 {
@@ -1158,23 +1191,35 @@
                 border-radius: 10px !important;
             }
 
-            /* اللوحة الإعلانية بمقاس الإطار 100% بدون أي قص */
+            /* اللوحة الإعلانية بمقاس الإطار 100% بدون أي قص أو إطار داخلي */
             .ad-carousel {
                 margin-bottom: 0.85rem !important;
-                border-radius: 14px !important;
+                border-radius: 16px !important;
+                border: none !important;
+                padding: 0 !important;
+                background: transparent !important;
                 width: 100% !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06) !important;
             }
 
             .ad-carousel .ad-media {
                 width: 100% !important;
                 height: auto !important;
-                border-radius: 14px !important;
+                border-radius: 16px !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
             }
 
             .ad-carousel .carousel-item img {
                 width: 100% !important;
                 height: auto !important;
-                border-radius: 14px !important;
+                border-radius: 16px !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                object-fit: cover !important;
                 opacity: 1 !important;
                 visibility: visible !important;
                 display: block !important;
@@ -1586,94 +1631,61 @@
             }
         }
 
-        /* Carousel Styles - Full Width Fit without Cropping */
+        /* Carousel Styles - Full Width Fit without Cropping or Inset Frame */
         .ad-carousel {
-            margin-bottom: 1.5rem;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            position: relative;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            margin-bottom: 1.25rem !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06) !important;
+            position: relative !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            width: 100% !important;
         }
 
         .ad-carousel .carousel-inner {
-            border-radius: 18px;
-            overflow: hidden;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .ad-carousel .carousel-item {
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         .ad-carousel .ad-media {
-            position: relative;
-            width: 100%;
-            height: auto;
-            overflow: hidden;
-            background: #ffffff;
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ad-carousel .ad-media-placeholder {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            color: #64748b;
-            background: #f8fafc;
-            text-align: center;
-            transition: opacity 0.25s ease, visibility 0.25s ease;
-        }
-
-        .ad-carousel .ad-media-placeholder i {
-            font-size: 2.2rem;
-            opacity: 0.9;
-        }
-
-        .ad-carousel .ad-media-spinner {
-            width: 26px;
-            height: 26px;
-            border: 3px solid rgba(18, 67, 196, 0.2);
-            border-top-color: #1243C4;
-            border-radius: 50%;
-            animation: ad-media-spin 0.85s linear infinite;
-        }
-
-        .ad-carousel .ad-media-placeholder-text {
-            font-size: 0.9rem;
-            font-weight: 700;
-        }
-
-        .ad-carousel .ad-media.is-ready .ad-media-placeholder {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .ad-carousel .ad-media.is-failed .ad-media-spinner {
-            display: none;
-        }
-
-        @keyframes ad-media-spin {
-            to { transform: rotate(360deg); }
+            position: relative !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            border-radius: 16px !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important;
         }
 
         .ad-carousel .carousel-item img {
-            position: relative;
-            z-index: 2;
+            position: relative !important;
+            z-index: 2 !important;
             width: 100% !important;
             height: auto !important;
             display: block !important;
-            border-radius: 16px;
-            transition: opacity 0.4s ease;
-            opacity: 0;
-        }
-
-        .ad-carousel .ad-media.is-ready img {
+            border-radius: 16px !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            object-fit: cover !important;
             opacity: 1 !important;
+            visibility: visible !important;
         }
 
         .ad-carousel .carousel-control-prev,
@@ -2231,15 +2243,13 @@
         }
 
         body {
-            padding-top: 76px;
+            padding-top: 75px !important;
         }
 
 
-        /* FORCE BACKGROUND - Added for cache override */
+        /* BACKGROUND */
         html {
-            background: linear-gradient(135deg, #1243C4 0%, #0A2DA0 100%) !important;
-            background-size: 400% 400% !important;
-            animation: gradientBG 20s ease infinite !important;
+            background: #f8fafc !important;
         }
 
         /* ============================================
@@ -2264,7 +2274,7 @@
         /* Mobile - Small screens */
         @media (max-width: 767.98px) {
             body {
-                padding-top: 0px;
+                padding-top: 75px !important;
                 background: #f8fafc !important;
             }
 
