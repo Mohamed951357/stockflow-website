@@ -3802,7 +3802,7 @@
                     id="welcomeCard">
 
                     <div class="row align-items-center">
-                        <div class="col-12 col-md-10 {% if not company.is_premium and premium_features_enabled and (monthly_search_limit - monthly_search_count) <= 3 %} warning-content-rtl {% endif %}"
+                        <div class="col-12 w-100 {% if not company.is_premium and premium_features_enabled and (monthly_search_limit - monthly_search_count) <= 3 %} warning-content-rtl {% endif %}"
                             id="welcomeContent">
                             <div id="welcomeCarousel" class="carousel slide" data-bs-ride="carousel"
                                 data-bs-interval="12000">
@@ -4001,13 +4001,6 @@
                             </div><!-- /.carousel-inner -->
                         </div><!-- /#welcomeCarousel -->
                     </div><!-- /#welcomeContent -->
-                    <div class="col-md-2 text-center d-none d-md-flex align-items-center justify-content-center" id="welcomeIconCol">
-                        {% if company.is_premium and premium_features_enabled %}
-                        <i class="fas fa-handshake text-primary" style="font-size: 3.5rem; opacity: 0.7;"></i>
-                        {% else %}
-                        <i class="fas fa-handshake text-primary" style="font-size: 3.5rem; opacity: 0.25;"></i>
-                        {% endif %}
-                    </div>
                 </div><!-- /.row -->
 
                 <div class="welcome-indicators w-100" id="welcomeIndicators">
