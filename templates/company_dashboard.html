@@ -1067,6 +1067,163 @@
 
         /* End New: Warning Low Searches Style */
 
+        
+        /* ===================================================
+           NATIVE MOBILE APP SERVICES ICON GRID
+           =================================================== */
+        .app-services-section {
+            width: 100%;
+            margin-bottom: 1.25rem;
+        }
+
+        .app-services-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 1.15rem 0.85rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .dark-mode .app-services-card {
+            background: #0f172a !important;
+            border-color: #1e293b !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .app-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px 8px;
+            justify-items: center;
+            align-items: start;
+            width: 100%;
+        }
+
+        @media (min-width: 992px) {
+            .app-grid-layout {
+                grid-template-columns: repeat(8, 1fr);
+                gap: 16px 10px;
+            }
+        }
+
+        .app-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none !important;
+            color: inherit !important;
+            cursor: pointer;
+            width: 100%;
+            max-width: 80px;
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-tile:hover {
+            transform: translateY(-3px);
+        }
+
+        .app-tile:active {
+            transform: scale(0.92);
+        }
+
+        .app-icon-squircle {
+            width: 58px;
+            height: 58px;
+            border-radius: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 1.45rem;
+            position: relative;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-tile:hover .app-icon-squircle {
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18) !important;
+        }
+
+        /* App Themes / Gradients */
+        .app-icon-search {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32);
+        }
+
+        .app-icon-products {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.32);
+        }
+
+        .app-icon-reports {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.32);
+        }
+
+        .app-icon-community {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            box-shadow: 0 6px 16px rgba(6, 182, 212, 0.32);
+        }
+
+        .app-icon-messages {
+            background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.32);
+        }
+
+        .app-icon-notifications {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            box-shadow: 0 6px 16px rgba(244, 63, 94, 0.32);
+        }
+
+        .app-icon-settings {
+            background: linear-gradient(135deg, #64748b 0%, #334155 100%);
+            box-shadow: 0 6px 16px rgba(100, 116, 139, 0.32);
+        }
+
+        .app-icon-appointments {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.32);
+        }
+
+        .app-tile-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 6px;
+            text-align: center;
+            white-space: nowrap;
+            letter-spacing: -0.01em;
+        }
+
+        .dark-mode .app-tile-name {
+            color: #f1f5f9;
+        }
+
+        .app-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 4px;
+            border-radius: 999px;
+            background: #ef4444;
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+            z-index: 2;
+        }
+
+        .dark-mode .app-badge {
+            border-color: #0f172a;
+        }
+
         /* Adjustments for responsive mobile layout */
         @media (max-width: 767.98px) {
             body {
@@ -1198,91 +1355,28 @@
                 align-items: flex-end;
             }
 
-            /* تصميم الكروت على الموبايل - 2 في السطر بعرض كامل للشاشة */
-            .feature-cards-row {
-                margin-left: -4px !important;
-                margin-right: -4px !important;
+            /* تنسيق شبكة التطبيقات على الموبايل */
+            .app-services-card {
+                padding: 0.95rem 0.5rem !important;
+                border-radius: 18px !important;
                 margin-bottom: 0.85rem !important;
-                display: flex !important;
-                flex-wrap: wrap !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                width: calc(100% + 8px) !important;
             }
 
-            .feature-cards-row .col-6,
-            .feature-cards-row .col-md-4 {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                flex: 0 0 50% !important;
-                max-width: 50% !important;
-                width: 50% !important;
-                padding: 4px !important;
-                margin-bottom: 0.25rem !important;
+            .app-grid-layout {
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 12px 2px !important;
             }
 
-            .feature-card {
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                transform: none !important;
-                padding: 0.85rem 0.5rem !important;
-                min-height: 155px !important;
-                border-radius: 16px !important;
-                background: #ffffff !important;
-                box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04) !important;
-                border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            .app-icon-squircle {
+                width: 54px !important;
+                height: 54px !important;
+                font-size: 1.35rem !important;
+                border-radius: 15px !important;
             }
 
-            .feature-icon {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                width: 56px !important;
-                height: 56px !important;
-                border-radius: 14px !important;
-                margin: 0 auto !important;
-            }
-
-            .feature-icon svg,
-            .sf-icon-svg {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                width: 56px !important;
-                height: 56px !important;
-            }
-
-            .feature-card h5,
-            .feature-card .feature-title {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                font-size: 0.92rem !important;
-                font-weight: 700 !important;
-                color: #1e293b !important;
-                margin-bottom: 0.25rem !important;
-            }
-
-            .feature-card p {
-                display: none !important;
-            }
-
-            .btn-feature {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                width: 100% !important;
-                padding: 7px 4px !important;
-                font-size: 0.85rem !important;
-                font-weight: 700 !important;
-                border-radius: 10px !important;
+            .app-tile-name {
+                font-size: 0.76rem !important;
+                margin-top: 5px !important;
             }
 
             /* اللوحة الإعلانية بمقاس الإطار 100% بدون أي قص أو إطار داخلي */
@@ -3980,320 +4074,86 @@
         {% endif %}
         {# END NEW: Ad Images Carousel #}
 
-        <div class="row feature-cards-row">
-            <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('search_products') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
-                    <div class="feature-icon mx-auto">
-                        <svg width="76" height="76" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" class="sf-icon-svg">
-                            <defs>
-                                <linearGradient id="sf-bg-search" x1="0" y1="0" x2="76" y2="76" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#1e54e4"/>
-                                    <stop offset="50%" stop-color="#1243C4"/>
-                                    <stop offset="100%" stop-color="#0A2DA0"/>
-                                </linearGradient>
-                                <linearGradient id="sf-glass-lens" x1="20" y1="20" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
-                                    <stop offset="100%" stop-color="#e0f2fe" stop-opacity="0.4"/>
-                                </linearGradient>
-                                <filter id="sf-shadow-search" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
-                                </filter>
-                            </defs>
-                            <rect width="76" height="76" rx="20" fill="url(#sf-bg-search)"/>
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0H56C67.0457 0 76 8.95431 76 20V34C76 34 50 42 0 34V20Z" fill="white" fill-opacity="0.2"/>
-                            <rect width="74" height="74" x="1" y="1" rx="19" stroke="white" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
-                            <g filter="url(#sf-shadow-search)">
-                                <circle cx="34" cy="34" r="15" stroke="url(#sf-glass-lens)" stroke-width="5" fill="rgba(255,255,255,0.15)"/>
-                                <circle cx="34" cy="34" r="11" stroke="white" stroke-opacity="0.6" stroke-width="1.5" fill="none"/>
-                                <path d="M45 45L56 56" stroke="white" stroke-width="6" stroke-linecap="round"/>
-                                <path d="M45 45L56 56" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
-                                <circle cx="30" cy="30" r="3" fill="white" fill-opacity="0.8"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <h5>البحث</h5>
-                    <p class="text-muted">تابع الاستوك وتفاصيل الأرصدة من هنا بسهوله</p>
-                    <span class="btn btn-feature">
-                        البحث
-                    </span>
-                </a>
-            </div>
+                <!-- شبكة خدمات وتطبيقات ستوك فلو (تصميم أيقونات التطبيقات الذكية) -->
+        <div class="app-services-section mb-4">
+            <div class="app-services-card">
+                <div class="app-grid-layout">
+                    
+                    <!-- 1. البحث -->
+                    <a href="{{ url_for('search_products') }}" class="app-tile" onclick="return showPageSpinner(this.href)" title="البحث">
+                        <div class="app-icon-squircle app-icon-search">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <span class="app-tile-name">البحث</span>
+                    </a>
 
-            <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('my_products') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
-                    <div class="feature-icon mx-auto">
-                        <svg width="76" height="76" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" class="sf-icon-svg">
-                            <defs>
-                                <linearGradient id="sf-bg-box" x1="0" y1="0" x2="76" y2="76" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#1e54e4"/>
-                                    <stop offset="50%" stop-color="#1243C4"/>
-                                    <stop offset="100%" stop-color="#0A2DA0"/>
-                                </linearGradient>
-                                <linearGradient id="sf-box-top" x1="20" y1="18" x2="56" y2="34" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
-                                    <stop offset="100%" stop-color="#bae6fd" stop-opacity="0.75"/>
-                                </linearGradient>
-                                <filter id="sf-shadow-box" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
-                                </filter>
-                            </defs>
-                            <rect width="76" height="76" rx="20" fill="url(#sf-bg-box)"/>
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0H56C67.0457 0 76 8.95431 76 20V34C76 34 50 42 0 34V20Z" fill="white" fill-opacity="0.2"/>
-                            <rect width="74" height="74" x="1" y="1" rx="19" stroke="white" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
-                            <g filter="url(#sf-shadow-box)">
-                                <path d="M38 18L58 27L38 36L18 27L38 18Z" fill="url(#sf-box-top)"/>
-                                <path d="M18 27L38 36V56L18 47V27Z" fill="white" fill-opacity="0.75"/>
-                                <path d="M38 36L58 27V47L38 56V36Z" fill="white" fill-opacity="0.95"/>
-                                <path d="M38 18L48 22.5L38 27L28 22.5L38 18Z" fill="#38bdf8" fill-opacity="0.9"/>
-                                <path d="M38 36L38 56" stroke="#0284c7" stroke-width="2"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <h5 class="feature-title">الأصناف</h5>
-                    <p class="text-muted">عرض وإدارة قائمة الأصناف المفضلة لديك</p>
-                    <span class="btn btn-feature">
-                        أصنافى
-                    </span>
-                </a>
-            </div>
+                    <!-- 2. الأصناف -->
+                    <a href="{{ url_for('my_products') }}" class="app-tile" onclick="return showPageSpinner(this.href)" title="أصنافى">
+                        <div class="app-icon-squircle app-icon-products">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <span class="app-tile-name">الأصناف</span>
+                    </a>
 
-            <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('company_stock_reports') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
-                    <div class="feature-icon mx-auto">
-                        <svg width="76" height="76" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" class="sf-icon-svg">
-                            <defs>
-                                <linearGradient id="sf-bg-reports" x1="0" y1="0" x2="76" y2="76" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#1e54e4"/>
-                                    <stop offset="50%" stop-color="#1243C4"/>
-                                    <stop offset="100%" stop-color="#0A2DA0"/>
-                                </linearGradient>
-                                <linearGradient id="sf-pie-slice" x1="38" y1="18" x2="58" y2="38" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#38bdf8"/>
-                                    <stop offset="100%" stop-color="#0284c7"/>
-                                </linearGradient>
-                                <filter id="sf-shadow-reports" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
-                                </filter>
-                            </defs>
-                            <rect width="76" height="76" rx="20" fill="url(#sf-bg-reports)"/>
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0H56C67.0457 0 76 8.95431 76 20V34C76 34 50 42 0 34V20Z" fill="white" fill-opacity="0.2"/>
-                            <rect width="74" height="74" x="1" y="1" rx="19" stroke="white" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
-                            <g filter="url(#sf-shadow-reports)">
-                                <path d="M38 38L18 38C18 26.9543 26.9543 18 38 18V38Z" fill="white" fill-opacity="0.8"/>
-                                <path d="M38 38V58C26.9543 58 18 49.0457 18 38H38Z" fill="white" fill-opacity="0.6"/>
-                                <path d="M38 38H58C58 49.0457 49.0457 58 38 58V38Z" fill="white" fill-opacity="0.9"/>
-                                <path d="M41 16C52.0457 16 60 23.9543 60 35H41V16Z" fill="url(#sf-pie-slice)"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <h5>التقارير</h5>
-                    <p class="text-muted">اطلع على الأرصدة واقتراحات التوريد</p>
-                    <span class="btn btn-feature">
-                        التقارير
-                    </span>
-                </a>
-            </div>
+                    <!-- 3. التقارير -->
+                    <a href="{{ url_for('company_stock_reports') }}" class="app-tile" onclick="return showPageSpinner(this.href)" title="التقارير">
+                        <div class="app-icon-squircle app-icon-reports">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <span class="app-tile-name">التقارير</span>
+                    </a>
 
-            <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('community_bonus.community_bonus') }}"
-                    class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
-                    <div class="feature-icon mx-auto">
-                        <svg width="76" height="76" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" class="sf-icon-svg">
-                            <defs>
-                                <linearGradient id="sf-bg-community" x1="0" y1="0" x2="76" y2="76" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#1e54e4"/>
-                                    <stop offset="50%" stop-color="#1243C4"/>
-                                    <stop offset="100%" stop-color="#0A2DA0"/>
-                                </linearGradient>
-                                <filter id="sf-shadow-community" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
-                                </filter>
-                            </defs>
-                            <rect width="76" height="76" rx="20" fill="url(#sf-bg-community)"/>
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0H56C67.0457 0 76 8.95431 76 20V34C76 34 50 42 0 34V20Z" fill="white" fill-opacity="0.2"/>
-                            <rect width="74" height="74" x="1" y="1" rx="19" stroke="white" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
-                            <g filter="url(#sf-shadow-community)">
-                                <circle cx="38" cy="27" r="7" fill="white"/>
-                                <path d="M26 53C26 45.268 31.3726 39 38 39C44.6274 39 50 45.268 50 53V55H26V53Z" fill="white"/>
-                                <circle cx="23" cy="30" r="5" fill="#38bdf8" fill-opacity="0.9"/>
-                                <path d="M14 51C14 44.9249 18.0294 40 23 40C25.4 40 27.5 41.2 29 43.1C27.5 45.5 26.5 48.5 26.1 52H14V51Z" fill="#38bdf8" fill-opacity="0.7"/>
-                                <circle cx="53" cy="30" r="5" fill="white" fill-opacity="0.75"/>
-                                <path d="M47 43.1C48.5 41.2 50.6 40 53 40C57.9706 40 62 44.9249 62 51V52H49.9C49.5 48.5 48.5 45.5 47 43.1Z" fill="white" fill-opacity="0.6"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <h5 class="feature-title">المجتمع</h5>
-                    <p class="text-muted">شارك وتفاعل مع الشركات الأخرى</p>
-                    <span class="btn btn-feature position-relative">
-                        المجتمع
-                        <span
-                            class="notification-badge pulse-badge {% if unread_community_posts_count <= 0 %}d-none{% endif %}"
-                            id="community-posts-count-feature">
-                            {{ unread_community_posts_count }}
-                        </span>
-                    </span>
-                </a>
-            </div>
+                    <!-- 4. المجتمع -->
+                    <a href="{{ url_for('community_bonus.community_bonus') }}" class="app-tile" onclick="return showPageSpinner(this.href)" title="المجتمع">
+                        <div class="app-icon-squircle app-icon-community position-relative">
+                            <i class="fas fa-users"></i>
+                            <span class="app-badge pulse-badge {% if unread_community_posts_count <= 0 %}d-none{% endif %}" id="community-posts-count-feature">
+                                {{ unread_community_posts_count }}
+                            </span>
+                        </div>
+                        <span class="app-tile-name">المجتمع</span>
+                    </a>
 
-            <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('company_messages') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
-                    <div class="feature-icon mx-auto">
-                        <svg width="76" height="76" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" class="sf-icon-svg">
-                            <defs>
-                                <linearGradient id="sf-bg-msg" x1="0" y1="0" x2="76" y2="76" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#1e54e4"/>
-                                    <stop offset="50%" stop-color="#1243C4"/>
-                                    <stop offset="100%" stop-color="#0A2DA0"/>
-                                </linearGradient>
-                                <linearGradient id="sf-bubble-top" x1="18" y1="18" x2="52" y2="44" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#ffffff"/>
-                                    <stop offset="100%" stop-color="#e0f2fe" stop-opacity="0.9"/>
-                                </linearGradient>
-                                <filter id="sf-shadow-msg" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
-                                </filter>
-                            </defs>
-                            <rect width="76" height="76" rx="20" fill="url(#sf-bg-msg)"/>
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0H56C67.0457 0 76 8.95431 76 20V34C76 34 50 42 0 34V20Z" fill="white" fill-opacity="0.2"/>
-                            <rect width="74" height="74" x="1" y="1" rx="19" stroke="white" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
-                            <g filter="url(#sf-shadow-msg)">
-                                <path d="M30 30H54C57.3137 30 60 32.6863 60 36V46C60 49.3137 57.3137 52 54 52H48L42 57V52H30C26.6863 52 24 49.3137 24 46V36C24 32.6863 26.6863 30 30 30Z" fill="#38bdf8" fill-opacity="0.8"/>
-                                <path d="M22 18H46C49.3137 18 52 20.6863 52 24V34C52 37.3137 49.3137 40 46 40H32L24 46V40H22C18.6863 40 16 37.3137 16 34V24C16 20.6863 18.6863 18 22 18Z" fill="url(#sf-bubble-top)"/>
-                                <circle cx="27" cy="29" r="2.5" fill="#0284c7"/>
-                                <circle cx="34" cy="29" r="2.5" fill="#0284c7"/>
-                                <circle cx="41" cy="29" r="2.5" fill="#0284c7"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <h5 class="feature-title">الرسائل</h5>
-                    <p class="text-muted">تواصل مع الشركات الأخرى</p>
-                    <span class="btn btn-feature position-relative">
-                        الرسائل
-                        <span
-                            class="notification-badge pulse-badge {% if unread_private_messages_count <= 0 %}d-none{% endif %}"
-                            id="private-messages-count-feature">
-                            {{ unread_private_messages_count }}
-                        </span>
-                    </span>
-                </a>
-            </div>
+                    <!-- 5. الرسائل -->
+                    <a href="{{ url_for('company_messages') }}" class="app-tile" onclick="return showPageSpinner(this.href)" title="الرسائل">
+                        <div class="app-icon-squircle app-icon-messages position-relative">
+                            <i class="fas fa-comments"></i>
+                            <span class="app-badge pulse-badge {% if unread_private_messages_count <= 0 %}d-none{% endif %}" id="private-messages-count-feature">
+                                {{ unread_private_messages_count }}
+                            </span>
+                        </div>
+                        <span class="app-tile-name">الرسائل</span>
+                    </a>
 
-            <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('notifications') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
-                    <div class="feature-icon mx-auto">
-                        <svg width="76" height="76" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" class="sf-icon-svg">
-                            <defs>
-                                <linearGradient id="sf-bg-notif" x1="0" y1="0" x2="76" y2="76" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#1e54e4"/>
-                                    <stop offset="50%" stop-color="#1243C4"/>
-                                    <stop offset="100%" stop-color="#0A2DA0"/>
-                                </linearGradient>
-                                <linearGradient id="sf-bell-grad" x1="20" y1="18" x2="56" y2="52" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#ffffff"/>
-                                    <stop offset="100%" stop-color="#bae6fd"/>
-                                </linearGradient>
-                                <filter id="sf-shadow-notif" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
-                                </filter>
-                            </defs>
-                            <rect width="76" height="76" rx="20" fill="url(#sf-bg-notif)"/>
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0H56C67.0457 0 76 8.95431 76 20V34C76 34 50 42 0 34V20Z" fill="white" fill-opacity="0.2"/>
-                            <rect width="74" height="74" x="1" y="1" rx="19" stroke="white" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
-                            <g filter="url(#sf-shadow-notif)">
-                                <path d="M38 16C36.3431 16 35 17.3431 35 19V20H41V19C41 17.3431 39.6569 16 38 16Z" fill="white"/>
-                                <path d="M22 47C22 45.8954 22.8954 45 24 45H52C53.1046 45 54 45.8954 54 47C54 48.1046 53.1046 49 52 49H24C22.8954 49 22 48.1046 22 47Z" fill="white"/>
-                                <path d="M25 45C25 33.9543 30.8203 21 38 21C45.1797 21 51 33.9543 51 45H25Z" fill="url(#sf-bell-grad)"/>
-                                <path d="M33 49C33 51.7614 35.2386 54 38 54C40.7614 54 43 51.7614 43 49H33Z" fill="#38bdf8"/>
-                                <circle cx="49" cy="23" r="5" fill="#f43f5e" stroke="white" stroke-width="2"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <h5>الإشعارات</h5>
-                    <p class="text-muted">تابع آخر الإشعارات والتحديثات المهمة</p>
-                    <span class="btn btn-feature position-relative">
-                        الإشعارات
-                        <span class="notification-badge {% if unread_notifications_count <= 0 %}d-none{% endif %}"
-                            id="notification-count-feature">
-                            {{ unread_notifications_count }}
-                        </span>
-                    </span>
-                </a>
-            </div>
+                    <!-- 6. الإشعارات -->
+                    <a href="{{ url_for('notifications') }}" class="app-tile" onclick="return showPageSpinner(this.href)" title="الإشعارات">
+                        <div class="app-icon-squircle app-icon-notifications position-relative">
+                            <i class="fas fa-bell"></i>
+                            <span class="app-badge pulse-badge {% if unread_notifications_count <= 0 %}d-none{% endif %}" id="notification-count-feature">
+                                {{ unread_notifications_count }}
+                            </span>
+                        </div>
+                        <span class="app-tile-name">الإشعارات</span>
+                    </a>
 
-            <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('company_profile') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
-                    <div class="feature-icon mx-auto">
-                        <svg width="76" height="76" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" class="sf-icon-svg">
-                            <defs>
-                                <linearGradient id="sf-bg-set" x1="0" y1="0" x2="76" y2="76" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#1e54e4"/>
-                                    <stop offset="50%" stop-color="#1243C4"/>
-                                    <stop offset="100%" stop-color="#0A2DA0"/>
-                                </linearGradient>
-                                <linearGradient id="sf-gear-grad" x1="18" y1="18" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#ffffff"/>
-                                    <stop offset="100%" stop-color="#e0f2fe"/>
-                                </linearGradient>
-                                <filter id="sf-shadow-set" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
-                                </filter>
-                            </defs>
-                            <rect width="76" height="76" rx="20" fill="url(#sf-bg-set)"/>
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0H56C67.0457 0 76 8.95431 76 20V34C76 34 50 42 0 34V20Z" fill="white" fill-opacity="0.2"/>
-                            <rect width="74" height="74" x="1" y="1" rx="19" stroke="white" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
-                            <g filter="url(#sf-shadow-set)">
-                                <path d="M34 16H42V21.2C43.5 21.7 44.9 22.4 46.2 23.3L50 19.5L55.7 25.2L51.9 29C52.8 30.3 53.5 31.7 54 33.2H59.2V41.2H54C53.5 42.7 52.8 44.1 51.9 45.4L55.7 49.2L50 54.9L46.2 51.1C44.9 52 43.5 52.7 42 53.2V58.4H34V53.2C32.5 52.7 31.1 52 29.8 51.1L26 54.9L20.3 49.2L24.1 45.4C23.2 44.1 22.5 42.7 22 41.2H16.8V33.2H22C22.5 31.7 23.2 30.3 24.1 29L20.3 25.2L26 19.5L29.8 23.3C31.1 22.4 32.5 21.7 34 21.2V16Z" fill="url(#sf-gear-grad)"/>
-                                <circle cx="38" cy="37" r="9" fill="#1243C4"/>
-                                <circle cx="38" cy="37" r="6" fill="#38bdf8"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <h5 class="feature-title">الإعدادات</h5>
-                    <p class="text-muted">تعديل بيانات الشركة وإضافة أفاتار والتحكم فى الرسائل</p>
-                    <span class="btn btn-feature">
-                        الإعدادات
-                    </span>
-                </a>
-            </div>
+                    <!-- 7. الإعدادات -->
+                    <a href="{{ url_for('company_profile') }}" class="app-tile" onclick="return showPageSpinner(this.href)" title="الإعدادات">
+                        <div class="app-icon-squircle app-icon-settings">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <span class="app-tile-name">الإعدادات</span>
+                    </a>
 
-            <div class="col-6 col-md-4 mb-4">
-                <a href="{{ url_for('appointments') }}" class="feature-card text-center clickable-card" onclick="return showPageSpinner(this.href)">
-                    <div class="feature-icon mx-auto">
-                        <svg width="76" height="76" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" class="sf-icon-svg">
-                            <defs>
-                                <linearGradient id="sf-bg-app" x1="0" y1="0" x2="76" y2="76" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#1e54e4"/>
-                                    <stop offset="50%" stop-color="#1243C4"/>
-                                    <stop offset="100%" stop-color="#0A2DA0"/>
-                                </linearGradient>
-                                <linearGradient id="sf-cal-header" x1="18" y1="18" x2="58" y2="28" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#38bdf8"/>
-                                    <stop offset="100%" stop-color="#0284c7"/>
-                                </linearGradient>
-                                <filter id="sf-shadow-app" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
-                                </filter>
-                            </defs>
-                            <rect width="76" height="76" rx="20" fill="url(#sf-bg-app)"/>
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0H56C67.0457 0 76 8.95431 76 20V34C76 34 50 42 0 34V20Z" fill="white" fill-opacity="0.2"/>
-                            <rect width="74" height="74" x="1" y="1" rx="19" stroke="white" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
-                            <g filter="url(#sf-shadow-app)">
-                                <rect x="18" y="22" width="40" height="34" rx="10" fill="white"/>
-                                <path d="M18 28C18 24.6863 20.6863 22 24 22H52C55.3137 22 58 24.6863 58 28V31H18V28Z" fill="url(#sf-cal-header)"/>
-                                <rect x="27" y="17" width="4" height="8" rx="2" fill="white"/>
-                                <rect x="45" y="17" width="4" height="8" rx="2" fill="white"/>
-                                <path d="M28 41L34 47L48 33" stroke="#0284c7" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <h5 class="feature-title">المواعيد</h5>
-                    <p class="text-muted">احجز موعد مقابلة مع الإدارة لمناقشة احتياجاتك</p>
-                    <span class="btn btn-feature">
-                        المواعيد
-                    </span>
-                </a>
-            </div>
+                    <!-- 8. المواعيد -->
+                    <a href="{{ url_for('appointments') }}" class="app-tile" onclick="return showPageSpinner(this.href)" title="المواعيد">
+                        <div class="app-icon-squircle app-icon-appointments">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <span class="app-tile-name">المواعيد</span>
+                    </a>
 
+                </div>
+            </div>
         </div>
 
         <!-- قسم مركز الإحصائيات والمؤشرات البيانية -->
