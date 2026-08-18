@@ -134,20 +134,16 @@
             background: linear-gradient(135deg, #020617 0%, #0f172a 100%) !important;
         }
 
-        /* Modern Welcome Card Styles - Strict Zero Layout Shift */
+        /* Modern Welcome Card Styles */
         .welcome-card {
             position: relative;
             border-radius: 20px;
             background: #ffffff;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid #e2e8f0;
-            padding: 1.1rem 1.25rem 0.5rem 1.25rem;
-            margin-bottom: 1.5rem;
-            min-height: 190px !important;
-            height: 190px !important;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            padding: 1.1rem 1.25rem 0.6rem 1.25rem;
+            margin-bottom: 1.25rem;
+            width: 100%;
         }
 
         .welcome-card.premium {
@@ -163,86 +159,59 @@
 
         #welcomeCarousel {
             width: 100%;
-            height: 130px !important;
-            min-height: 130px !important;
-            max-height: 130px !important;
             position: relative;
-            overflow: hidden;
         }
 
         #welcomeCarousel .carousel-inner {
             position: relative;
             width: 100%;
-            height: 130px !important;
-            min-height: 130px !important;
-            max-height: 130px !important;
             overflow: hidden;
+            min-height: 85px;
         }
 
         .welcome-card .carousel-item {
-            height: 130px !important;
-            min-height: 130px !important;
-            max-height: 130px !important;
-            overflow: hidden;
+            min-height: 85px;
             transition: transform 0.6s ease-in-out;
-        }
-
-        .welcome-card .carousel-item > div {
-            height: 100% !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            text-align: center !important;
         }
 
         #welcomeStatsCarousel,
         #welcomeAdhkarCarousel,
         #welcomeOnlineCompaniesCarousel {
             width: 100%;
-            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
+            padding: 4px 0;
         }
 
         .welcome-progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0%;
-            height: 4px;
-            background: linear-gradient(90deg, #0d6efd 0%, #06b6d4 100%);
-            transition: width 0.1s linear;
-            z-index: 10;
-            border-radius: 0 4px 4px 0;
+            display: none !important;
         }
-
         .welcome-indicators {
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 6px;
-            z-index: 10;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin-top: 8px;
+            margin-bottom: 2px;
         }
 
         .welcome-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
-            background-color: rgba(18, 67, 196, 0.25);
+            background-color: #cbd5e1;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
 
         .welcome-dot.active {
-            width: 26px;
+            width: 22px;
             border-radius: 999px;
             background: #1243C4;
-            box-shadow: 0 2px 6px rgba(18, 67, 196, 0.35);
+            box-shadow: 0 2px 6px rgba(18, 67, 196, 0.3);
         }
 
         .dark-mode .welcome-dot {
@@ -1022,52 +991,58 @@
 
         /* End New: Warning Low Searches Style */
 
-        /* Adjustments for responsive text in welcome card */
+        /* Adjustments for responsive mobile layout */
         @media (max-width: 767.98px) {
+            body {
+                padding-top: 0px !important;
+                background: #f8fafc !important;
+            }
+
+            .main-content {
+                padding: 0.5rem 0 !important;
+            }
+
+            .container,
+            .container-fluid,
+            .dashboard-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            .dashboard-content {
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
             .welcome-card {
-                padding: 0.85rem 0.75rem 0.35rem 0.75rem !important;
-                margin-bottom: 1rem !important;
-                border-radius: 18px !important;
-                min-height: 185px !important;
-                height: 185px !important;
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: space-between !important;
+                padding: 0.85rem 0.85rem 0.4rem 0.85rem !important;
+                margin-bottom: 0.85rem !important;
+                border-radius: 16px !important;
+                width: 100% !important;
             }
 
             #welcomeCarousel {
                 width: 100% !important;
-                height: 125px !important;
-                min-height: 125px !important;
-                max-height: 125px !important;
                 position: relative !important;
-                overflow: hidden !important;
             }
 
             #welcomeCarousel .carousel-inner {
                 position: relative !important;
                 width: 100% !important;
-                height: 125px !important;
-                min-height: 125px !important;
-                max-height: 125px !important;
                 overflow: hidden !important;
+                min-height: 85px !important;
             }
 
             .welcome-card .carousel-item {
-                height: 125px !important;
-                min-height: 125px !important;
-                max-height: 125px !important;
-                overflow: hidden !important;
-                padding: 0 !important;
-            }
-
-            .welcome-card .carousel-item > div {
-                height: 100% !important;
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: center !important;
-                align-items: center !important;
-                text-align: center !important;
+                min-height: 85px !important;
             }
 
             .welcome-card h2 {
@@ -1096,15 +1071,16 @@
                 align-items: flex-end;
             }
 
-            /* تصميم الكروت على الموبايل - 2 في السطر ظاهرة 100% */
+            /* تصميم الكروت على الموبايل - 2 في السطر بعرض كامل للشاشة */
             .feature-cards-row {
-                margin-left: -5px !important;
-                margin-right: -5px !important;
-                margin-bottom: 1rem !important;
+                margin-left: -4px !important;
+                margin-right: -4px !important;
+                margin-bottom: 0.85rem !important;
                 display: flex !important;
                 flex-wrap: wrap !important;
                 visibility: visible !important;
                 opacity: 1 !important;
+                width: calc(100% + 8px) !important;
             }
 
             .feature-cards-row .col-6,
@@ -1115,8 +1091,8 @@
                 flex: 0 0 50% !important;
                 max-width: 50% !important;
                 width: 50% !important;
-                padding: 6px !important;
-                margin-bottom: 0.5rem !important;
+                padding: 4px !important;
+                margin-bottom: 0.25rem !important;
             }
 
             .feature-card {
@@ -1127,12 +1103,12 @@
                 visibility: visible !important;
                 opacity: 1 !important;
                 transform: none !important;
-                padding: 0.85rem 0.6rem !important;
-                min-height: 160px !important;
-                border-radius: 18px !important;
+                padding: 0.85rem 0.5rem !important;
+                min-height: 155px !important;
+                border-radius: 16px !important;
                 background: #ffffff !important;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-                border: 1px solid rgba(0, 0, 0, 0.06) !important;
+                box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04) !important;
+                border: 1px solid rgba(0, 0, 0, 0.05) !important;
             }
 
             .feature-icon {
@@ -1141,10 +1117,9 @@
                 justify-content: center !important;
                 visibility: visible !important;
                 opacity: 1 !important;
-                width: 60px !important;
-                height: 60px !important;
-                font-size: 26px !important;
-                border-radius: 16px !important;
+                width: 56px !important;
+                height: 56px !important;
+                border-radius: 14px !important;
                 margin: 0 auto !important;
             }
 
@@ -1153,8 +1128,8 @@
                 display: block !important;
                 visibility: visible !important;
                 opacity: 1 !important;
-                width: 60px !important;
-                height: 60px !important;
+                width: 56px !important;
+                height: 56px !important;
             }
 
             .feature-card h5,
@@ -1162,10 +1137,10 @@
                 display: block !important;
                 visibility: visible !important;
                 opacity: 1 !important;
-                font-size: 0.95rem !important;
+                font-size: 0.92rem !important;
                 font-weight: 700 !important;
                 color: #1e293b !important;
-                margin-bottom: 0.3rem !important;
+                margin-bottom: 0.25rem !important;
             }
 
             .feature-card p {
@@ -1177,28 +1152,32 @@
                 visibility: visible !important;
                 opacity: 1 !important;
                 width: 100% !important;
-                padding: 8px 5px !important;
-                font-size: 0.88rem !important;
+                padding: 7px 4px !important;
+                font-size: 0.85rem !important;
                 font-weight: 700 !important;
-                border-radius: 12px !important;
+                border-radius: 10px !important;
             }
 
             /* اللوحة الإعلانية بمقاس الإطار 100% بدون أي قص */
             .ad-carousel {
-                margin-bottom: 1rem !important;
-                border-radius: 16px !important;
+                margin-bottom: 0.85rem !important;
+                border-radius: 14px !important;
+                width: 100% !important;
             }
 
             .ad-carousel .ad-media {
                 width: 100% !important;
                 height: auto !important;
-                border-radius: 16px !important;
+                border-radius: 14px !important;
             }
 
             .ad-carousel .carousel-item img {
                 width: 100% !important;
                 height: auto !important;
                 border-radius: 14px !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                display: block !important;
             }
         }
 
@@ -3604,7 +3583,7 @@
 
     <div class="dashboard-content">
         <div class="main-content">
-            <div class="container dashboard-container">
+            <div class="container-fluid dashboard-container" style="max-width: 1200px;">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                 {% for category, message in messages %}
@@ -3623,10 +3602,9 @@
 
                 <div class="welcome-card {% if not company.is_premium and premium_features_enabled and (monthly_search_limit - monthly_search_count) <= 3 %} warning-low-searches {% elif company.is_premium and premium_features_enabled %}premium{% endif %}"
                     id="welcomeCard">
-                    <div class="welcome-progress-bar" id="welcomeProgressBar"></div>
 
-                    <div class="row align-items-start">
-                        <div class="col-md-10 {% if not company.is_premium and premium_features_enabled and (monthly_search_limit - monthly_search_count) <= 3 %} warning-content-rtl {% endif %}"
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-10 {% if not company.is_premium and premium_features_enabled and (monthly_search_limit - monthly_search_count) <= 3 %} warning-content-rtl {% endif %}"
                             id="welcomeContent">
                             <div id="welcomeCarousel" class="carousel slide" data-bs-ride="carousel"
                                 data-bs-interval="12000">
@@ -3646,7 +3624,7 @@
                                                     class="btn btn-warning">اشترك الآن</a></div>
                                     </div>
                                     {% else %}
-                                    <div class="d-flex align-items-center h-100 justify-content-center gap-3">
+                                    <div class="d-flex align-items-center justify-content-start gap-3 w-100 px-2 py-1 text-end" dir="rtl">
                                         {% if ramadan_theme_enabled %}
                                         <!-- Ramadan Themed Content -->
                                         <div class="ramadan-welcome-content">
@@ -3685,7 +3663,7 @@
                                                             <path d="M-15 0 L 15 0 L 20 25 L -20 25 Z" fill="#FFA000" /> <!-- Upper Body -->
                                                             <path d="M-20 25 L 20 25 L 12 45 L -12 45 Z" fill="#FFD700" /> <!-- Lower Body -->
 
-                                                            <!-- Fanoos Glass Panels (Colorful Egyptian Style) -->
+                                                             <!-- Fanoos Glass Panels (Colorful Egyptian Style) -->
                                                             <path d="M-10 5 L 10 5 L 14 20 L -14 20 Z" fill="#FFFDE7" class="lantern-light-pro" />
                                                             <rect x="-4" y="28" width="8" height="12" fill="#E91E63" opacity="0.6" /> <!-- Colored glass -->
 
@@ -3715,18 +3693,18 @@
                                         </div>
                                         {% else %}
                                         <!-- Original Content -->
-                                        <div>
+                                        <div style="flex-shrink: 0;">
                                             {% set avatar_key = company.avatar if company.avatar else 'male-1' %}
                                             {% if avatar_key == 'default-male' %}{% set avatar_key = 'male-1' %}{% endif %}
                                             <!-- Avatar wrapped in link to settings -->
                                             <a href="{{ url_for('company_profile') }}" title="تغيير الأفاتار" style="display: inline-block; text-decoration: none; position: relative;">
                                             {% if avatar_key.startswith('custom-photo:') or avatar_key[:4] == 'http' or avatar_key[:7] == '/media/' %}
-                                            <div style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15); position: relative;">
+                                            <div style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.12); position: relative;">
                                                 <img src="{% if avatar_key.startswith('custom-photo:') %}{{ url_for('static', filename='images/profile_photos/' + avatar_key[13:]) }}{% else %}{{ avatar_key }}{% endif %}"
                                                     alt="Avatar"
                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                                                     style="width: 100%; height: 100%; object-fit: cover;">
-                                                <div style="display: none; position: absolute; inset: 0; background: linear-gradient(135deg, #1243C4, #0A2DA0); color: white; align-items: center; justify-content: center; font-weight: bold; font-size: 26px;">
+                                                <div style="display: none; position: absolute; inset: 0; background: linear-gradient(135deg, #1243C4, #0A2DA0); color: white; align-items: center; justify-content: center; font-weight: bold; font-size: 22px;">
                                                     {{ company.company_name[0].upper() if company.company_name else 'S' }}
                                                 </div>
                                             </div>
@@ -3743,43 +3721,43 @@
                                                 {% elif avatar_key == 'html-6' %}{% set html_border = '3px solid #a8edea' %}
                                                 {% else %}{% set html_border = '3px solid #1243C4' %}
                                                 {% endif %}
-                                                <div style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: {{ html_border }}; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                                <div style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; border: {{ html_border }}; box-shadow: 0 4px 8px rgba(0,0,0,0.12);">
                                                     <img src="{{ url_for('static', filename='images/avatars/male-1.jpg') }}"
                                                         alt="Avatar"
                                                         onerror="this.parentElement.style.background='linear-gradient(45deg,#1243C4,#0A2DA0)'; this.style.display='none';"
                                                         style="width: 100%; height: 100%; object-fit: cover;">
                                                 </div>
                                             {% else %}
-                                            <div style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.15); position: relative;">
+                                            <div style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.12); position: relative;">
                                                 <img src="{{ url_for('static', filename='images/avatars/' + avatar_key + '.jpg') }}"
                                                     alt="Avatar"
                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                                                     style="width: 100%; height: 100%; object-fit: cover;">
-                                                <div style="display: none; position: absolute; inset: 0; background: linear-gradient(135deg, #1243C4, #0A2DA0); color: white; align-items: center; justify-content: center; font-weight: bold; font-size: 26px;">
+                                                <div style="display: none; position: absolute; inset: 0; background: linear-gradient(135deg, #1243C4, #0A2DA0); color: white; align-items: center; justify-content: center; font-weight: bold; font-size: 22px;">
                                                     {{ company.company_name[0].upper() if company.company_name else 'S' }}
                                                 </div>
                                             </div>
                                             {% endif %}
                                             {% endif %}
                                             <!-- Edit icon overlay -->
-                                            <span style="position: absolute; bottom: 0; right: 0; width: 22px; height: 22px; background: #1243C4; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                                                <i class="fas fa-pen" style="font-size: 9px; color: white;"></i>
+                                            <span style="position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; background: #1243C4; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                                <i class="fas fa-pen" style="font-size: 8px; color: white;"></i>
                                             </span>
                                             </a>
                                         </div>
-                                        <div>
+                                        <div style="flex-grow: 1; text-align: right;">
                                             <h2
-                                                class="{% if company.is_verified and premium_features_enabled %}premium-text{% endif %} mb-1">
+                                                class="{% if company.is_verified and premium_features_enabled %}premium-text{% endif %} mb-1" style="font-size: 1.15rem; font-weight: 700;">
                                                 مرحباً بك، {{ company.company_name }} {% if company.is_verified and
                                                 premium_features_enabled %}<i class="fas fa-check-circle verified-badge"
                                                     title="شركة موثقة (STOCKFLOW PLUS)"></i>{% endif %}</h2>
                                             {% if is_on_trial %}
                                             <p
-                                                class="mb-0 {% if company.is_verified and premium_features_enabled %}premium-text{% endif %}">
+                                                class="mb-0 {% if company.is_verified and premium_features_enabled %}premium-text{% endif %}" style="font-size: 0.85rem;">
                                                 لديك تجربة مميزة مجانيه جارية — باقي لك ({{ trial_days_left }}) يوم.</p>
                                             {% else %}
                                             <p
-                                                class="mb-0 {% if company.is_verified and premium_features_enabled %}premium-text{% endif %}">
+                                                class="mb-0 {% if company.is_verified and premium_features_enabled %}premium-text{% endif %}" style="font-size: 0.85rem; color: #64748b;">
                                                 نظام ستوك فلو يتيح لك الآن متابعة أرصدة الشركة الخاصه بكم بسهوله
                                                 وفعاليه.</p>
                                             {% endif %}
@@ -3851,22 +3829,17 @@
 
         {# NEW: Ad Images Carousel #}
         {% if ad_images %}
-        <div id="adCarousel" class="carousel slide ad-carousel mb-4">
+        <div id="adCarousel" class="carousel slide ad-carousel mb-4" data-bs-ride="carousel" data-bs-interval="7000">
             <div class="carousel-inner">
                 {% for image in ad_images %}
                 <div class="carousel-item {{ 'active' if loop.first }}">
                     {% set is_gif_ad = image.original_filename.lower().endswith('.gif') or image.filename.lower().endswith('.gif') %}
-                    <div class="ad-media" data-ad-media aria-label="إعلان">
-                        <div class="ad-media-placeholder" aria-hidden="true">
-                            <div class="ad-media-spinner"></div>
-                            <i class="fas fa-image"></i>
-                            <span class="ad-media-placeholder-text">جارٍ تحميل الإعلان</span>
-                        </div>
+                    <div class="ad-media" aria-label="إعلان">
                         {% if image.filename.startswith('http') %}
-                        <img src="{{ image.filename }}" class="d-block w-100" alt=""
+                        <img src="{{ image.filename }}" class="d-block w-100" alt="إعلان"
                             {% if is_gif_ad %}data-is-gif="true"{% endif %}>
                         {% else %}
-                        <img src="{{ url_for('serve_ad_image', filename=image.filename) }}" class="d-block w-100" alt=""
+                        <img src="{{ url_for('serve_ad_image', filename=image.filename) }}" class="d-block w-100" alt="إعلان"
                             {% if is_gif_ad %}data-is-gif="true"{% endif %}>
                         {% endif %}
                     </div>
