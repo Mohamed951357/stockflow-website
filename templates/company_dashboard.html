@@ -247,10 +247,12 @@
             width: 100%;
             height: 100%;
             gap: 4px;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .slide-header-badge {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
             padding: 0.15rem 0.65rem;
             border-radius: 999px;
@@ -258,6 +260,7 @@
             align-items: center;
             gap: 5px;
             margin-bottom: 2px;
+            flex-shrink: 0;
         }
 
         .podium-grid {
@@ -265,25 +268,45 @@
             justify-content: center;
             align-items: center;
             gap: 6px;
-            flex-wrap: nowrap;
             width: 100%;
             max-width: 100%;
-            overflow-x: auto;
+            box-sizing: border-box;
+            overflow: hidden;
+            padding: 0 4px;
         }
 
         .podium-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 0.25rem 0.55rem;
-            display: inline-flex;
+            border-radius: 8px;
+            padding: 3px 6px;
+            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 4px;
-            font-size: 0.8rem;
+            font-size: 0.76rem;
             font-weight: 700;
             color: #1e293b;
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: 33.33%;
+            box-sizing: border-box;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            text-align: center;
+        }
+
+        .podium-item span:first-child {
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .podium-name {
             white-space: nowrap;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            display: block;
+            font-size: 0.74rem;
         }
 
         .podium-rank-1 { border-color: #fde68a; background: #fffbeb; color: #92400e; }
@@ -294,14 +317,17 @@
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
             color: #166534;
-            border-radius: 12px;
-            padding: 0.35rem 0.85rem;
-            font-size: 0.85rem;
+            border-radius: 10px;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.82rem;
             font-weight: 700;
-            line-height: 1.4;
+            line-height: 1.35;
             max-width: 95%;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(22, 101, 52, 0.04);
+            box-shadow: 0 1px 3px rgba(22, 101, 52, 0.04);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .network-stat-card {
@@ -311,8 +337,8 @@
             gap: 8px;
             background: #eff6ff;
             border: 1px solid #bfdbfe;
-            border-radius: 12px;
-            padding: 0.3rem 0.85rem;
+            border-radius: 10px;
+            padding: 0.25rem 0.75rem;
         }
 
         .nagy-brand-card {
@@ -3621,19 +3647,26 @@
                                 <div class="carousel-inner">
                                     <div class="carousel-item active">
                                         {% if not company.is_premium and premium_features_enabled and
-                                        (monthly_search_limit - monthly_search_count) <= 3 %} <div
-                                            class="h-100 d-flex flex-column justify-content-center align-items-center text-center">
-                                            <h2 class="premium-text"><i
-                                                    class="fas fa-exclamation-triangle verified-badge"></i> باقي لك ({{
-                                                monthly_search_limit - monthly_search_count }}) بحث هذا الشهر !</h2>
-                                            <p class="premium-text mb-2">اشترك في Stockflow plus لتستمتع بعدد بحثات لا
-                                                نهائي.</p>
-                                            <div class="button-center-wrapper"><a
-                                                    href="javascript:void(0)"
-                                                    onclick="openInviteCodeModal()"
-                                                    class="btn btn-warning">اشترك الآن</a></div>
-                                    </div>
-                                    {% else %}
+                                        (monthly_search_limit - monthly_search_count) <= 3 %}
+                                        <div class="d-flex align-items-center justify-content-between w-100 h-100 px-2 py-1 gap-2" dir="rtl">
+                                            <div class="d-flex align-items-center gap-2 text-end" style="flex: 1; min-width: 0;">
+                                                <div style="width: 42px; height: 42px; border-radius: 12px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; border: 1px solid #fde68a;">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                </div>
+                                                <div style="min-width: 0;">
+                                                    <div style="font-size: 0.9rem; font-weight: 800; color: #92400e; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                        باقي لك ({{ monthly_search_limit - monthly_search_count }}) بحث هذا الشهر!
+                                                    </div>
+                                                    <div style="font-size: 0.76rem; color: #b45309; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                        اشترك في Stockflow Plus لتفعيل بحث غير محدود
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <a href="javascript:void(0)" onclick="openInviteCodeModal()" class="btn btn-warning" style="flex-shrink: 0; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; border-radius: 10px; box-shadow: 0 3px 8px rgba(245,158,11,0.3); white-space: nowrap;">
+                                                <i class="fas fa-crown me-1"></i> اشترك الآن
+                                            </a>
+                                        </div>
+                                        {% else %}
                                     <div class="d-flex align-items-center justify-content-start gap-3 w-100 px-2 py-1 text-end" dir="rtl">
                                         {% if ramadan_theme_enabled %}
                                         <!-- Ramadan Themed Content -->
@@ -3786,18 +3819,20 @@
                                     <div id="welcomeOnlineCompaniesCarousel"></div>
                                 </div>
                                 <div class="carousel-item">
-                                    <div class="d-flex align-items-center justify-content-center h-100">
-                                        <div class="nagy-brand-card text-center">
-                                            <div class="nagy-logo-text">
-                                                MO7AMED NAGY<span class="reg-mark">®</span>
-                                                <i class="fas fa-check-circle nagy-verified" title="Registered Brand"></i>
+                                    <div class="d-flex align-items-center justify-content-center h-100 w-100">
+                                        <div class="slide-content-wrap" style="gap: 3px;">
+                                            <div class="slide-header-badge bg-primary bg-opacity-10 text-primary">
+                                                <span style="font-weight: 800; letter-spacing: 0.12em; font-size: 0.85rem; direction: ltr; display: inline-flex; align-items: center; gap: 4px;">
+                                                    MO7AMED NAGY<span style="font-size: 0.58rem; vertical-align: top;">®</span>
+                                                    <i class="fas fa-check-circle text-success" style="font-size: 0.82rem;" title="Verified Brand"></i>
+                                                </span>
                                             </div>
-                                            <p class="nagy-tagline mb-1">
-                                                Design & implementation of STOCKFLOW company dashboard experience.
-                                            </p>
-                                            <p class="nagy-subtext mb-0">
-                                                For projects & collaboration: <strong>01554077727</strong>
-                                            </p>
+                                            <div style="font-size: 0.78rem; color: #475569; font-weight: 600; text-align: center; line-height: 1.2;">
+                                                تصميم وتطوير واجهة مستخدم ستوك فلو
+                                            </div>
+                                            <div style="font-size: 0.72rem; color: #1e40af; font-weight: 700; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 2px 10px; margin-top: 1px; display: inline-flex; align-items: center; gap: 4px;" dir="ltr">
+                                                <i class="fas fa-phone-alt" style="font-size: 0.65rem;"></i> 01554077727
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -6204,8 +6239,8 @@
             topCompanies.forEach((company, index) => {
                 companiesList += `
 <div class="podium-item ${rankClasses[index] || ''}">
-    <span style="font-size: 1.1rem;">${medals[index] || '⭐'}</span>
-    <span style="white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${company.name}</span>
+    <span>${medals[index] || '⭐'}</span>
+    <span class="podium-name">${company.name}</span>
 </div>
 `;
             });
